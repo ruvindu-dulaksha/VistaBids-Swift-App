@@ -7,6 +7,7 @@ struct BiddingScreen: View {
     @State private var selectedProperty: AuctionProperty?
     @State private var showingPropertyDetail = false
     @State private var showingAddProperty = false
+    @State private var refreshTimer: Timer? = nil
     
     private let filters = ["All", "Live", "Upcoming", "Ended"]
     
@@ -66,12 +67,13 @@ struct BiddingScreen: View {
                 .padding(.horizontal)
                 .padding(.top, 8)
                 
-                // Filter Pills
+                // Filter Pills with Counts
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
                         ForEach(filters, id: \.self) { filter in
-                            FilterPillButton(
+                            FilterPillButtonWithCount(
                                 title: filter,
+                                count: getCountForFilter(filter),
                                 isSelected: selectedFilter == filter,
                                 action: { selectedFilter = filter }
                             )
@@ -149,7 +151,19 @@ struct BiddingScreen: View {
             .onAppear {
                 Task {
                     await biddingService.loadAuctionProperties()
+                    
+                    // Setup auto-refresh timer (every 30 seconds)
+                    self.refreshTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) { _ in
+                        Task {
+                            await biddingService.loadAuctionProperties()
+                        }
+                    }
                 }
+            }
+            .onDisappear {
+                // Invalidate the timer when leaving the screen
+                refreshTimer?.invalidate()
+                refreshTimer = nil
             }
             .alert("Error", isPresented: .constant(biddingService.error != nil)) {
                 Button("OK") {
@@ -163,7 +177,7 @@ struct BiddingScreen: View {
             .fullScreenCover(isPresented: $showingAR) {
                 if let property = selectedProperty {
                     ARPanoramicView(
-                        panoramicImages: property.panoramicImages ?? [],
+                        panoramicImages: property.panoramicImages,
                         property: property
                     )
                 }
@@ -186,17 +200,79 @@ struct BiddingScreen: View {
         switch selectedFilter {
         case "Live":
             return biddingService.auctionProperties.filter { $0.status == AuctionStatus.active }
+                .sorted(by: { $0.auctionEndTime < $1.auctionEndTime }) // Sort by end time (soonest ending first)
         case "Upcoming":
             return biddingService.auctionProperties.filter { $0.status == AuctionStatus.upcoming }
+                .sorted(by: { $0.auctionStartTime < $1.auctionStartTime }) // Sort by start time (soonest starting first)
         case "Ended":
             return biddingService.auctionProperties.filter { $0.status == AuctionStatus.ended }
+                .sorted(by: { $0.auctionEndTime > $1.auctionEndTime }) // Sort by end time (most recently ended first)
         default:
-            return biddingService.auctionProperties
+            // For "All", prioritize live auctions, then upcoming, then ended
+            let live = biddingService.auctionProperties.filter { $0.status == AuctionStatus.active }
+                .sorted(by: { $0.auctionEndTime < $1.auctionEndTime })
+            
+            let upcoming = biddingService.auctionProperties.filter { $0.status == AuctionStatus.upcoming }
+                .sorted(by: { $0.auctionStartTime < $1.auctionStartTime })
+            
+            let ended = biddingService.auctionProperties.filter { $0.status == AuctionStatus.ended }
+                .sorted(by: { $0.auctionEndTime > $1.auctionEndTime })
+            
+            return live + upcoming + ended
+        }
+    }
+    
+    private func getCountForFilter(_ filter: String) -> Int {
+        switch filter {
+        case "Live":
+            return biddingService.auctionProperties.filter { $0.status == AuctionStatus.active }.count
+        case "Upcoming":
+            return biddingService.auctionProperties.filter { $0.status == AuctionStatus.upcoming }.count
+        case "Ended":
+            return biddingService.auctionProperties.filter { $0.status == AuctionStatus.ended }.count
+        default:
+            return biddingService.auctionProperties.count
         }
     }
 }
 
 // MARK: - Supporting Views
+struct FilterPillButtonWithCount: View {
+    let title: String
+    let count: Int
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                
+                if count > 0 {
+                    Text("\(count)")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(
+                            Capsule()
+                                .fill(isSelected ? .white.opacity(0.3) : Color.accentBlues.opacity(0.2))
+                        )
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(isSelected ? Color.accentBlues : Color.backgrounds)
+                    .stroke(Color.accentBlues, lineWidth: 1)
+            )
+            .foregroundColor(isSelected ? .white : .accentBlues)
+        }
+    }
+}
 
 struct FilterPillButton: View {
     let title: String
@@ -304,6 +380,12 @@ struct PropertyDetailsSection: View {
                 .font(.subheadline)
                 .foregroundColor(.secondaryTextColor)
             
+            // Auction timing
+            auctionTimingInfo
+                .font(.caption)
+                .foregroundColor(.gray)
+                .padding(.vertical, 2)
+            
             HStack {
                 PropertyFeatureBadge(
                     icon: "bed.double.fill",
@@ -333,8 +415,90 @@ struct PropertyDetailsSection: View {
                     )
                     .foregroundColor(property.status.color)
             }
+            
+            // Bid count or watchlist count
+            HStack(spacing: 12) {
+                if !property.bidHistory.isEmpty {
+                    HStack(spacing: 4) {
+                        Image(systemName: "person.2.fill")
+                            .font(.caption2)
+                            .foregroundColor(.gray)
+                        Text("\(property.bidHistory.count) bids")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    }
+                }
+                
+                if !property.watchlistUsers.isEmpty {
+                    HStack(spacing: 4) {
+                        Image(systemName: "eye.fill")
+                            .font(.caption2)
+                            .foregroundColor(.gray)
+                        Text("\(property.watchlistUsers.count) watching")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    }
+                }
+                
+                if !property.panoramicImages.isEmpty {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arkit")
+                            .font(.caption2)
+                            .foregroundColor(.gray)
+                        Text("\(property.panoramicImages.count) AR views")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    }
+                }
+                
+                Spacer()
+            }
         }
         .padding(.horizontal, 12)
+    }
+    
+    private var auctionTimingInfo: some View {
+        Group {
+            switch property.status {
+            case .upcoming:
+                HStack(spacing: 4) {
+                    Image(systemName: "clock.fill")
+                        .font(.caption2)
+                    Text("Starts \(property.auctionStartTime, formatter: dateFormatter)")
+                }
+            case .active:
+                HStack(spacing: 4) {
+                    Image(systemName: "timer")
+                        .font(.caption2)
+                    Text("Ends \(property.auctionEndTime, formatter: dateFormatter)")
+                }
+            case .ended:
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.caption2)
+                    Text("Ended \(property.auctionEndTime, formatter: dateFormatter)")
+                }
+            case .sold:
+                HStack(spacing: 4) {
+                    Image(systemName: "bag.fill")
+                        .font(.caption2)
+                    Text("Sold on \(property.auctionEndTime, formatter: dateFormatter)")
+                }
+            case .cancelled:
+                HStack(spacing: 4) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.caption2)
+                    Text("Cancelled")
+                }
+            }
+        }
+    }
+    
+    private var dateFormatter: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter
     }
 }
 
