@@ -64,54 +64,92 @@ class HeatMapRenderer: MKOverlayRenderer {
     override func draw(_ mapRect: MKMapRect, zoomScale: MKZoomScale, in context: CGContext) {
         let rect = self.rect(for: mapRect)
         
-        // Create heat map image
-        UIGraphicsBeginImageContext(rect.size)
-        guard let imageContext = UIGraphicsGetCurrentContext() else { return }
+        // Validate rect size
+        guard rect.width > 0 && rect.height > 0 else { return }
         
-        // Clear the context
-        imageContext.clear(rect)
+        // Save the context state
+        context.saveGState()
         
-        // Draw heat points
+        // Set blend mode for proper heatmap visualization
+        context.setBlendMode(.screen)
+        
+        // Draw heat points directly in the map context
         for point in heatMapOverlay.points {
+            // Validate coordinates
+            guard CLLocationCoordinate2DIsValid(point.coordinate) else { continue }
+            
             let pointInMap = MKMapPoint(point.coordinate)
             let pointInRect = self.point(for: pointInMap)
             
-            if rect.contains(pointInRect) {
-                drawHeatPoint(at: pointInRect, intensity: point.intensity, type: point.type, in: imageContext)
+            // Check if point is within visible rect with some padding
+            let paddedRect = rect.insetBy(dx: -100, dy: -100)
+            if paddedRect.contains(pointInRect) {
+                drawHeatPoint(at: pointInRect, intensity: point.intensity, type: point.type, in: context, zoomScale: zoomScale)
             }
         }
         
-        let image = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        
-        // Draw the image in the map context
-        if let image = image {
-            context.draw(image.cgImage!, in: rect)
-        }
+        // Restore the context state
+        context.restoreGState()
     }
     
-    private func drawHeatPoint(at point: CGPoint, intensity: Double, type: HeatMapPoint.HeatMapType, in context: CGContext) {
-        let radius = CGFloat(40 * intensity + 10) // Radius based on intensity
-        let rect = CGRect(x: point.x - radius, y: point.y - radius, width: radius * 2, height: radius * 2)
+    private func drawHeatPoint(at point: CGPoint, intensity: Double, type: HeatMapPoint.HeatMapType, in context: CGContext, zoomScale: MKZoomScale) {
+        // Create larger radius based on zoom level and intensity for better visibility
+        let baseRadius = CGFloat(50 + (intensity * 100)) // Larger base radius
+        let radius = baseRadius / max(sqrt(zoomScale), 0.5) // Scale with zoom level, minimum divisor
         
-        // Create gradient
-        let colors = [
-            UIColor(type.color.opacity(0.1)).cgColor,
-            UIColor(type.color.opacity(intensity * 0.8)).cgColor
-        ]
+        // Ensure minimum and maximum radius for visibility
+        let finalRadius = max(20, min(radius, 200))
         
+        // Create vibrant color based on type and intensity
+        let baseColor = colorForHeatMapType(type)
+        let centerAlpha = CGFloat(0.6 + (intensity * 0.4)) // Higher center alpha for visibility
+        let edgeAlpha = CGFloat(0.1)
+        
+        // Create multiple gradient layers for better heatmap effect
         let colorSpace = CGColorSpaceCreateDeviceRGB()
-        let gradient = CGGradient(colorsSpace: colorSpace, colors: colors as CFArray, locations: [0.0, 1.0])!
         
-        // Draw gradient circle
+        // Create multi-stop gradient for better heatmap visualization
+        let colors = [
+            baseColor.withAlphaComponent(centerAlpha).cgColor,      // Strong center
+            baseColor.withAlphaComponent(centerAlpha * 0.7).cgColor, // Mid intensity
+            baseColor.withAlphaComponent(centerAlpha * 0.4).cgColor, // Lower intensity
+            baseColor.withAlphaComponent(edgeAlpha).cgColor          // Soft edge
+        ]
+        let locations: [CGFloat] = [0.0, 0.3, 0.7, 1.0]
+        
+        guard let gradient = CGGradient(colorsSpace: colorSpace, colors: colors as CFArray, locations: locations) else {
+            return
+        }
+        
+        // Draw radial gradient with better blending
+        context.saveGState()
+        context.setBlendMode(.normal) // Use normal blend mode for individual points
+        
         context.drawRadialGradient(
             gradient,
             startCenter: point,
             startRadius: 0,
             endCenter: point,
-            endRadius: radius,
-            options: .drawsAfterEndLocation
+            endRadius: finalRadius,
+            options: [.drawsBeforeStartLocation]
         )
+        
+        context.restoreGState()
+    }
+    
+    private func colorForHeatMapType(_ type: HeatMapPoint.HeatMapType) -> UIColor {
+        switch type {
+        case .bidActivity:
+            return UIColor(red: 1.0, green: 0.2, blue: 0.2, alpha: 1.0) // Bright red for high activity
+        case .propertyValue:
+            return UIColor(red: 0.2, green: 0.8, blue: 0.2, alpha: 1.0) // Bright green for value
+        case .userActivity:
+            return UIColor(red: 0.2, green: 0.4, blue: 1.0, alpha: 1.0) // Bright blue for user activity
+        case .priceAppreciation:
+            return UIColor(red: 1.0, green: 0.6, blue: 0.0, alpha: 1.0) // Orange for price changes
+        case .demandLevel:
+            return UIColor(red: 0.8, green: 0.2, blue: 0.8, alpha: 1.0) // Purple for demand
+        }
     }
 }
 

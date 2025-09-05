@@ -301,15 +301,19 @@ struct HomeScreen: View {
 
             // Property detail sheet
             if let property = selectedProperty {
-                Color.black.opacity(0.3)
-                    .ignoresSafeArea()
-                    .onTapGesture { selectedProperty = nil }
-                VStack {
-                    Spacer()
-                    PropertyDetailSheet(property: property, onClose: { selectedProperty = nil })
-                        .transition(.move(edge: .bottom))
+                ZStack {
+                    Color.black.opacity(0.4)
+                        .ignoresSafeArea()
+                        .onTapGesture { selectedProperty = nil }
+                    
+                    VStack {
+                        Spacer()
+                        PropertyDetailSheet(property: property, onClose: { selectedProperty = nil })
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
                 }
                 .zIndex(2)
+                .animation(.easeInOut(duration: 0.3), value: selectedProperty != nil)
             }
         }
         .background(Color.backgrounds)
@@ -499,24 +503,41 @@ struct PropertyDetailSheet: View {
     @StateObject private var nearbyPlacesService = NearbyPlacesService.shared
     @State private var selectedPlaceType: PlaceType = .restaurant
     @State private var currentTab = 0
+    @State private var showingContactAlert = false
+    @State private var showingCallAlert = false
     
     private var filteredPlaces: [NearbyPlace] {
         nearbyPlacesService.filterPlaces(by: selectedPlaceType)
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 0) {
+            // Header with close button
             HStack {
-                Text(property.title)
-                    .font(.headline)
-                    .foregroundColor(.textPrimary)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(property.title)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.textPrimary)
+                        .lineLimit(2)
+                    
+                    Text(property.formattedPrice)
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.accentBlues)
+                }
+                
                 Spacer()
+                
                 Button(action: onClose) {
                     Image(systemName: "xmark.circle.fill")
                         .font(.title2)
                         .foregroundColor(.secondaryTextColor)
                 }
             }
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+            .padding(.bottom, 16)
             
             TabView(selection: $currentTab) {
                 // First tab - Main info
@@ -685,46 +706,138 @@ struct PropertyDetailSheet: View {
                 .tag(1)
             }
             .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-            .frame(height: 500)
+            .frame(minHeight: 400, maxHeight: .infinity)
             
             // Custom tab indicator
             HStack {
                 TabButton(title: "Details", isSelected: currentTab == 0) {
-                    withAnimation {
+                    withAnimation(.easeInOut(duration: 0.3)) {
                         currentTab = 0
                     }
                 }
                 
                 TabButton(title: "Nearby", isSelected: currentTab == 1) {
-                    withAnimation {
+                    withAnimation(.easeInOut(duration: 0.3)) {
                         currentTab = 1
                         loadNearbyPlaces()
                     }
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            .background(Color.secondaryBackground.opacity(0.5))
             
-            Spacer()
-            
-            // Contact button
-            Button(action: {
-                // Contact action
-            }) {
-                Text("Contact Agent")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Color.accentBlues)
-                    .cornerRadius(12)
+            // Contact buttons section
+            VStack(spacing: 12) {
+                HStack(spacing: 12) {
+                    // Call button
+                    Button(action: {
+                        showingCallAlert = true
+                    }) {
+                        HStack {
+                            Image(systemName: "phone.fill")
+                            Text("Call")
+                        }
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.green)
+                        .cornerRadius(12)
+                    }
+                    
+                    // Message button
+                    Button(action: {
+                        showingContactAlert = true
+                    }) {
+                        HStack {
+                            Image(systemName: "message.fill")
+                            Text("Message")
+                        }
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.accentBlues)
+                        .cornerRadius(12)
+                    }
+                }
+                
+                // Seller info
+                HStack(spacing: 12) {
+                    AsyncImage(url: URL(string: property.seller.profileImageURL ?? "")) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Image(systemName: "person.circle.fill")
+                            .resizable()
+                            .foregroundColor(.gray)
+                    }
+                    .frame(width: 40, height: 40)
+                    .clipShape(Circle())
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(property.seller.name)
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.textPrimary)
+                        
+                        HStack(spacing: 4) {
+                            HStack(spacing: 2) {
+                                ForEach(0..<5) { index in
+                                    Image(systemName: "star.fill")
+                                        .foregroundColor(index < Int(property.seller.rating) ? .yellow : .gray.opacity(0.3))
+                                        .font(.caption2)
+                                }
+                            }
+                            
+                            Text("(\(property.seller.reviewCount))")
+                                .font(.caption)
+                                .foregroundColor(.secondaryTextColor)
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    if property.seller.verificationStatus == .verified {
+                        HStack(spacing: 4) {
+                            Image(systemName: "checkmark.seal.fill")
+                                .foregroundColor(.green)
+                            Text("Verified")
+                                .font(.caption)
+                                .foregroundColor(.green)
+                        }
+                    }
+                }
             }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 20)
         }
-        .padding()
         .background(Color.cardBackground)
-        .cornerRadius(20)
-        .shadow(radius: 10)
-        .frame(maxWidth: 350)
-        .padding(.bottom, 24)
+        .cornerRadius(20, corners: [.topLeft, .topRight])
+        .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: -5)
+        .alert("Call Seller", isPresented: $showingCallAlert) {
+            Button("Call Now") {
+                makePhoneCall()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Would you like to call \(property.seller.name) at \(property.seller.phone ?? "N/A")?")
+        }
+        .alert("Contact Seller", isPresented: $showingContactAlert) {
+            Button("Send Email") {
+                sendEmail()
+            }
+            Button("Send SMS") {
+                sendSMS()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("How would you like to contact \(property.seller.name)?")
+        }
     }
     
     private func loadNearbyPlaces() {
@@ -734,6 +847,39 @@ struct PropertyDetailSheet: View {
                 types: PlaceType.allCases,
                 radius: 5000 // 5km radius
             )
+        }
+    }
+    
+    private func makePhoneCall() {
+        guard let phoneNumber = property.seller.phone,
+              let url = URL(string: "tel://\(phoneNumber.replacingOccurrences(of: " ", with: ""))") else {
+            return
+        }
+        
+        if UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url)
+        }
+    }
+    
+    private func sendEmail() {
+        let email = property.seller.email
+        guard let url = URL(string: "mailto:\(email)?subject=Inquiry%20about%20\(property.title.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")") else {
+            return
+        }
+        
+        if UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url)
+        }
+    }
+    
+    private func sendSMS() {
+        guard let phoneNumber = property.seller.phone,
+              let url = URL(string: "sms:\(phoneNumber)?body=Hi%20\(property.seller.name),%20I'm%20interested%20in%20your%20property%20\(property.title.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")") else {
+            return
+        }
+        
+        if UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url)
         }
     }
 }

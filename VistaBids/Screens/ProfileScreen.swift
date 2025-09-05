@@ -561,10 +561,26 @@ struct ProfileEditView: View {
     private func loadCurrentProfile() {
         // Initialize with binding data if available
         displayName = extendedProfile.displayName.isEmpty ? (authService.currentUser?.displayName ?? "") : extendedProfile.displayName
-        photoURL = extendedProfile.photoURL.isEmpty ? (authService.currentUser?.photoURL?.absoluteString ?? "") : extendedProfile.photoURL
         phoneNumber = extendedProfile.phoneNumber
         location = extendedProfile.location
         bio = extendedProfile.bio
+        
+        // Handle photoURL migration from old format to new format
+        let currentPhotoURL = extendedProfile.photoURL.isEmpty ? (authService.currentUser?.photoURL?.absoluteString ?? "") : extendedProfile.photoURL
+        
+        // Check if we need to migrate from old file:// format to new local:// format
+        if currentPhotoURL.hasPrefix("file://") {
+            // Try to extract filename and convert to new format
+            if let url = URL(string: currentPhotoURL) {
+                let filename = url.lastPathComponent
+                photoURL = "local://images/\(filename)"
+                print("🔄 Migrated profile image URL from file:// to local:// format")
+            } else {
+                photoURL = currentPhotoURL
+            }
+        } else {
+            photoURL = currentPhotoURL
+        }
     }
     
     private func saveProfile() {
@@ -634,19 +650,21 @@ struct ProfileEditView: View {
     }
     
     private func uploadProfileImage(_ image: UIImage) async throws -> String {
-        guard let userId = authService.currentUser?.uid,
-              let imageData = image.jpegData(compressionQuality: 0.8) else {
+        guard let userId = authService.currentUser?.uid else {
             throw ProfileError.imageProcessingFailed
         }
         
-        // Save image to local documents directory
-        let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let imageURL = documentsDirectory.appendingPathComponent("profile_\(userId).jpg")
+        // Use ImageUtils for consistent image storage
+        let filename = "profile_\(userId).jpg"
         
-        try imageData.write(to: imageURL)
-        
-        // Return the local file path as string
-        return imageURL.absoluteString
+        do {
+            let localURL = try ImageUtils.shared.saveImageLocally(image, filename: filename)
+            print("✅ Profile image saved successfully: \(localURL)")
+            return localURL
+        } catch {
+            print("❌ Failed to save profile image: \(error)")
+            throw ProfileError.uploadFailed
+        }
     }
 }
 
@@ -1033,29 +1051,22 @@ struct NotificationToggleRow: View {
 struct ProfileImageView: View {
     let imageURL: String
     let displayName: String
+    @State private var loadedImage: UIImage?
+    @State private var isLoading = false
     
     var body: some View {
         Group {
-            if imageURL.hasPrefix("file://") {
-                // Local image
-                if let localURL = URL(string: imageURL),
-                   let imageData = try? Data(contentsOf: localURL),
-                   let uiImage = UIImage(data: imageData) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } else {
-                    placeholderImage
-                }
-            } else if !imageURL.isEmpty {
-                // Remote image
-                AsyncImage(url: URL(string: imageURL)) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    placeholderImage
-                }
+            if let loadedImage = loadedImage {
+                Image(uiImage: loadedImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } else if isLoading {
+                placeholderImage
+                    .overlay(
+                        ProgressView()
+                            .scaleEffect(0.8)
+                            .tint(.white)
+                    )
             } else {
                 placeholderImage
             }
@@ -1067,6 +1078,12 @@ struct ProfileImageView: View {
                 .stroke(Color.cardBackground, lineWidth: 4)
                 .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
         )
+        .onAppear {
+            loadImageIfNeeded()
+        }
+        .onChange(of: imageURL) { _, _ in
+            loadImageIfNeeded()
+        }
     }
     
     private var placeholderImage: some View {
@@ -1078,6 +1095,45 @@ struct ProfileImageView: View {
                     .fontWeight(.semibold)
                     .foregroundColor(.accentBlues)
             )
+    }
+    
+    private func loadImageIfNeeded() {
+        guard !imageURL.isEmpty, loadedImage == nil else { return }
+        
+        isLoading = true
+        
+        Task {
+            let image = await loadImage(from: imageURL)
+            await MainActor.run {
+                loadedImage = image
+                isLoading = false
+            }
+        }
+    }
+    
+    private func loadImage(from urlString: String) async -> UIImage? {
+        if urlString.hasPrefix("local://") {
+            // Load from local storage using ImageUtils
+            return await ImageUtils.shared.loadImage(from: urlString)
+        } else if urlString.hasPrefix("file://") {
+            // Handle legacy file:// URLs
+            guard let url = URL(string: urlString),
+                  let imageData = try? Data(contentsOf: url) else {
+                return nil
+            }
+            return UIImage(data: imageData)
+        } else if !urlString.isEmpty {
+            // Load remote image
+            guard let url = URL(string: urlString) else { return nil }
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                return UIImage(data: data)
+            } catch {
+                print("Failed to load remote image: \(error)")
+                return nil
+            }
+        }
+        return nil
     }
 }
 

@@ -22,6 +22,33 @@ struct BiddingScreen: View {
                     
                     Spacer()
                     
+                    // Debug button to populate sample data
+                    if biddingService.auctionProperties.isEmpty {
+                        Button(action: {
+                            Task {
+                                do {
+                                    try await biddingService.createEnhancedAuctionData()
+                                    // After creating sample data, reload from Firestore
+                                    await biddingService.loadAuctionProperties()
+                                } catch {
+                                    print("Failed to create sample data: \(error)")
+                                }
+                            }
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "plus.circle.fill")
+                                Text("Add Sample Data")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color.orange)
+                            .cornerRadius(15)
+                        }
+                    }
+                    
                     Button(action: { showingAddProperty = true }) {
                         HStack(spacing: 6) {
                             Image(systemName: "plus.circle.fill")
@@ -55,27 +82,67 @@ struct BiddingScreen: View {
                 .padding(.vertical, 8)
                 
                 // Properties List
-                ScrollView {
-                    LazyVStack(spacing: 16) {
-                        ForEach(filteredProperties(), id: \.id) { property in
-                            LiveAuctionCard(
-                                property: property,
-                                onARTap: {
-                                    selectedProperty = property
-                                    showingAR = true
-                                },
-                                onDetailTap: {
-                                    selectedProperty = property
-                                    showingPropertyDetail = true
-                                }
-                            )
-                            .padding(.horizontal)
-                        }
+                if biddingService.isCreatingData {
+                    VStack(spacing: 20) {
+                        ProgressView(value: biddingService.dataCreationProgress)
+                            .progressViewStyle(LinearProgressViewStyle())
+                            .padding(.horizontal, 40)
+                        
+                        Text("Creating sample auction data...")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        Text("\(Int(biddingService.dataCreationProgress * 100))% Complete")
+                            .font(.caption)
+                            .foregroundColor(.accentBlues)
                     }
-                    .padding(.vertical)
-                }
-                .refreshable {
-                    await biddingService.loadAuctionProperties()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding()
+                } else if biddingService.isLoading {
+                    ProgressView("Loading auctions...")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if biddingService.auctionProperties.isEmpty {
+                    VStack(spacing: 20) {
+                        Image(systemName: "house.circle")
+                            .font(.system(size: 60))
+                            .foregroundColor(.gray)
+                        
+                        Text("No Active Auctions")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.textPrimary)
+                        
+                        Text("Tap 'Add Sample Data' to populate with example auctions, or 'Add Property' to create your first auction.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 40)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding()
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 16) {
+                            ForEach(filteredProperties(), id: \.id) { property in
+                                LiveAuctionCard(
+                                    property: property,
+                                    onARTap: {
+                                        selectedProperty = property
+                                        showingAR = true
+                                    },
+                                    onDetailTap: {
+                                        selectedProperty = property
+                                        showingPropertyDetail = true
+                                    }
+                                )
+                                .padding(.horizontal)
+                            }
+                        }
+                        .padding(.vertical)
+                    }
+                    .refreshable {
+                        await biddingService.loadAuctionProperties()
+                    }
                 }
             }
             .background(Color.backgrounds)
@@ -84,10 +151,20 @@ struct BiddingScreen: View {
                     await biddingService.loadAuctionProperties()
                 }
             }
+            .alert("Error", isPresented: .constant(biddingService.error != nil)) {
+                Button("OK") {
+                    biddingService.error = nil
+                }
+            } message: {
+                if let error = biddingService.error {
+                    Text(error)
+                }
+            }
             .fullScreenCover(isPresented: $showingAR) {
                 if let property = selectedProperty {
                     ARPanoramicView(
-                        panoramicImages: property.panoramicImages ?? []
+                        panoramicImages: property.panoramicImages ?? [],
+                        property: property
                     )
                 }
             }

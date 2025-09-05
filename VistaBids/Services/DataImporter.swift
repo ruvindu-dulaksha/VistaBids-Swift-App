@@ -319,7 +319,7 @@ class DataImporter {
                 [
                     "id": "f4",
                     "name": "Parking",
-                    "icon": "car.garage",
+                    "icon": "car.fill",
                     "category": "exterior"
                 ]
             ]

@@ -144,14 +144,27 @@ class CommunityService: ObservableObject {
     func translatePost(_ post: CommunityPost, to language: String) async -> CommunityPost {
         var updatedPost = post
         
+        // Skip translation if target language is the same as original
+        if post.originalLanguage == language {
+            updatedPost.translatedContent = nil
+            updatedPost.isTranslated = false
+            return updatedPost
+        }
+        
         do {
-            if !post.isTranslated || post.translatedContent == nil {
-                let translatedContent = try await translationService.translateText(post.content, to: language)
-                updatedPost.translatedContent = translatedContent
-                updatedPost.isTranslated = true
-            }
+            print("🌐 CommunityService: Translating post from \(post.originalLanguage) to \(language)")
+            let translatedContent = try await translationService.translateText(post.content, to: language)
+            updatedPost.translatedContent = translatedContent
+            updatedPost.isTranslated = true
+            updatedPost.translatedLanguage = language
+            print("🌐 CommunityService: Translation successful")
         } catch {
-            print("Translation error: \(error)")
+            print("🌐 CommunityService: Translation error: \(error.localizedDescription)")
+            // On error, clear any existing translation and show original
+            updatedPost.translatedContent = nil
+            updatedPost.isTranslated = false
+            updatedPost.translatedLanguage = nil
+            self.error = "Translation failed: \(error.localizedDescription)"
         }
         
         return updatedPost
@@ -934,6 +947,67 @@ class CommunityService: ObservableObject {
                     longitude: 80.6337,
                     address: "Kandy, Central Province"
                 ),
+                groupId: nil,
+                likedBy: []
+            ),
+            // Multi-language sample posts for testing translation
+            CommunityPost(
+                id: "6",
+                userId: "user6",
+                author: "María García",
+                authorAvatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=800",
+                content: "¡Hola a todos! Estoy buscando propiedades de inversión en Colombo. ¿Alguien tiene experiencia en el mercado inmobiliario de Sri Lanka?",
+                originalLanguage: "es",
+                timestamp: Date().addingTimeInterval(-25200),
+                likes: 12,
+                comments: 5,
+                imageURLs: [],
+                location: nil,
+                groupId: nil,
+                likedBy: []
+            ),
+            CommunityPost(
+                id: "7",
+                userId: "user7",
+                author: "Pierre Dubois",
+                authorAvatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=800",
+                content: "Bonjour! Je cherche à acheter une propriété au bord de mer. Quelqu'un peut-il me donner des conseils sur les enchères immobilières?",
+                originalLanguage: "fr",
+                timestamp: Date().addingTimeInterval(-43200),
+                likes: 18,
+                comments: 9,
+                imageURLs: ["https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800"],
+                location: nil,
+                groupId: nil,
+                likedBy: []
+            ),
+            CommunityPost(
+                id: "8",
+                userId: "user8",
+                author: "田中太郎",
+                authorAvatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=800",
+                content: "スリランカの不動産市場について興味があります。オークションでの物件購入について教えてください。",
+                originalLanguage: "ja",
+                timestamp: Date().addingTimeInterval(-61200),
+                likes: 9,
+                comments: 3,
+                imageURLs: [],
+                location: nil,
+                groupId: nil,
+                likedBy: []
+            ),
+            CommunityPost(
+                id: "9",
+                userId: "user9",
+                author: "王小明",
+                authorAvatar: "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=800",
+                content: "大家好！我在寻找科伦坡的投资房产。有人可以分享一下拍卖经验吗？",
+                originalLanguage: "zh",
+                timestamp: Date().addingTimeInterval(-79200),
+                likes: 14,
+                comments: 7,
+                imageURLs: ["https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800"],
+                location: nil,
                 groupId: nil,
                 likedBy: []
             )

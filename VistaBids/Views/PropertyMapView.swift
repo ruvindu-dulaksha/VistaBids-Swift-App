@@ -71,8 +71,12 @@ struct PropertyMapView: View {
             .onChange(of: showHeatMap) { oldValue, isEnabled in
                 if isEnabled {
                     Task {
-                        await mapService.generateHeatMapData(for: properties, type: .bidActivity)
+                        print("Generating heatmap data for \(properties.count) properties")
+                        await mapService.generateHeatMapData(for: properties, type: selectedHeatMapType)
                     }
+                } else {
+                    // Clear heatmap data when disabled
+                    mapService.heatMapData = []
                 }
             }
             .onChange(of: showClusters) { oldValue, newValue in
@@ -168,6 +172,7 @@ struct PropertyMapView: View {
     
     private func updateHeatMapData() {
         Task {
+            print("Updating heatmap data for type: \(selectedHeatMapType.displayName)")
             await mapService.generateHeatMapData(for: filteredProperties, type: selectedHeatMapType)
         }
     }
@@ -303,8 +308,11 @@ struct AdvancedMapView: UIViewRepresentable {
         
         if showHeatMap && !heatMapData.isEmpty {
             // Add heat map overlay
+            print("Adding heatmap overlay with \(heatMapData.count) points")
             let heatMapOverlay = HeatMapOverlay(points: heatMapData)
             mapView.addOverlay(heatMapOverlay)
+        } else if showHeatMap {
+            print("Heatmap enabled but no data available")
         }
     }
     

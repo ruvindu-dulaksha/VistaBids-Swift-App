@@ -112,7 +112,7 @@ struct PropertyDetailView: View {
                 }
             }
             .sheet(isPresented: $showingPanoramicAR) {
-                ARPanoramicView(panoramicImages: property.panoramicImages)
+                ARPanoramicView(panoramicImages: property.panoramicImages, property: property)
             }
             .sheet(isPresented: $showingVideoPlayer) {
                 if let videoURL = selectedVideoURL {

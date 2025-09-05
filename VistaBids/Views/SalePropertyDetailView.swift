@@ -87,7 +87,7 @@ struct SalePropertyDetailView: View {
                 SalePropertyMapView(property: property)
             }
             .sheet(isPresented: $showingARView) {
-                ARPanoramicView(panoramicImages: property.panoramicImages)
+                ARPanoramicView(panoramicImages: property.panoramicImages, property: property)
             }
             .sheet(isPresented: $showingVideoPlayer) {
                 if let videoURL = property.walkthroughVideoURL {

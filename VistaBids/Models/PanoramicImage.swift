@@ -26,6 +26,7 @@ struct PanoramicImage: Identifiable, Codable {
         case garage = "garage"
         case balcony = "balcony"
         case garden = "garden"
+        case outdoor = "outdoor"
         
         var displayName: String {
             switch self {
@@ -37,6 +38,7 @@ struct PanoramicImage: Identifiable, Codable {
             case .garage: return "Garage"
             case .balcony: return "Balcony"
             case .garden: return "Garden"
+            case .outdoor: return "Outdoor"
             }
         }
         
@@ -47,9 +49,10 @@ struct PanoramicImage: Identifiable, Codable {
             case .kitchen: return "cooktop.fill"
             case .bathroom: return "bathtub.fill"
             case .exterior: return "house.fill"
-            case .garage: return "car.garage"
+            case .garage: return "car.fill"
             case .balcony: return "building.2"
             case .garden: return "leaf.fill"
+            case .outdoor: return "mountain.2.fill"
             }
         }
     }

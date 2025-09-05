@@ -9,6 +9,7 @@ import SwiftUI
 import PhotosUI
 import MapKit
 import FirebaseFirestore
+import FirebaseAuth
 import Foundation
 
 // Import required models
@@ -17,6 +18,8 @@ import FirebaseFirestore
 struct AddPropertyForAuctionView: View {
     let biddingService: BiddingService
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var authService: FirebaseAuthService
+    @StateObject private var ownershipService = PropertyOwnershipService()
     
     // Basic Info
     @State private var title = ""
@@ -308,22 +311,33 @@ struct AddPropertyForAuctionView: View {
                 }
                 
                 Section {
-                    // AR Capture Button
-                    Button(action: { showingARCapture = true }) {
-                        HStack {
-                            Image(systemName: "camera.viewfinder")
-                                .foregroundColor(.purple.opacity(0.8))
-                            Text("Capture 360° AR Panorama")
-                                .foregroundColor(.primary)
-                            Spacer()
-                            if !arCapturedImages.isEmpty {
-                                Text("\(arCapturedImages.count) captured")
+                    // AR Capture Button - Only for authenticated users
+                    if ownershipService.canCaptureImages() {
+                        Button(action: { showingARCapture = true }) {
+                            HStack {
+                                Image(systemName: "camera.viewfinder")
+                                    .foregroundColor(.purple.opacity(0.8))
+                                Text("Capture 360° AR Panorama")
+                                    .foregroundColor(.primary)
+                                Spacer()
+                                if !arCapturedImages.isEmpty {
+                                    Text("\(arCapturedImages.count) captured")
+                                        .foregroundColor(.secondary)
+                                        .font(.caption)
+                                }
+                                Image(systemName: "chevron.right")
                                     .foregroundColor(.secondary)
-                                    .font(.caption)
                             }
-                            Image(systemName: "chevron.right")
+                        }
+                        .disabled(isUploading)
+                    } else {
+                        HStack {
+                            Image(systemName: "exclamationmark.circle")
+                                .foregroundColor(.orange)
+                            Text("Please log in to capture panoramic images")
                                 .foregroundColor(.secondary)
                         }
+                        .padding(.vertical, 8)
                     }
                     
                     // Display AR captured images
@@ -354,24 +368,35 @@ struct AddPropertyForAuctionView: View {
                         .frame(height: 70)
                     }
                     
-                    // Manual Photo Picker for Panoramic Images
-                    PhotosPicker(
-                        selection: $selectedPanoramicImages,
-                        maxSelectionCount: 5,
-                        matching: .images
-                    ) {
-                        HStack {
-                            Image(systemName: "photo.on.rectangle.angled")
-                                .foregroundColor(.accentColor)
-                            Text("Or Select 360° Images from Gallery")
-                                .foregroundColor(.primary)
-                            Spacer()
-                            if !panoramicImages.isEmpty {
-                                Text("\(panoramicImages.count) selected")
-                                    .foregroundColor(.secondary)
-                                    .font(.caption)
+                    // Manual Photo Picker for Panoramic Images - Only for authenticated users
+                    if ownershipService.canCaptureImages() {
+                        PhotosPicker(
+                            selection: $selectedPanoramicImages,
+                            maxSelectionCount: 5,
+                            matching: .images
+                        ) {
+                            HStack {
+                                Image(systemName: "photo.on.rectangle.angled")
+                                    .foregroundColor(.accentColor)
+                                Text("Or Select 360° Images from Gallery")
+                                    .foregroundColor(.primary)
+                                Spacer()
+                                if !panoramicImages.isEmpty {
+                                    Text("\(panoramicImages.count) selected")
+                                        .foregroundColor(.secondary)
+                                        .font(.caption)
+                                }
                             }
                         }
+                        .disabled(isUploading)
+                    } else {
+                        HStack {
+                            Image(systemName: "exclamationmark.circle")
+                                .foregroundColor(.orange)
+                            Text("Please log in to select panoramic images")
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.vertical, 8)
                     }
                     
                     if !panoramicImages.isEmpty {

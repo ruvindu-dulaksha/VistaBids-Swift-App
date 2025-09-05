@@ -331,14 +331,33 @@ struct PostCardOriginal: View {
                         translatePost()
                     }) {
                         HStack {
-                            Image(systemName: isTranslating ? "clock" : "translate")
-                            Text(isTranslating ? "Translating..." : "Translate")
+                            if isTranslating {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                                Text("Translating...")
+                            } else if translatedPost?.isTranslated == true && translatedPost?.translatedLanguage == selectedLanguage {
+                                Image(systemName: "checkmark.circle.fill")
+                                Text("Translated")
+                            } else {
+                                Image(systemName: "translate")
+                                Text("Translate to \(languageDisplayName(selectedLanguage))")
+                            }
                         }
                         .font(.caption)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(Color.blue.opacity(0.1))
-                        .foregroundColor(.blue)
+                        .background(
+                            Group {
+                                if translatedPost?.isTranslated == true && translatedPost?.translatedLanguage == selectedLanguage {
+                                    Color.green.opacity(0.1)
+                                } else {
+                                    Color.blue.opacity(0.1)
+                                }
+                            }
+                        )
+                        .foregroundColor(
+                            translatedPost?.isTranslated == true && translatedPost?.translatedLanguage == selectedLanguage ? .green : .blue
+                        )
                         .cornerRadius(8)
                     }
                     .disabled(isTranslating)
@@ -429,9 +448,37 @@ struct PostCardOriginal: View {
     private func translatePost() {
         isTranslating = true
         Task {
-            translatedPost = await communityService.translatePost(post, to: selectedLanguage)
+            do {
+                translatedPost = await communityService.translatePost(post, to: selectedLanguage)
+                
+                // Check if translation was successful
+                if let error = communityService.error {
+                    print("⚠️ Translation error: \(error)")
+                    // Reset to show original post on error
+                    translatedPost = post
+                } else if translatedPost?.isTranslated == true {
+                    print("✅ Translation successful to \(selectedLanguage)")
+                } else {
+                    print("ℹ️ No translation needed - same language")
+                }
+            } catch {
+                print("⚠️ Translation failed: \(error.localizedDescription)")
+                translatedPost = post // Show original on error
+            }
             isTranslating = false
         }
+    }
+    
+    private func languageDisplayName(_ code: String) -> String {
+        let languageNames: [String: String] = [
+            "en": "English",
+            "es": "Spanish", 
+            "fr": "French",
+            "de": "German",
+            "ja": "Japanese",
+            "zh": "Chinese"
+        ]
+        return languageNames[code] ?? code.uppercased()
     }
 }
 

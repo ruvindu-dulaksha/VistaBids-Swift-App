@@ -193,8 +193,14 @@ class ImageUploadService: ObservableObject {
                     // Write data to file
                     try imageData.write(to: fileUrl)
                     
-                    // Return local file path
-                    let localUrl = fileUrl.path
+                    // Verify file was written successfully
+                    guard FileManager.default.fileExists(atPath: fileUrl.path) else {
+                        throw ImageUploadError.fileWriteFailed
+                    }
+                    
+                    // Return proper file URL for AsyncImage compatibility
+                    let localUrl = fileUrl.absoluteString
+                    print("✅ Saved image: \(fileName) -> \(localUrl)")
                     continuation.resume(returning: localUrl)
                     
                 } catch {

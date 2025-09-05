@@ -183,7 +183,7 @@ extension SaleProperty {
             walkthroughVideoURL: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
             features: [
                 PropertyFeature(id: "1", name: "Swimming Pool", icon: "figure.pool.swim", category: .exterior),
-                PropertyFeature(id: "2", name: "Garage", icon: "car.garage", category: .exterior),
+                PropertyFeature(id: "2", name: "Garage", icon: "car.fill", category: .exterior),
                 PropertyFeature(id: "3", name: "Fireplace", icon: "fireplace", category: .interior)
             ],
             seller: PropertySeller(

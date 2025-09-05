@@ -142,9 +142,23 @@ class MapService: NSObject, ObservableObject {
         isLoadingData = true
         defer { isLoadingData = false }
         
+        // Clear existing data first
+        await MainActor.run {
+            self.heatMapData = []
+        }
+        
         var heatPoints: [HeatMapPoint] = []
         
         for property in properties {
+            // Validate coordinates
+            guard CLLocationCoordinate2DIsValid(CLLocationCoordinate2D(
+                latitude: property.location.latitude,
+                longitude: property.location.longitude
+            )) else {
+                print("Invalid coordinates for property: \(property.title)")
+                continue
+            }
+            
             let coordinate = CLLocationCoordinate2D(
                 latitude: property.location.latitude,
                 longitude: property.location.longitude
@@ -152,36 +166,70 @@ class MapService: NSObject, ObservableObject {
             
             let intensity = calculateIntensity(for: property, type: type)
             
-            let heatPoint = HeatMapPoint(
-                coordinate: coordinate,
-                intensity: intensity,
-                value: property.currentBid,
-                type: type
-            )
-            
-            heatPoints.append(heatPoint)
+            // Only add points with meaningful intensity
+            if intensity > 0.01 {
+                let heatPoint = HeatMapPoint(
+                    coordinate: coordinate,
+                    intensity: intensity,
+                    value: property.currentBid,
+                    type: type
+                )
+                
+                heatPoints.append(heatPoint)
+            }
         }
         
-        // Add clustering logic for dense areas
-        heatPoints = await clusterHeatPoints(heatPoints)
+        print("Generated \(heatPoints.count) heat points for type: \(type.displayName)")
         
-        self.heatMapData = heatPoints
+        // Add clustering logic for dense areas
+        if heatPoints.count > 1 {
+            heatPoints = await clusterHeatPoints(heatPoints)
+        }
+        
+        // Update data on main thread
+        await MainActor.run {
+            self.heatMapData = heatPoints
+        }
     }
     
     private func calculateIntensity(for property: AuctionProperty, type: HeatMapPoint.HeatMapType) -> Double {
+        let intensity: Double
+        
         switch type {
         case .bidActivity:
-            return min(Double(property.bidHistory.count) / 50.0, 1.0)
+            // More aggressive scaling for bid activity
+            let bidCount = Double(property.bidHistory.count)
+            intensity = bidCount > 0 ? min(bidCount / 10.0, 1.0) : 0.1 // Minimum 0.1 for active properties
+            
         case .propertyValue:
-            return min(property.currentBid / 1000000.0, 1.0) // Normalize to millions
+            // Scale property values more reasonably
+            let normalizedValue = property.currentBid / 500000.0 // Normalize to 500k
+            intensity = max(0.2, min(normalizedValue, 1.0)) // Minimum 0.2, max 1.0
+            
         case .priceAppreciation:
+            // Time-based intensity (higher for properties ending soon)
             let hoursRemaining = property.auctionEndTime.timeIntervalSinceNow / 3600
-            return max(0, min(1.0 - (hoursRemaining / 168.0), 1.0)) // Normalize to week
+            if hoursRemaining > 0 {
+                intensity = max(0.2, min(1.0 - (hoursRemaining / 48.0), 1.0)) // 48-hour window
+            } else {
+                intensity = 1.0 // Ended auctions get maximum intensity
+            }
+            
         case .userActivity:
-            return min(Double(property.watchlistUsers.count) / 1000.0, 1.0)
+            // Watchlist-based intensity
+            let watchlistCount = Double(property.watchlistUsers.count)
+            intensity = watchlistCount > 0 ? min(watchlistCount / 20.0, 1.0) : 0.1
+            
         case .demandLevel:
-            return min(Double(property.bidHistory.count) / 100.0, 1.0)
+            // Combination of bids and watchers
+            let bidCount = Double(property.bidHistory.count)
+            let watchCount = Double(property.watchlistUsers.count)
+            let combined = (bidCount * 2 + watchCount) / 30.0 // Weight bids more heavily
+            intensity = max(0.1, min(combined, 1.0))
         }
+        
+        // Ensure intensity is within valid range
+        return max(0.0, min(intensity, 1.0))
     }
     
     private func clusterHeatPoints(_ points: [HeatMapPoint]) async -> [HeatMapPoint] {

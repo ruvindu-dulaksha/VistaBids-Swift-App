@@ -8,6 +8,7 @@
 import SwiftUI
 import RealityKit
 import ARKit
+import SceneKit
 import Combine
 
 struct ARPanoramicView: View {
@@ -16,13 +17,18 @@ struct ARPanoramicView: View {
     @State private var isARSessionActive = false
     @State private var isARLoading = false
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var ownershipService = PropertyOwnershipService()
+    
+    // Property ownership info (can be either AuctionProperty or SaleProperty)
+    var property: (any OwnableProperty)?
     
     var body: some View {
         NavigationView {
             ZStack {
                 if isARSessionActive, let selectedImage = selectedImage {
                     ZStack {
-                        ARPanoramaViewerRepresentable(panoramicImage: selectedImage)
+                        // Always use SceneKit for consistent experience
+                        ImmersiveSceneKitARView(panoramicImage: selectedImage)
                             .ignoresSafeArea()
                         
                         // Loading overlay
@@ -78,16 +84,19 @@ struct ARPanoramicView: View {
                         }
                         .padding()
                         
-                        // Instructions for AR usage
-                        HStack {
-                            Image(systemName: "hand.draw")
-                                .font(.title2)
-                                .foregroundColor(.white)
-                            Text("Look around to explore the 360° view")
-                                .font(.caption)
-                                .foregroundColor(.white)
-                                .padding(.leading, 8)
-                            Spacer()
+                        // Consistent viewing instructions
+                        VStack(spacing: 8) {
+                            HStack {
+                                Image(systemName: "hand.draw")
+                                    .font(.title2)
+                                    .foregroundColor(.white)
+                                
+                                Text("Pan to look around • Pinch to zoom • Double tap to reset")
+                                    .font(.caption)
+                                    .foregroundColor(.white)
+                                    .padding(.leading, 8)
+                                Spacer()
+                            }
                         }
                         .padding(.horizontal)
                         .padding(.bottom, 8)
@@ -108,7 +117,7 @@ struct ARPanoramicView: View {
                     }
                 }
             }
-        }
+    }
     }
     
     private var panoramicImageGrid: some View {
@@ -456,6 +465,331 @@ struct ARPanoramaViewerRepresentable: UIViewRepresentable {
     }
 }
 
+// MARK: - Immersive SceneKit AR View for Enhanced Experience
+struct ImmersiveSceneKitARView: UIViewRepresentable {
+    let panoramicImage: PanoramicImage
+    
+    func makeUIView(context: Context) -> ARSCNView {
+        let arView = ARSCNView()
+        
+        // Configure AR session for panoramic viewing
+        let configuration = ARWorldTrackingConfiguration()
+        configuration.planeDetection = []
+        configuration.isLightEstimationEnabled = false
+        
+        arView.session.run(configuration)
+        arView.automaticallyUpdatesLighting = false
+        arView.antialiasingMode = .multisampling4X
+        
+        // Create immersive panoramic sphere
+        createImmersivePanoramicScene(in: arView)
+        
+        // Add enhanced gesture recognizers
+        addAdvancedGestureRecognizers(to: arView, context: context)
+        
+        return arView
+    }
+    
+    func updateUIView(_ uiView: ARSCNView, context: Context) {
+        // Update if needed
+    }
+    
+    private func createImmersivePanoramicScene(in arView: ARSCNView) {
+        let scene = SCNScene()
+        arView.scene = scene
+        
+        // Create sphere geometry with higher detail for better quality
+        let sphere = SCNSphere(radius: 10.0)
+        sphere.segmentCount = 64 // Higher segment count for smoother sphere
+        
+        // Load and apply panoramic image
+        loadPanoramicImageForSceneKit { image in
+            DispatchQueue.main.async {
+                // Create material with enhanced properties
+                let material = SCNMaterial()
+                
+                if let image = image {
+                    material.diffuse.contents = image
+                } else {
+                    // Fallback gradient material
+                    let gradientLayer = CAGradientLayer()
+                    gradientLayer.frame = CGRect(x: 0, y: 0, width: 1024, height: 512)
+                    gradientLayer.colors = [
+                        UIColor.systemBlue.cgColor,
+                        UIColor.systemPurple.cgColor,
+                        UIColor.systemBlue.cgColor
+                    ]
+                    gradientLayer.locations = [0.0, 0.5, 1.0]
+                    gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+                    gradientLayer.endPoint = CGPoint(x: 1, y: 1)
+                    
+                    UIGraphicsBeginImageContext(gradientLayer.frame.size)
+                    if let context = UIGraphicsGetCurrentContext() {
+                        gradientLayer.render(in: context)
+                        let gradientImage = UIGraphicsGetImageFromCurrentImageContext()
+                        UIGraphicsEndImageContext()
+                        material.diffuse.contents = gradientImage
+                    }
+                }
+                
+                // Enhanced material properties for better visual quality
+                material.isDoubleSided = true
+                material.cullMode = .front // Show texture from inside
+                material.lightingModel = .constant // Prevent lighting from affecting the panorama
+                material.writesToDepthBuffer = false
+                
+                sphere.materials = [material]
+                
+                // Create panorama node
+                let panoramaNode = SCNNode(geometry: sphere)
+                panoramaNode.scale = SCNVector3(-1, 1, 1) // Inside-out view
+                
+                // Create camera setup for immersive experience
+                let cameraNode = SCNNode()
+                cameraNode.camera = SCNCamera()
+                cameraNode.camera?.fieldOfView = 75 // Wider field of view for better immersion
+                cameraNode.camera?.zNear = 0.1
+                cameraNode.camera?.zFar = 50.0
+                cameraNode.position = SCNVector3(0, 0, 0)
+                
+                // Add nodes to scene
+                scene.rootNode.addChildNode(cameraNode)
+                scene.rootNode.addChildNode(panoramaNode)
+                
+                // Set camera as point of view
+                arView.pointOfView = cameraNode
+                
+                print("✅ Enhanced SceneKit panoramic sphere created with immersive camera setup")
+            }
+        }
+    }
+    
+    private func loadPanoramicImageForSceneKit(completion: @escaping (UIImage?) -> Void) {
+        guard !panoramicImage.imageURL.isEmpty else {
+            completion(nil)
+            return
+        }
+        
+        // Handle local URLs
+        if panoramicImage.imageURL.hasPrefix("local://") {
+            loadLocalImageForSceneKit(completion: completion)
+            return
+        }
+        
+        // Handle remote URLs
+        guard let url = URL(string: panoramicImage.imageURL) else {
+            completion(nil)
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let data = data, let image = UIImage(data: data) {
+                DispatchQueue.main.async {
+                    completion(image)
+                }
+            } else {
+                DispatchQueue.main.async {
+                    self.loadLocalImageForSceneKit(completion: completion)
+                }
+            }
+        }.resume()
+    }
+    
+    private func loadLocalImageForSceneKit(completion: @escaping (UIImage?) -> Void) {
+        let urlString = panoramicImage.imageURL
+        let cleanPath = urlString.hasPrefix("local://") ? String(urlString.dropFirst(8)) : urlString
+        
+        // Try various paths
+        let possiblePaths = [
+            cleanPath,
+            cleanPath.replacingOccurrences(of: "file://", with: ""),
+            FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+                .appendingPathComponent(URL(fileURLWithPath: cleanPath).lastPathComponent).path
+        ]
+        
+        for path in possiblePaths {
+            if let image = UIImage(contentsOfFile: path) {
+                completion(image)
+                return
+            }
+        }
+        
+        // Try bundle
+        let filename = URL(fileURLWithPath: cleanPath).lastPathComponent
+        let baseName = filename.replacingOccurrences(of: ".jpg", with: "")
+                              .replacingOccurrences(of: ".jpeg", with: "")
+                              .replacingOccurrences(of: ".png", with: "")
+        
+        if let bundleImage = UIImage(named: baseName) {
+            completion(bundleImage)
+            return
+        }
+        
+        completion(nil)
+    }
+    
+    private func addAdvancedGestureRecognizers(to arView: ARSCNView, context: Context) {
+        // Pan gesture for looking around
+        let panGesture = UIPanGestureRecognizer(target: context.coordinator, action: #selector(ImmersiveCoordinator.handlePan(_:)))
+        arView.addGestureRecognizer(panGesture)
+        
+        // Pinch gesture for zoom
+        let pinchGesture = UIPinchGestureRecognizer(target: context.coordinator, action: #selector(ImmersiveCoordinator.handlePinch(_:)))
+        arView.addGestureRecognizer(pinchGesture)
+        
+        // Double tap to reset
+        let doubleTapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(ImmersiveCoordinator.handleDoubleTap(_:)))
+        doubleTapGesture.numberOfTapsRequired = 2
+        arView.addGestureRecognizer(doubleTapGesture)
+        
+        // Long press for quick zoom
+        let longPressGesture = UILongPressGestureRecognizer(target: context.coordinator, action: #selector(ImmersiveCoordinator.handleLongPress(_:)))
+        longPressGesture.minimumPressDuration = 0.5
+        arView.addGestureRecognizer(longPressGesture)
+    }
+    
+    func makeCoordinator() -> ImmersiveCoordinator {
+        ImmersiveCoordinator()
+    }
+}
+
+class ImmersiveCoordinator: NSObject {
+    private var currentRotation: SCNVector3 = SCNVector3(0, 0, 0)
+    private var isZooming = false
+    
+    @objc func handlePan(_ gesture: UIPanGestureRecognizer) {
+        guard let arView = gesture.view as? ARSCNView,
+              let camera = arView.pointOfView else { return }
+        
+        let translation = gesture.translation(in: gesture.view)
+        let velocity = gesture.velocity(in: gesture.view)
+        
+        // Enhanced sensitivity based on device
+        let sensitivity: Float = UIDevice.current.userInterfaceIdiom == .pad ? 0.008 : 0.01
+        
+        let rotationX = Float(translation.y) * sensitivity
+        let rotationY = Float(translation.x) * sensitivity
+        
+        switch gesture.state {
+        case .began:
+            // Stop any ongoing animations
+            camera.removeAllAnimations()
+            
+        case .changed:
+            currentRotation.x += rotationX
+            currentRotation.y += rotationY
+            
+            // Enhanced clamping with smooth transitions at limits
+            currentRotation.x = max(-Float.pi/2.2, min(Float.pi/2.2, currentRotation.x))
+            
+            camera.eulerAngles = currentRotation
+            gesture.setTranslation(.zero, in: gesture.view)
+            
+        case .ended:
+            // Add momentum for smooth deceleration
+            let momentumX = Float(velocity.y) * 0.0001
+            let momentumY = Float(velocity.x) * 0.0001
+            
+            let finalRotationX = currentRotation.x + momentumX
+            let finalRotationY = currentRotation.y + momentumY
+            
+            currentRotation.x = max(-Float.pi/2.2, min(Float.pi/2.2, finalRotationX))
+            currentRotation.y = finalRotationY
+            
+            // Smooth deceleration animation
+            SCNTransaction.begin()
+            SCNTransaction.animationDuration = 0.4
+            SCNTransaction.animationTimingFunction = CAMediaTimingFunction(name: .easeOut)
+            camera.eulerAngles = currentRotation
+            SCNTransaction.commit()
+            
+        default:
+            break
+        }
+    }
+    
+    @objc func handlePinch(_ gesture: UIPinchGestureRecognizer) {
+        guard let arView = gesture.view as? ARSCNView,
+              let camera = arView.pointOfView?.camera else { return }
+        
+        switch gesture.state {
+        case .began:
+            isZooming = true
+            camera.removeAllAnimations()
+            
+        case .changed:
+            let scale = Float(gesture.scale)
+            let currentFOV = camera.fieldOfView
+            
+            // Enhanced zoom range and sensitivity
+            let zoomFactor = 1.0 / Double(scale)
+            let newFOV = max(15.0, min(120.0, currentFOV * zoomFactor))
+            
+            camera.fieldOfView = newFOV
+            gesture.scale = 1.0
+            
+        case .ended, .cancelled:
+            isZooming = false
+            
+            // Smooth zoom settling
+            SCNTransaction.begin()
+            SCNTransaction.animationDuration = 0.2
+            SCNTransaction.animationTimingFunction = CAMediaTimingFunction(name: .easeOut)
+            SCNTransaction.commit()
+            
+        default:
+            break
+        }
+    }
+    
+    @objc func handleDoubleTap(_ gesture: UITapGestureRecognizer) {
+        guard let arView = gesture.view as? ARSCNView,
+              let camera = arView.pointOfView else { return }
+        
+        currentRotation = SCNVector3(0, 0, 0)
+        
+        // Smooth reset animation
+        SCNTransaction.begin()
+        SCNTransaction.animationDuration = 0.6
+        SCNTransaction.animationTimingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        camera.eulerAngles = currentRotation
+        camera.camera?.fieldOfView = 75 // Reset to default FOV
+        SCNTransaction.commit()
+        
+        // Haptic feedback
+        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+        impactFeedback.impactOccurred()
+    }
+    
+    @objc func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+        guard let arView = gesture.view as? ARSCNView,
+              let camera = arView.pointOfView?.camera else { return }
+        
+        switch gesture.state {
+        case .began:
+            // Quick zoom to 45° FOV
+            SCNTransaction.begin()
+            SCNTransaction.animationDuration = 0.3
+            camera.fieldOfView = 45.0
+            SCNTransaction.commit()
+            
+            // Haptic feedback
+            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+            impactFeedback.impactOccurred()
+            
+        case .ended, .cancelled:
+            // Return to previous FOV
+            SCNTransaction.begin()
+            SCNTransaction.animationDuration = 0.3
+            camera.fieldOfView = 75.0
+            SCNTransaction.commit()
+            
+        default:
+            break
+        }
+    }
+}
+
 #Preview {
     ARPanoramicView(panoramicImages: [
         PanoramicImage(
@@ -476,5 +810,5 @@ struct ARPanoramaViewerRepresentable: UIViewRepresentable {
             captureDate: Date(),
             isAREnabled: true
         )
-    ])
+    ], property: nil)
 }
