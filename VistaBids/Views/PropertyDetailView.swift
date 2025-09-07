@@ -11,6 +11,7 @@ import ARKit
 import AVKit
 import FirebaseFirestore
 import FirebaseAuth
+import PhotosUI
 
 struct PropertyDetailView: View {
     let property: AuctionProperty
@@ -26,6 +27,12 @@ struct PropertyDetailView: View {
     @State private var showingMap = false
     @State private var timeRemaining = ""
     @State private var timer: Timer?
+    @State private var selectedVideos: [PhotosPickerItem] = []
+    @State private var isUploadingVideo = false
+    @State private var showingVideoUploadSheet = false
+    @State private var uploadProgress = 0.0
+    @State private var showingUploadAlert = false
+    @State private var uploadAlertMessage = ""
     
     var body: some View {
         NavigationView {
@@ -497,30 +504,52 @@ struct PropertyDetailView: View {
                         )
                     }
                     
-                    // Add Video Button (placeholder for future functionality)
-                    Button(action: {
-                        // TODO: Add video upload functionality
-                    }) {
-                        VStack {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 30))
-                                .foregroundColor(.accentBlues)
-                            
-                            Text("Add Video")
-                                .font(.caption)
-                                .foregroundColor(.textPrimary)
+                    // Add Video Button with proper implementation
+                    if isCurrentUserOwner() {
+                        PhotosPicker(
+                            selection: $selectedVideos,
+                            maxSelectionCount: 1,
+                            matching: .videos
+                        ) {
+                            VStack {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.system(size: 30))
+                                    .foregroundColor(.accentBlues)
+                                
+                                Text("Add Video")
+                                    .font(.caption)
+                                    .foregroundColor(.textPrimary)
+                                
+                                if isUploadingVideo {
+                                    ProgressView(value: uploadProgress, total: 1.0)
+                                        .progressViewStyle(LinearProgressViewStyle())
+                                        .frame(width: 80)
+                                }
+                            }
+                            .frame(width: 120, height: 80)
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.accentBlues.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [5]))
+                            )
                         }
-                        .frame(width: 120, height: 80)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.accentBlues.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [5]))
-                        )
+                        .onChange(of: selectedVideos) { items in
+                            if !items.isEmpty, let item = items.first {
+                                uploadVideo(item: item)
+                            }
+                        }
                     }
                 }
                 .padding(.horizontal)
             }
+        }
+        .alert(isPresented: $showingUploadAlert) {
+            Alert(
+                title: Text("Video Upload"),
+                message: Text(uploadAlertMessage),
+                dismissButton: .default(Text("OK"))
+            )
         }
     }
     
@@ -707,6 +736,118 @@ struct PropertyDetailView: View {
             }
         }
     }
+    
+    private func isCurrentUserOwner() -> Bool {
+        guard let currentUserId = Auth.auth().currentUser?.uid else {
+            return false
+        }
+        return currentUserId == property.sellerId
+    }
+    
+    private func uploadVideo(item: PhotosPickerItem) {
+        guard let propertyId = property.id else {
+            uploadAlertMessage = "Cannot upload video: Missing property ID"
+            showingUploadAlert = true
+            return
+        }
+        
+        isUploadingVideo = true
+        uploadProgress = 0.1
+        
+        Task {
+            do {
+                guard let videoData = try await item.loadTransferable(type: Data.self) else {
+                    await MainActor.run {
+                        isUploadingVideo = false
+                        uploadAlertMessage = "Failed to load video data"
+                        showingUploadAlert = true
+                    }
+                    return
+                }
+                
+                // Check file size - limit to 5MB for Firestore (Firestore has a 1MB limit per document)
+                if videoData.count > 5 * 1024 * 1024 {
+                    await MainActor.run {
+                        isUploadingVideo = false
+                        uploadAlertMessage = "Video too large. Please select a video under 5MB for direct storage."
+                        showingUploadAlert = true
+                    }
+                    return
+                }
+                
+                await MainActor.run {
+                    uploadProgress = 0.3
+                }
+                
+                // Store video locally and reference it
+                let fileName = "\(UUID().uuidString).mp4"
+                let videoURL = try await saveVideoLocally(data: videoData, fileName: fileName)
+                
+                // Update progress
+                await MainActor.run {
+                    uploadProgress = 0.7
+                }
+                
+                // Add local URL reference to Firestore
+                updatePropertyWithLocalVideo(propertyId: propertyId, videoURL: videoURL)
+            } catch {
+                await MainActor.run {
+                    isUploadingVideo = false
+                    uploadAlertMessage = "Error processing video: \(error.localizedDescription)"
+                    showingUploadAlert = true
+                }
+            }
+        }
+    }
+    
+    private func saveVideoLocally(data: Data, fileName: String) async throws -> String {
+        // Get documents directory
+        let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let videoDirectory = documentsDirectory.appendingPathComponent("videos", isDirectory: true)
+        
+        // Create videos directory if it doesn't exist
+        if !FileManager.default.fileExists(atPath: videoDirectory.path) {
+            try FileManager.default.createDirectory(at: videoDirectory, withIntermediateDirectories: true)
+        }
+        
+        // Create file URL
+        let fileURL = videoDirectory.appendingPathComponent(fileName)
+        
+        // Write data to file
+        try data.write(to: fileURL)
+        
+        // Return local URL scheme
+        return "local://videos/\(fileName)"
+    }
+    
+    private func updatePropertyWithLocalVideo(propertyId: String, videoURL: String) {
+        let db = Firestore.firestore()
+        let propertyRef = db.collection("properties").document(propertyId)
+        
+        propertyRef.updateData([
+            "videos": FieldValue.arrayUnion([videoURL])
+        ]) { error in
+            DispatchQueue.main.async {
+                self.isUploadingVideo = false
+                
+                if let error = error {
+                    self.uploadProgress = 0
+                    self.uploadAlertMessage = "Failed to update property data: \(error.localizedDescription)"
+                    self.showingUploadAlert = true
+                } else {
+                    self.uploadProgress = 1.0
+                    self.uploadAlertMessage = "Video uploaded successfully!"
+                    self.showingUploadAlert = true
+                    self.selectedVideos = []
+                    
+                    // Refresh property data
+                    Task {
+                        try await self.biddingService.refreshProperty(propertyId: propertyId)
+                    }
+                }
+            }
+        }
+    }
 }
 
 // MARK: - Video Thumbnail View
@@ -714,14 +855,28 @@ struct VideoThumbnailView: View {
     let videoURL: String
     let title: String
     let onTap: () -> Void
+    @State private var thumbnailImage: UIImage? = nil
     
     var body: some View {
         Button(action: onTap) {
             ZStack {
-                Rectangle()
-                    .fill(Color.black.opacity(0.8))
-                    .frame(width: 120, height: 80)
-                    .cornerRadius(8)
+                if let thumbnail = thumbnailImage {
+                    Image(uiImage: thumbnail)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 120, height: 80)
+                        .cornerRadius(8)
+                        .overlay(
+                            Rectangle()
+                                .fill(Color.black.opacity(0.2))
+                                .cornerRadius(8)
+                        )
+                } else {
+                    Rectangle()
+                        .fill(Color.black.opacity(0.8))
+                        .frame(width: 120, height: 80)
+                        .cornerRadius(8)
+                }
                 
                 VStack(spacing: 4) {
                     Image(systemName: "play.circle.fill")
@@ -737,6 +892,44 @@ struct VideoThumbnailView: View {
             }
         }
         .buttonStyle(PlainButtonStyle())
+        .onAppear {
+            generateThumbnail()
+        }
+    }
+    
+    private func generateThumbnail() {
+        // Handle local URLs first
+        if videoURL.hasPrefix("local://") {
+            let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+            let cleanPath = videoURL.replacingOccurrences(of: "local://", with: "")
+            let fileURL = documentsDirectory.appendingPathComponent(cleanPath)
+            
+            createThumbnail(from: fileURL)
+            return
+        }
+        
+        // Handle remote URLs
+        guard let url = URL(string: videoURL) else { return }
+        createThumbnail(from: url)
+    }
+    
+    private func createThumbnail(from url: URL) {
+        DispatchQueue.global().async {
+            let asset = AVAsset(url: url)
+            let imageGenerator = AVAssetImageGenerator(asset: asset)
+            imageGenerator.appliesPreferredTrackTransform = true
+            
+            do {
+                let cgImage = try imageGenerator.copyCGImage(at: CMTime(seconds: 1, preferredTimescale: 60), actualTime: nil)
+                let thumbnail = UIImage(cgImage: cgImage)
+                
+                DispatchQueue.main.async {
+                    self.thumbnailImage = thumbnail
+                }
+            } catch {
+                print("Error generating thumbnail: \(error.localizedDescription)")
+            }
+        }
     }
 }
 

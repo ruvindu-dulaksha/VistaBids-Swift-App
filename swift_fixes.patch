@@ -1,0 +1,1 @@
+OTHER_SWIFT_FLAGS = $(inherited) -Xfrontend -enable-upcoming-feature -Xfrontend InternalImportsByDefault

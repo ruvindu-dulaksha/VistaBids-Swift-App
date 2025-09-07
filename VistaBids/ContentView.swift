@@ -15,7 +15,7 @@ struct ContentView: View {
     @StateObject private var authService = FirebaseAuthService()
     @StateObject private var appLockService = AppLockService()
     @StateObject private var credentialsService = BiometricCredentialsService()
-    @StateObject private var themeManager = ThemeManager()
+    @EnvironmentObject var themeManager: ThemeManager
     @State private var showSplash = true
     
     var body: some View {

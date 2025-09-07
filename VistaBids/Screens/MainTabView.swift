@@ -26,12 +26,15 @@ struct MainTabView: View {
             
             // Tab Content
             TabView(selection: $selectedTab) {
-                HomeScreen()
-                    .tabItem {
-                        Image(systemName: selectedTab == 0 ? "map.fill" : "map")
-                        Text("Home")
-                    }
-                    .tag(0)
+                NavigationView {
+                    HomeScreen()
+                }
+                .navigationViewStyle(StackNavigationViewStyle())
+                .tabItem {
+                    Image(systemName: selectedTab == 0 ? "map.fill" : "map")
+                    Text("Home")
+                }
+                .tag(0)
                 
                 BiddingScreen()
                     .tabItem {
@@ -80,7 +83,7 @@ struct MainTabView: View {
             NewPostView(communityService: CommunityService())
         }
         .sheet(isPresented: $showingSettings) {
-            ProfileScreen() // Use ProfileScreen instead of SettingsView since we don't have a settings view
+            ProfileScreen() // Use ProfileScreen
         }
     }
     

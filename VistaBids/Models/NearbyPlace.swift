@@ -2,7 +2,7 @@
 //  NearbyPlace.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2025-08-21.
+//  Created by Ruvindu Dulaksha on 2025-08-21.
 //
 
 import Foundation

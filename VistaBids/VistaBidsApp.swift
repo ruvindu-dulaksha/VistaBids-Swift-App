@@ -94,42 +94,65 @@ struct VistaBidsApp: App {
     private func autoStartAuctionOnLaunch() async {
         print("🚀 Starting automatic auction on app launch...")
         
-        // Create a new auction property that starts immediately
-        let biddingService = BiddingService()
-        
-        // Create auto-start auction property
-        let property = createAutoStartAuctionProperty()
-        
         do {
-            // Add the property to Firebase
-            try await biddingService.createAuctionProperty(
-                title: property.title,
-                description: property.description,
-                startingPrice: property.startingPrice,
-                images: property.images,
-                videos: property.videos,
-                arModelURL: property.arModelURL,
-                address: property.address,
-                location: property.location,
-                features: property.features,
-                auctionStartTime: property.auctionStartTime,
-                auctionEndTime: property.auctionEndTime,
-                auctionDuration: property.auctionDuration,
-                category: property.category,
-                panoramicImages: property.panoramicImages,
-                walkthroughVideoURL: property.walkthroughVideoURL
-            )
+            // First, check if we need to clear auction properties
+            let db = Firestore.firestore()
+            let auctionSnapshot = try await db.collection("auction_properties").getDocuments()
             
-            print("✅ Auto-start auction created successfully!")
-            
-            // Schedule push notification for auction start
-            await scheduleAuctionStartNotification(for: property)
-            
-            // Show immediate "Let's Bid Now!" notification
-            await showLetsBidNowNotification(for: property)
+            // If we have fewer than 3 properties, reset and create varied properties
+            if auctionSnapshot.documents.count < 3 {
+                print("🏠 Creating varied auction properties using AuctionPropertyDataService...")
+                
+                // Clear existing auction properties
+                let batch = db.batch()
+                for document in auctionSnapshot.documents {
+                    batch.deleteDocument(document.reference)
+                }
+                if !auctionSnapshot.documents.isEmpty {
+                    try await batch.commit()
+                    print("✅ Deleted \(auctionSnapshot.documents.count) existing auction documents")
+                }
+                
+                // Create varied auction properties using the data service
+                let auctionPropertyDataService = AuctionPropertyDataService()
+                try await auctionPropertyDataService.createEnhancedAuctionProperties()
+                print("✅ Created varied auction properties with different locations, images, and panoramic views")
+                
+                // Also create one immediate auto-start auction property
+                let biddingService = BiddingService()
+                let property = createAutoStartAuctionProperty()
+                
+                try await biddingService.createAuctionProperty(
+                    title: property.title,
+                    description: property.description,
+                    startingPrice: property.startingPrice,
+                    images: property.images,
+                    videos: property.videos,
+                    arModelURL: property.arModelURL,
+                    address: property.address,
+                    location: property.location,
+                    features: property.features,
+                    auctionStartTime: property.auctionStartTime,
+                    auctionEndTime: property.auctionEndTime,
+                    auctionDuration: property.auctionDuration,
+                    category: property.category,
+                    panoramicImages: property.panoramicImages,
+                    walkthroughVideoURL: property.walkthroughVideoURL
+                )
+                
+                print("✅ Auto-start auction created successfully!")
+                
+                // Schedule push notification for auction start
+                await scheduleAuctionStartNotification(for: property)
+                
+                // Show immediate "Let's Bid Now!" notification
+                await showLetsBidNowNotification(for: property)
+            } else {
+                print("✅ Found \(auctionSnapshot.documents.count) existing auction properties, skipping recreation")
+            }
             
         } catch {
-            print("❌ Error creating auto-start auction: \(error)")
+            print("❌ Error in auction property setup: \(error)")
         }
     }
     
@@ -138,63 +161,151 @@ struct VistaBidsApp: App {
         let startTime = now.addingTimeInterval(30) // Start in 30 seconds
         let endTime = now.addingTimeInterval(3600) // End in 1 hour
         
-        return AuctionProperty(
-            sellerId: "auto_system",
-            sellerName: "VistaBids System",
-            title: "🏠 Featured Luxury Villa - AUTO AUCTION",
-            description: "Stunning modern villa with panoramic ocean views. This automated auction showcases the power of VistaBids real-time bidding system. Features include a spacious living area, modern kitchen, 4 bedrooms, and a beautiful garden. Don't miss this opportunity to own a piece of paradise!",
-            startingPrice: 750000,
-            currentBid: 750000,
-            highestBidderId: nil as String?,
-            highestBidderName: nil as String?,
-            images: [
+        // Generate a random variant for this auto auction
+        let variant = Int.random(in: 0...2)
+        
+        // Different property templates to choose from
+        let propertyTypes = ["Luxury Villa", "Modern Penthouse", "Beach House"]
+        let descriptions = [
+            "Stunning modern villa with panoramic ocean views. This automated auction showcases the power of VistaBids real-time bidding system. Features include a spacious living area, modern kitchen, 4 bedrooms, and a beautiful garden. Don't miss this opportunity to own a piece of paradise!",
+            "Exclusive penthouse in the heart of the city with 360° views, premium finishes, and smart home technology. This auction highlights VistaBids' real-time bidding capabilities. Featuring 3 bedrooms, a gourmet kitchen, and a private rooftop terrace.",
+            "Charming beachfront property with direct access to pristine sands and crystal clear waters. This special auction demonstrates VistaBids' live auction technology. Includes 4 bedrooms, an open plan living area, and breathtaking sunset views."
+        ]
+        
+        // Different image sets
+        let imageSets = [
+            [
                 "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800",
-                "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800",
+                "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800", 
                 "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800"
             ],
-            videos: [],
-            arModelURL: nil as String?,
-            address: PropertyAddress(
-                street: "123 Ocean View Drive",
-                city: "Malibu",
-                state: "California",
-                postalCode: "90265",
-                country: "USA"
-            ),
-            location: GeoPoint(latitude: 34.0259, longitude: -118.7798),
-            features: PropertyFeatures(
-                bedrooms: 4,
-                bathrooms: 3,
-                area: 3500,
-                yearBuilt: 2020,
-                parkingSpaces: 2,
-                hasGarden: true,
-                hasPool: true,
-                hasGym: false,
-                floorNumber: nil as Int?,
-                totalFloors: 2,
-                propertyType: "Villa"
-            ),
-            auctionStartTime: startTime,
-            auctionEndTime: endTime,
-            auctionDuration: .thirtyMinutes, // Add the required auctionDuration field
-            status: AuctionStatus.upcoming,
-            category: PropertyCategory.luxury,
-            bidHistory: [],
-            watchlistUsers: [],
-            createdAt: now,
-            updatedAt: now,
-            panoramicImages: [
+            [
+                "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",
+                "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800",
+                "https://images.unsplash.com/photo-1593696140826-c58b021acf8b?w=800"
+            ],
+            [
+                "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800",
+                "https://images.unsplash.com/photo-1540541338287-41700207dee6?w=800",
+                "https://images.unsplash.com/photo-1513584684374-8bab748fbf90?w=800"
+            ]
+        ]
+        
+        // Different panoramic image sets
+        let panoramicSets = [
+            [
                 PanoramicImage(
                     id: UUID().uuidString,
-                    imageURL: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800",
+                    imageURL: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1920&h=960&fit=crop",
                     title: "Living Room View",
                     description: "360° view of the spacious living area",
                     roomType: .livingRoom,
                     captureDate: now,
                     isAREnabled: true
+                ),
+                PanoramicImage(
+                    id: UUID().uuidString,
+                    imageURL: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1920&h=960&fit=crop",
+                    title: "Exterior View",
+                    description: "360° view of the property exterior",
+                    roomType: .exterior,
+                    captureDate: now,
+                    isAREnabled: true
                 )
             ],
+            [
+                PanoramicImage(
+                    id: UUID().uuidString,
+                    imageURL: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1920&h=960&fit=crop",
+                    title: "Kitchen View",
+                    description: "360° view of the gourmet kitchen",
+                    roomType: .kitchen,
+                    captureDate: now,
+                    isAREnabled: true
+                ),
+                PanoramicImage(
+                    id: UUID().uuidString,
+                    imageURL: "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1920&h=960&fit=crop",
+                    title: "Master Bedroom",
+                    description: "360° view of the master bedroom",
+                    roomType: .bedroom,
+                    captureDate: now,
+                    isAREnabled: true
+                )
+            ],
+            [
+                PanoramicImage(
+                    id: UUID().uuidString,
+                    imageURL: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1920&h=960&fit=crop",
+                    title: "Beach View",
+                    description: "360° panoramic view of the beach",
+                    roomType: .exterior,
+                    captureDate: now,
+                    isAREnabled: true
+                ),
+                PanoramicImage(
+                    id: UUID().uuidString,
+                    imageURL: "https://images.unsplash.com/photo-1540541338287-41700207dee6?w=1920&h=960&fit=crop",
+                    title: "Balcony View",
+                    description: "360° view from the balcony",
+                    roomType: .balcony,
+                    captureDate: now,
+                    isAREnabled: true
+                )
+            ]
+        ]
+        
+        // Different locations
+        let locations = [
+            (city: "Malibu", state: "California", lat: 34.0259, lng: -118.7798),
+            (city: "Manhattan", state: "New York", lat: 40.7831, lng: -73.9712),
+            (city: "Miami Beach", state: "Florida", lat: 25.7907, lng: -80.1300)
+        ]
+        
+        // Create the property using the random variant
+        return AuctionProperty(
+            sellerId: "auto_system",
+            sellerName: "VistaBids System",
+            title: "🔥 Featured \(propertyTypes[variant]) - LIVE AUCTION",
+            description: descriptions[variant],
+            startingPrice: Double([750000, 680000, 820000][variant]),
+            currentBid: Double([750000, 680000, 820000][variant]),
+            highestBidderId: nil as String?,
+            highestBidderName: nil as String?,
+            images: imageSets[variant],
+            videos: [],
+            arModelURL: nil as String?,
+            address: PropertyAddress(
+                street: "\(100 + variant * 23) \(["Ocean View", "Central Park", "Shoreline"][variant]) Drive",
+                city: locations[variant].city,
+                state: locations[variant].state,
+                postalCode: ["90265", "10021", "33139"][variant],
+                country: "USA"
+            ),
+            location: GeoPoint(latitude: locations[variant].lat, longitude: locations[variant].lng),
+            features: PropertyFeatures(
+                bedrooms: [4, 3, 4][variant],
+                bathrooms: [3, 3, 4][variant],
+                area: [3500, 2800, 3200][variant],
+                yearBuilt: 2020 + variant,
+                parkingSpaces: [2, 1, 2][variant],
+                hasGarden: [true, false, true][variant],
+                hasPool: [true, false, true][variant],
+                hasGym: [false, true, false][variant],
+                floorNumber: variant == 1 ? 15 : nil,
+                totalFloors: variant == 1 ? 30 : nil,
+                propertyType: ["Villa", "Penthouse", "Beach House"][variant]
+            ),
+            auctionStartTime: startTime,
+            auctionEndTime: endTime,
+            auctionDuration: .thirtyMinutes,
+            status: AuctionStatus.upcoming,
+            category: [PropertyCategory.luxury, PropertyCategory.luxury, PropertyCategory.residential][variant],
+            bidHistory: [],
+            watchlistUsers: [],
+            createdAt: now,
+            updatedAt: now,
+            panoramicImages: panoramicSets[variant],
             walkthroughVideoURL: nil as String?
         )
     }

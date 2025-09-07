@@ -73,10 +73,28 @@ struct VideoPlayerView: View {
     }
     
     private func loadVideo() {
-        guard let videoURL = URL(string: url) else {
-            loadingError = "Invalid video URL"
-            isLoading = false
-            return
+        let videoURL: URL
+        
+        // Handle local URLs
+        if url.hasPrefix("local://") {
+            let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+            let cleanPath = url.replacingOccurrences(of: "local://", with: "")
+            videoURL = documentsDirectory.appendingPathComponent(cleanPath)
+            
+            // Check if file exists
+            if !FileManager.default.fileExists(atPath: videoURL.path) {
+                loadingError = "Local video file not found"
+                isLoading = false
+                return
+            }
+        } else {
+            // Handle remote URLs
+            guard let remoteURL = URL(string: url) else {
+                loadingError = "Invalid video URL"
+                isLoading = false
+                return
+            }
+            videoURL = remoteURL
         }
         
         player = AVPlayer(url: videoURL)

@@ -27,8 +27,8 @@ struct AuctionProperty: Identifiable, Codable {
     let address: PropertyAddress
     let location: GeoPoint
     let features: PropertyFeatures
-    let auctionStartTime: Date
-    let auctionEndTime: Date
+    var auctionStartTime: Date
+    var auctionEndTime: Date
     let auctionDuration: AuctionDuration
     var status: AuctionStatus
     let category: PropertyCategory
@@ -156,6 +156,7 @@ enum AuctionDuration: String, CaseIterable, Codable {
     case thirtyMinutes = "30"
     case oneHour = "60"
     case twoHours = "120"
+    case threeHours = "180"
     case oneDay = "1440"
     case custom = "custom"
     
@@ -167,6 +168,7 @@ enum AuctionDuration: String, CaseIterable, Codable {
         case .thirtyMinutes: return "30 Minutes"
         case .oneHour: return "1 Hour"
         case .twoHours: return "2 Hours"
+        case .threeHours: return "3 Hours"
         case .oneDay: return "1 Day"
         case .custom: return "Custom"
         }
@@ -178,6 +180,10 @@ enum AuctionDuration: String, CaseIterable, Codable {
     
     var timeInterval: TimeInterval {
         return TimeInterval(minutes * 60)
+    }
+    
+    var seconds: Int {
+        return minutes * 60
     }
 }
 

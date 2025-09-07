@@ -2,7 +2,7 @@
 //  ARPanoramicView.swift
 //  VistaBids
 //
-//  Created by AI Assistant on 2025-08-18.
+//  Created by Ruvindu Dulaksha on 2025-08-18.
 //
 
 import SwiftUI
@@ -202,11 +202,13 @@ struct ARPanoramicView: View {
 struct PanoramicImageCard: View {
     let image: PanoramicImage
     let onTap: () -> Void
+    @State private var imageLoadError = false
     
     var body: some View {
         Button(action: onTap) {
             VStack(spacing: 12) {
                 ZStack {
+                    // Base container with rounded corners
                     RoundedRectangle(cornerRadius: 12)
                         .fill(LinearGradient(
                             colors: [.blue.opacity(0.6), .purple.opacity(0.6)],
@@ -215,24 +217,63 @@ struct PanoramicImageCard: View {
                         ))
                         .frame(height: 120)
                     
-                    VStack(spacing: 8) {
-                        Image(systemName: "view.3d")
-                            .font(.system(size: 30))
-                            .foregroundColor(.white)
-                        
-                        if image.isAREnabled {
-                            HStack(spacing: 4) {
-                                Image(systemName: "arkit")
-                                    .font(.caption)
-                                Text("AR")
-                                    .font(.caption2)
-                                    .fontWeight(.semibold)
+                    // Load the actual panoramic image if available
+                    if !image.imageURL.isEmpty && !imageLoadError {
+                        if image.imageURL.hasPrefix("local://") {
+                            // Handle local image
+                            LocalPanoramicImageView(imageURL: image.imageURL)
+                                .aspectRatio(contentMode: .fill)
+                                .frame(height: 120)
+                                .cornerRadius(12)
+                                .clipped()
+                        } else {
+                            // Handle remote image
+                            AsyncImage(url: URL(string: image.imageURL)) { phase in
+                                switch phase {
+                                case .empty:
+                                    ProgressView()
+                                        .tint(.white)
+                                case .success(let loadedImage):
+                                    loadedImage
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(height: 120)
+                                        .cornerRadius(12)
+                                        .clipped()
+                                case .failure:
+                                    // Show placeholder on failure
+                                    FallbackPanoramicImageView()
+                                        .onAppear { imageLoadError = true }
+                                @unknown default:
+                                    FallbackPanoramicImageView()
+                                }
                             }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 2)
-                            .background(.white.opacity(0.2))
-                            .cornerRadius(8)
+                        }
+                    } else {
+                        // Fallback view when no image URL or error loading
+                        FallbackPanoramicImageView()
+                    }
+                    
+                    // AR badge overlay
+                    if image.isAREnabled {
+                        VStack {
+                            Spacer()
+                            HStack {
+                                Spacer()
+                                HStack(spacing: 4) {
+                                    Image(systemName: "arkit")
+                                        .font(.caption)
+                                    Text("AR")
+                                        .font(.caption2)
+                                        .fontWeight(.semibold)
+                                }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(.black.opacity(0.6))
+                                .cornerRadius(8)
+                                .padding(8)
+                            }
                         }
                     }
                 }
@@ -254,6 +295,131 @@ struct PanoramicImageCard: View {
             }
         }
         .buttonStyle(.plain)
+    }
+}
+
+// Helper view for fallback panoramic image display
+struct FallbackPanoramicImageView: View {
+    var body: some View {
+        ZStack {
+            // Gradient background
+            LinearGradient(
+                colors: [.blue.opacity(0.6), .purple.opacity(0.6)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            
+            // 3D icon
+            VStack(spacing: 8) {
+                Image(systemName: "view.3d")
+                    .font(.system(size: 30))
+                    .foregroundColor(.white)
+                
+                Text("360° View")
+                    .font(.caption)
+                    .foregroundColor(.white)
+            }
+        }
+    }
+}
+
+// Helper view to load local panoramic images
+struct LocalPanoramicImageView: View {
+    let imageURL: String
+    @State private var uiImage: UIImage? = nil
+    
+    var body: some View {
+        Group {
+            if let image = uiImage {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } else {
+                FallbackPanoramicImageView()
+            }
+        }
+        .onAppear {
+            loadLocalImage()
+        }
+    }
+    
+    private func loadLocalImage() {
+        print("🔍 Card - Loading local image: \(imageURL)")
+        
+        if imageURL.hasPrefix("local://") {
+            let cleanPath = String(imageURL.dropFirst(8)) // Remove "local://"
+            print("📸 Card - Clean path: \(cleanPath)")
+            
+            // Try direct path in documents directory
+            let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+            let documentFile = documentsPath.appendingPathComponent(cleanPath)
+            
+            if let image = UIImage(contentsOfFile: documentFile.path) {
+                print("✅ Card - Found image at: \(documentFile.path)")
+                DispatchQueue.main.async {
+                    self.uiImage = image
+                }
+                return
+            }
+            
+            // Look through images directory
+            let imagesDir = documentsPath.appendingPathComponent("images")
+            if FileManager.default.fileExists(atPath: imagesDir.path) {
+                do {
+                    let imageFiles = try FileManager.default.contentsOfDirectory(at: imagesDir, includingPropertiesForKeys: nil)
+                    print("📁 Card - Files in images directory:")
+                    
+                    for imageFile in imageFiles {
+                        print("   - \(imageFile.lastPathComponent)")
+                        
+                        // If this file is mentioned in our URL
+                        if imageURL.contains(imageFile.lastPathComponent) {
+                            if let image = UIImage(contentsOfFile: imageFile.path) {
+                                print("✅ Card - Found image match: \(imageFile.path)")
+                                DispatchQueue.main.async {
+                                    self.uiImage = image
+                                }
+                                return
+                            }
+                        }
+                    }
+                } catch {
+                    print("❌ Card - Error reading images directory: \(error)")
+                }
+            }
+        }
+        
+        // Try various paths as fallback
+        let possiblePaths = [
+            imageURL,
+            imageURL.replacingOccurrences(of: "local://", with: ""),
+            imageURL.replacingOccurrences(of: "file://", with: "")
+        ]
+        
+        for path in possiblePaths {
+            if let image = UIImage(contentsOfFile: path) {
+                print("✅ Card - Found image at fallback path: \(path)")
+                DispatchQueue.main.async {
+                    self.uiImage = image
+                }
+                return
+            }
+        }
+        
+        // Try bundle
+        let filename = URL(fileURLWithPath: imageURL).lastPathComponent
+        let baseName = filename.replacingOccurrences(of: ".jpg", with: "")
+                              .replacingOccurrences(of: ".jpeg", with: "")
+                              .replacingOccurrences(of: ".png", with: "")
+        
+        if let bundleImage = UIImage(named: baseName) {
+            print("✅ Card - Loaded from bundle: \(baseName)")
+            DispatchQueue.main.async {
+                self.uiImage = bundleImage
+            }
+        } else {
+            print("❌ Card - Could not load image from any source")
+        }
     }
 }
 
@@ -377,28 +543,27 @@ struct ARPanoramaViewerRepresentable: UIViewRepresentable {
         
         if urlString.hasPrefix("local://") {
             let cleanPath = String(urlString.dropFirst(8)) // Remove "local://"
+            print("📸 Clean path after removing local://: \(cleanPath)")
             
-            // Check if it's already a full file path
-            if cleanPath.hasPrefix("file://") || cleanPath.hasPrefix("/") {
-                // Extract the actual file path
-                let actualPath = cleanPath.replacingOccurrences(of: "file://", with: "")
-                if FileManager.default.fileExists(atPath: actualPath) {
-                    finalImagePath = actualPath
-                } else {
-                    // Try to find it in documents directory
-                    let filename = URL(fileURLWithPath: actualPath).lastPathComponent
-                    let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-                    let documentFile = documentsPath.appendingPathComponent(filename)
-                    if FileManager.default.fileExists(atPath: documentFile.path) {
-                        finalImagePath = documentFile.path
-                    }
-                }
+            // First try direct path in documents directory
+            let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+            
+            // If it's a path like "images/filename.jpg"
+            let documentFile = documentsPath.appendingPathComponent(cleanPath)
+            print("📸 Checking for file at: \(documentFile.path)")
+            
+            if FileManager.default.fileExists(atPath: documentFile.path) {
+                print("📸 File exists at path: \(documentFile.path)")
+                finalImagePath = documentFile.path
             } else {
-                // It's just a filename, look in documents directory
-                let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-                let documentFile = documentsPath.appendingPathComponent(cleanPath)
-                if FileManager.default.fileExists(atPath: documentFile.path) {
-                    finalImagePath = documentFile.path
+                // Try just the filename part
+                let filename = URL(fileURLWithPath: cleanPath).lastPathComponent
+                let fileOnlyPath = documentsPath.appendingPathComponent(filename)
+                print("📸 Checking alternate path: \(fileOnlyPath.path)")
+                
+                if FileManager.default.fileExists(atPath: fileOnlyPath.path) {
+                    print("📸 File exists at alternate path: \(fileOnlyPath.path)")
+                    finalImagePath = fileOnlyPath.path
                 }
             }
         } else if urlString.hasPrefix("file://") {
@@ -422,9 +587,43 @@ struct ARPanoramaViewerRepresentable: UIViewRepresentable {
             return
         }
         
+        // List all files in the documents directory for debugging
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        print("📁 Looking for images in documents directory: \(documentsPath.path)")
+        do {
+            let fileURLs = try FileManager.default.contentsOfDirectory(at: documentsPath, includingPropertiesForKeys: nil)
+            print("📁 Files in documents directory:")
+            for fileURL in fileURLs {
+                print("   - \(fileURL.lastPathComponent)")
+                
+                // Check subdirectories like 'images'
+                if fileURL.lastPathComponent == "images" {
+                    do {
+                        let imageFiles = try FileManager.default.contentsOfDirectory(at: fileURL, includingPropertiesForKeys: nil)
+                        print("📁 Files in images subdirectory:")
+                        for imageFile in imageFiles {
+                            print("   - \(imageFile.lastPathComponent)")
+                            
+                            // If this is our file by checking the last part of imageURL
+                            if urlString.contains(imageFile.lastPathComponent) {
+                                if let image = UIImage(contentsOfFile: imageFile.path) {
+                                    print("✅ Found and loaded the image from: \(imageFile.path)")
+                                    createTextureFromImage(image, completion: completion)
+                                    return
+                                }
+                            }
+                        }
+                    } catch {
+                        print("❌ Error reading images directory: \(error)")
+                    }
+                }
+            }
+        } catch {
+            print("❌ Error reading documents directory: \(error)")
+        }
+        
         // Fallback: Try to find by filename in documents directory
         let filename = URL(fileURLWithPath: urlString).lastPathComponent
-        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         let fallbackPath = documentsPath.appendingPathComponent(filename)
         
         if let fallbackImage = UIImage(contentsOfFile: fallbackPath.path) {
@@ -597,35 +796,170 @@ struct ImmersiveSceneKitARView: UIViewRepresentable {
     
     private func loadLocalImageForSceneKit(completion: @escaping (UIImage?) -> Void) {
         let urlString = panoramicImage.imageURL
-        let cleanPath = urlString.hasPrefix("local://") ? String(urlString.dropFirst(8)) : urlString
+        print("🔍 SceneKit - Processing local panoramic URL: \(urlString)")
         
-        // Try various paths
-        let possiblePaths = [
-            cleanPath,
-            cleanPath.replacingOccurrences(of: "file://", with: ""),
-            FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-                .appendingPathComponent(URL(fileURLWithPath: cleanPath).lastPathComponent).path
-        ]
-        
-        for path in possiblePaths {
-            if let image = UIImage(contentsOfFile: path) {
-                completion(image)
+        // First try loading from remote URL since some "local" references might actually be web URLs
+        if urlString.hasPrefix("http") {
+            guard let url = URL(string: urlString) else {
+                print("❌ SceneKit - Invalid URL: \(urlString)")
+                completion(nil)
                 return
             }
-        }
-        
-        // Try bundle
-        let filename = URL(fileURLWithPath: cleanPath).lastPathComponent
-        let baseName = filename.replacingOccurrences(of: ".jpg", with: "")
-                              .replacingOccurrences(of: ".jpeg", with: "")
-                              .replacingOccurrences(of: ".png", with: "")
-        
-        if let bundleImage = UIImage(named: baseName) {
-            completion(bundleImage)
+            
+            let task = URLSession.shared.dataTask(with: url) { data, response, error in
+                if let data = data, let image = UIImage(data: data) {
+                    print("✅ SceneKit - Successfully loaded from remote URL: \(urlString)")
+                    DispatchQueue.main.async {
+                        completion(image)
+                    }
+                    return
+                } else {
+                    print("⚠️ SceneKit - Failed to load from remote URL, trying local paths: \(error?.localizedDescription ?? "Unknown error")")
+                }
+            }
+            task.resume()
+            
+            // Give the remote URL a chance to load, but don't completely wait for it to fail
+            // Continue with local paths attempt after a short delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                // If we haven't succeeded yet, try local paths
+                if task.state != .completed {
+                    self.tryLocalPaths(urlString: urlString, completion: completion)
+                }
+            }
             return
         }
         
+        // If not a remote URL, try local paths directly
+        tryLocalPaths(urlString: urlString, completion: completion)
+    }
+    
+    private func tryLocalPaths(urlString: String, completion: @escaping (UIImage?) -> Void) {
+        if urlString.hasPrefix("local://") {
+            let cleanPath = String(urlString.dropFirst(8)) // Remove "local://"
+            print("📸 SceneKit - Clean path after removing local://: \(cleanPath)")
+            
+            // First try direct path in documents directory
+            let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+            
+            // If it's a path like "images/filename.jpg"
+            let documentFile = documentsPath.appendingPathComponent(cleanPath)
+            print("📸 SceneKit - Checking for file at: \(documentFile.path)")
+            
+            if let image = UIImage(contentsOfFile: documentFile.path) {
+                print("✅ SceneKit - Found panoramic image at: \(documentFile.path)")
+                completion(image)
+                return
+            }
+            
+            // Try just the filename
+            let filename = URL(fileURLWithPath: cleanPath).lastPathComponent
+            let filenameOnlyPath = documentsPath.appendingPathComponent(filename)
+            if let image = UIImage(contentsOfFile: filenameOnlyPath.path) {
+                print("✅ SceneKit - Found panoramic image by filename: \(filenameOnlyPath.path)")
+                completion(image)
+                return
+            }
+            
+            // Scan all subdirectories for matching filename
+            scanAllDirectoriesForImage(urlString: urlString, documentsPath: documentsPath, completion: completion)
+        } else {
+            // Try various paths as fallback
+            let possiblePaths = [
+                urlString,
+                urlString.replacingOccurrences(of: "local://", with: ""),
+                urlString.replacingOccurrences(of: "file://", with: "")
+            ]
+            
+            for path in possiblePaths {
+                if let image = UIImage(contentsOfFile: path) {
+                    print("✅ SceneKit - Found image at fallback path: \(path)")
+                    completion(image)
+                    return
+                }
+            }
+            
+            // Try bundle
+            let filename = URL(fileURLWithPath: urlString).lastPathComponent
+            let baseName = filename.replacingOccurrences(of: ".jpg", with: "")
+                                  .replacingOccurrences(of: ".jpeg", with: "")
+                                  .replacingOccurrences(of: ".png", with: "")
+            
+            if let bundleImage = UIImage(named: baseName) {
+                print("✅ SceneKit - Loaded from bundle: \(baseName)")
+                completion(bundleImage)
+                return
+            }
+            
+            // Try as asset catalog name
+            if let assetImage = UIImage(named: filename) {
+                print("✅ SceneKit - Loaded from asset catalog: \(filename)")
+                completion(assetImage)
+                return
+            }
+            
+            // Last resort - try scanning all directories
+            let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+            scanAllDirectoriesForImage(urlString: urlString, documentsPath: documentsPath, completion: completion)
+        }
+        
+        print("❌ SceneKit - Failed to load panoramic image: \(urlString)")
         completion(nil)
+    }
+    
+    private func scanAllDirectoriesForImage(urlString: String, documentsPath: URL, completion: @escaping (UIImage?) -> Void) {
+        print("📁 SceneKit - Deep scanning directories for matching image...")
+        
+        let filename = URL(fileURLWithPath: urlString).lastPathComponent
+        
+        // Get all directories recursively
+        do {
+            let fileManager = FileManager.default
+            let resourceKeys: [URLResourceKey] = [.isDirectoryKey]
+            let enumerator = fileManager.enumerator(at: documentsPath, 
+                                                    includingPropertiesForKeys: resourceKeys,
+                                                    options: [.skipsHiddenFiles],
+                                                    errorHandler: nil)!
+            
+            var foundImage = false
+            
+            for case let fileURL as URL in enumerator {
+                do {
+                    let resourceValues = try fileURL.resourceValues(forKeys: Set(resourceKeys))
+                    
+                    // If this is a directory
+                    if resourceValues.isDirectory == true {
+                        do {
+                            // Check all files in this directory
+                            let directoryContents = try fileManager.contentsOfDirectory(at: fileURL, includingPropertiesForKeys: nil)
+                            for contentURL in directoryContents {
+                                // If this file matches our filename
+                                if contentURL.lastPathComponent.contains(filename) || urlString.contains(contentURL.lastPathComponent) {
+                                    if let image = UIImage(contentsOfFile: contentURL.path) {
+                                        print("✅ SceneKit - Found image through deep scan: \(contentURL.path)")
+                                        foundImage = true
+                                        completion(image)
+                                        return
+                                    }
+                                }
+                            }
+                        } catch {
+                            print("❌ SceneKit - Error reading directory: \(error)")
+                        }
+                    }
+                } catch {
+                    print("❌ SceneKit - Error getting resource values: \(error)")
+                }
+            }
+            
+            if !foundImage {
+                print("❌ SceneKit - No matching image found in deep scan")
+                completion(nil)
+            }
+        } catch {
+            print("❌ SceneKit - Error enumerating directories: \(error)")
+            completion(nil)
+        }
     }
     
     private func addAdvancedGestureRecognizers(to arView: ARSCNView, context: Context) {

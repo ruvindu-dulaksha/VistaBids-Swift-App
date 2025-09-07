@@ -1,0 +1,665 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A743594F2E46ABD20093EF6B /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = A7E607DD2E2FD49A003AC09D /* FirebaseFirestore */; };
+		A7667A572E4378FF00ECA732 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = A7667A562E4378FF00ECA732 /* GoogleSignIn */; };
+		A7667A592E4378FF00ECA732 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = A7667A582E4378FF00ECA732 /* GoogleSignInSwift */; };
+		A7E607CD2E2FC766003AC09D /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = A7E607CC2E2FC766003AC09D /* Lottie */; };
+		A7E607D62E2FD49A003AC09D /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = A7E607D52E2FD49A003AC09D /* FirebaseAuth */; };
+		A7E607D82E2FD49A003AC09D /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = A7E607D72E2FD49A003AC09D /* FirebaseCore */; };
+		A7E607DA2E2FD49A003AC09D /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = A7E607D92E2FD49A003AC09D /* FirebaseDatabase */; };
+		A7E607DC2E2FD49A003AC09D /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = A7E607DB2E2FD49A003AC09D /* FirebaseMessaging */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A7E607962E2FC4A5003AC09D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A7E607802E2FC4A4003AC09D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A7E607872E2FC4A4003AC09D;
+			remoteInfo = VistaBids;
+		};
+		A7E607A02E2FC4A5003AC09D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A7E607802E2FC4A4003AC09D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A7E607872E2FC4A4003AC09D;
+			remoteInfo = VistaBids;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		A7E607882E2FC4A4003AC09D /* VistaBids.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VistaBids.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A7E607952E2FC4A5003AC09D /* VistaBidsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VistaBidsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A7E6079F2E2FC4A5003AC09D /* VistaBidsUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VistaBidsUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		A7E6078A2E2FC4A4003AC09D /* VistaBids */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = VistaBids;
+			sourceTree = "<group>";
+		};
+		A7E607982E2FC4A5003AC09D /* VistaBidsTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = VistaBidsTests;
+			sourceTree = "<group>";
+		};
+		A7E607A22E2FC4A5003AC09D /* VistaBidsUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = VistaBidsUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A7E607852E2FC4A4003AC09D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A743594F2E46ABD20093EF6B /* FirebaseFirestore in Frameworks */,
+				A7E607CD2E2FC766003AC09D /* Lottie in Frameworks */,
+				A7E607D82E2FD49A003AC09D /* FirebaseCore in Frameworks */,
+				A7667A592E4378FF00ECA732 /* GoogleSignInSwift in Frameworks */,
+				A7E607DC2E2FD49A003AC09D /* FirebaseMessaging in Frameworks */,
+				A7E607DA2E2FD49A003AC09D /* FirebaseDatabase in Frameworks */,
+				A7E607D62E2FD49A003AC09D /* FirebaseAuth in Frameworks */,
+				A7667A572E4378FF00ECA732 /* GoogleSignIn in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A7E607922E2FC4A5003AC09D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A7E6079C2E2FC4A5003AC09D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A7E6077F2E2FC4A4003AC09D = {
+			isa = PBXGroup;
+			children = (
+				A7E6078A2E2FC4A4003AC09D /* VistaBids */,
+				A7E607982E2FC4A5003AC09D /* VistaBidsTests */,
+				A7E607A22E2FC4A5003AC09D /* VistaBidsUITests */,
+				A7E607892E2FC4A4003AC09D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A7E607892E2FC4A4003AC09D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A7E607882E2FC4A4003AC09D /* VistaBids.app */,
+				A7E607952E2FC4A5003AC09D /* VistaBidsTests.xctest */,
+				A7E6079F2E2FC4A5003AC09D /* VistaBidsUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A7E607872E2FC4A4003AC09D /* VistaBids */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A7E607A92E2FC4A5003AC09D /* Build configuration list for PBXNativeTarget "VistaBids" */;
+			buildPhases = (
+				A7E607842E2FC4A4003AC09D /* Sources */,
+				A7E607852E2FC4A4003AC09D /* Frameworks */,
+				A7E607862E2FC4A4003AC09D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				A7E6078A2E2FC4A4003AC09D /* VistaBids */,
+			);
+			name = VistaBids;
+			packageProductDependencies = (
+				A7E607CC2E2FC766003AC09D /* Lottie */,
+				A7E607D52E2FD49A003AC09D /* FirebaseAuth */,
+				A7E607D72E2FD49A003AC09D /* FirebaseCore */,
+				A7E607D92E2FD49A003AC09D /* FirebaseDatabase */,
+				A7E607DB2E2FD49A003AC09D /* FirebaseMessaging */,
+				A7E607DD2E2FD49A003AC09D /* FirebaseFirestore */,
+				A7667A562E4378FF00ECA732 /* GoogleSignIn */,
+				A7667A582E4378FF00ECA732 /* GoogleSignInSwift */,
+			);
+			productName = VistaBids;
+			productReference = A7E607882E2FC4A4003AC09D /* VistaBids.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A7E607942E2FC4A5003AC09D /* VistaBidsTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A7E607AC2E2FC4A5003AC09D /* Build configuration list for PBXNativeTarget "VistaBidsTests" */;
+			buildPhases = (
+				A7E607912E2FC4A5003AC09D /* Sources */,
+				A7E607922E2FC4A5003AC09D /* Frameworks */,
+				A7E607932E2FC4A5003AC09D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A7E607972E2FC4A5003AC09D /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				A7E607982E2FC4A5003AC09D /* VistaBidsTests */,
+			);
+			name = VistaBidsTests;
+			packageProductDependencies = (
+			);
+			productName = VistaBidsTests;
+			productReference = A7E607952E2FC4A5003AC09D /* VistaBidsTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		A7E6079E2E2FC4A5003AC09D /* VistaBidsUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A7E607AF2E2FC4A5003AC09D /* Build configuration list for PBXNativeTarget "VistaBidsUITests" */;
+			buildPhases = (
+				A7E6079B2E2FC4A5003AC09D /* Sources */,
+				A7E6079C2E2FC4A5003AC09D /* Frameworks */,
+				A7E6079D2E2FC4A5003AC09D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A7E607A12E2FC4A5003AC09D /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				A7E607A22E2FC4A5003AC09D /* VistaBidsUITests */,
+			);
+			name = VistaBidsUITests;
+			packageProductDependencies = (
+			);
+			productName = VistaBidsUITests;
+			productReference = A7E6079F2E2FC4A5003AC09D /* VistaBidsUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A7E607802E2FC4A4003AC09D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1640;
+				LastUpgradeCheck = 1640;
+				TargetAttributes = {
+					A7E607872E2FC4A4003AC09D = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					A7E607942E2FC4A5003AC09D = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = A7E607872E2FC4A4003AC09D;
+					};
+					A7E6079E2E2FC4A5003AC09D = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = A7E607872E2FC4A4003AC09D;
+					};
+				};
+			};
+			buildConfigurationList = A7E607832E2FC4A4003AC09D /* Build configuration list for PBXProject "VistaBids" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A7E6077F2E2FC4A4003AC09D;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A7E607CB2E2FC766003AC09D /* XCRemoteSwiftPackageReference "lottie-ios" */,
+				A7E607D42E2FD49A003AC09D /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				A7667A552E4378FF00ECA732 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = A7E607892E2FC4A4003AC09D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A7E607872E2FC4A4003AC09D /* VistaBids */,
+				A7E607942E2FC4A5003AC09D /* VistaBidsTests */,
+				A7E6079E2E2FC4A5003AC09D /* VistaBidsUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A7E607862E2FC4A4003AC09D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A7E607932E2FC4A5003AC09D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A7E6079D2E2FC4A5003AC09D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A7E607842E2FC4A4003AC09D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A7E607912E2FC4A5003AC09D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A7E6079B2E2FC4A5003AC09D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A7E607972E2FC4A5003AC09D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A7E607872E2FC4A4003AC09D /* VistaBids */;
+			targetProxy = A7E607962E2FC4A5003AC09D /* PBXContainerItemProxy */;
+		};
+		A7E607A12E2FC4A5003AC09D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A7E607872E2FC4A4003AC09D /* VistaBids */;
+			targetProxy = A7E607A02E2FC4A5003AC09D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		A7E607A72E2FC4A5003AC09D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A7E607A82E2FC4A5003AC09D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		A7E607AA2E2FC4A5003AC09D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = LBHJL5ZQ29;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "VistaBids uses the camera to capture and display AR panoramic views of properties for immersive property viewing experiences.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "VistaBids uses Face ID to provide secure and convenient authentication for quick sign-in to your account.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "VistaBids uses your location to provide relevant property information and enhance your bidding experience.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = co.dulaksha.VistaBids;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A7E607AB2E2FC4A5003AC09D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = LBHJL5ZQ29;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "VistaBids uses the camera to capture and display AR panoramic views of properties for immersive property viewing experiences.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "VistaBids uses Face ID to provide secure and convenient authentication for quick sign-in to your account.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "VistaBids uses your location to provide relevant property information and enhance your bidding experience.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = co.dulaksha.VistaBids;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		A7E607AD2E2FC4A5003AC09D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = co.dulaksha.VistaBidsTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VistaBids.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/VistaBids";
+			};
+			name = Debug;
+		};
+		A7E607AE2E2FC4A5003AC09D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = co.dulaksha.VistaBidsTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/VistaBids.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/VistaBids";
+			};
+			name = Release;
+		};
+		A7E607B02E2FC4A5003AC09D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = co.dulaksha.VistaBidsUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = VistaBids;
+			};
+			name = Debug;
+		};
+		A7E607B12E2FC4A5003AC09D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = co.dulaksha.VistaBidsUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = VistaBids;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A7E607832E2FC4A4003AC09D /* Build configuration list for PBXProject "VistaBids" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A7E607A72E2FC4A5003AC09D /* Debug */,
+				A7E607A82E2FC4A5003AC09D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A7E607A92E2FC4A5003AC09D /* Build configuration list for PBXNativeTarget "VistaBids" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A7E607AA2E2FC4A5003AC09D /* Debug */,
+				A7E607AB2E2FC4A5003AC09D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A7E607AC2E2FC4A5003AC09D /* Build configuration list for PBXNativeTarget "VistaBidsTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A7E607AD2E2FC4A5003AC09D /* Debug */,
+				A7E607AE2E2FC4A5003AC09D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A7E607AF2E2FC4A5003AC09D /* Build configuration list for PBXNativeTarget "VistaBidsUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A7E607B02E2FC4A5003AC09D /* Debug */,
+				A7E607B12E2FC4A5003AC09D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A7667A552E4378FF00ECA732 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+		};
+		A7E607CB2E2FC766003AC09D /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.5.2;
+			};
+		};
+		A7E607D42E2FD49A003AC09D /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A7667A562E4378FF00ECA732 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A7667A552E4378FF00ECA732 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		A7667A582E4378FF00ECA732 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A7667A552E4378FF00ECA732 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+		A7E607CC2E2FC766003AC09D /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A7E607CB2E2FC766003AC09D /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
+		};
+		A7E607D52E2FD49A003AC09D /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A7E607D42E2FD49A003AC09D /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		A7E607D72E2FD49A003AC09D /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A7E607D42E2FD49A003AC09D /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		A7E607D92E2FD49A003AC09D /* FirebaseDatabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A7E607D42E2FD49A003AC09D /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseDatabase;
+		};
+		A7E607DB2E2FD49A003AC09D /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A7E607D42E2FD49A003AC09D /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+		A7E607DD2E2FD49A003AC09D /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A7E607D42E2FD49A003AC09D /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = A7E607802E2FC4A4003AC09D /* Project object */;
+}

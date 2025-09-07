@@ -28,184 +28,271 @@ struct ProfileScreen: View {
         ScrollView {
             VStack(spacing: 24) {
                 // Profile Header
-                VStack(spacing: 16) {
-                    ProfileImageView(imageURL: extendedProfile.photoURL.isEmpty ? (authService.currentUser?.photoURL?.absoluteString ?? "") : extendedProfile.photoURL,
-                                   displayName: extendedProfile.displayName.isEmpty ? (authService.currentUser?.displayName ?? "U") : extendedProfile.displayName)
+                VStack(spacing: 0) {
+                    // Profile card with image and basic info
+                    VStack(spacing: 20) {
+                        ProfileImageView(imageURL: extendedProfile.photoURL.isEmpty ? (authService.currentUser?.photoURL?.absoluteString ?? "") : extendedProfile.photoURL,
+                                       displayName: extendedProfile.displayName.isEmpty ? (authService.currentUser?.displayName ?? "U") : extendedProfile.displayName)
+                        
+                        VStack(spacing: 6) {
+                            Text(extendedProfile.displayName.isEmpty ? (authService.currentUser?.displayName ?? "User") : extendedProfile.displayName)
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            
+                            Text(authService.currentUser?.email ?? "")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        if let isEmailVerified = authService.currentUser?.isEmailVerified {
+                            HStack(spacing: 6) {
+                                Image(systemName: isEmailVerified ? "checkmark.seal.fill" : "exclamationmark.triangle.fill")
+                                    .foregroundColor(isEmailVerified ? .green : .orange)
+                                Text(isEmailVerified ? "Verified Account" : "Unverified Account")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(isEmailVerified ? .green : .orange)
+                            }
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 12)
+                            .background(isEmailVerified ? Color.green.opacity(0.1) : Color.orange.opacity(0.1))
+                            .cornerRadius(20)
+                        }
+                    }
+                    .padding(.vertical, 24)
+                    .padding(.horizontal, 20)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.cardBackground)
+                    .cornerRadius(16)
+                    .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
                     
-                    VStack(spacing: 8) {
-                        Text(extendedProfile.displayName.isEmpty ? (authService.currentUser?.displayName ?? "User") : extendedProfile.displayName)
-                            .font(.title2)
-                            .fontWeight(.semibold)
+                    // Contact & Bio card
+                    VStack(alignment: .leading, spacing: 16) {
+                        HStack {
+                            Text("Contact & Bio")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                            Spacer()
+                            Button(action: {
+                                showingEditProfile = true
+                            }) {
+                                HStack(spacing: 4) {
+                                    Text("Edit")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                    Image(systemName: "pencil")
+                                        .font(.caption)
+                                }
+                                .foregroundColor(.accentBlues)
+                            }
+                        }
+                        .padding(.bottom, 4)
                         
-                        Text(authService.currentUser?.email ?? "")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        
-                        if !extendedProfile.location.isEmpty {
-                            HStack {
+                        VStack(alignment: .leading, spacing: 12) {
+                            // Location
+                            HStack(spacing: 12) {
                                 Image(systemName: "location.fill")
                                     .foregroundColor(.accentBlues)
-                                    .font(.caption)
-                                Text(extendedProfile.location)
+                                    .frame(width: 22, height: 22)
+                                    .font(.system(size: 14))
+                                
+                                Text(extendedProfile.location.isEmpty ? "No location added" : extendedProfile.location)
                                     .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(extendedProfile.location.isEmpty ? .secondary.opacity(0.7) : .primary)
                             }
-                        }
-                        
-                        if !extendedProfile.phoneNumber.isEmpty {
-                            HStack {
+                            
+                            Divider()
+                                .padding(.leading, 34)
+                            
+                            // Phone
+                            HStack(spacing: 12) {
                                 Image(systemName: "phone.fill")
                                     .foregroundColor(.accentBlues)
-                                    .font(.caption)
-                                Text(extendedProfile.phoneNumber)
+                                    .frame(width: 22, height: 22)
+                                    .font(.system(size: 14))
+                                
+                                Text(extendedProfile.phoneNumber.isEmpty ? "No phone number added" : extendedProfile.phoneNumber)
                                     .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(extendedProfile.phoneNumber.isEmpty ? .secondary.opacity(0.7) : .primary)
+                            }
+                            
+                            if !extendedProfile.bio.isEmpty {
+                                Divider()
+                                    .padding(.leading, 34)
+                                
+                                // Bio
+                                HStack(alignment: .top, spacing: 12) {
+                                    Image(systemName: "text.bubble.fill")
+                                        .foregroundColor(.accentBlues)
+                                        .frame(width: 22, height: 22)
+                                        .font(.system(size: 14))
+                                    
+                                    Text(extendedProfile.bio)
+                                        .font(.subheadline)
+                                        .foregroundColor(.primary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .lineLimit(4)
+                                }
                             }
                         }
-                        
-                        if !extendedProfile.bio.isEmpty {
-                            Text(extendedProfile.bio)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal, 20)
-                        }
+                        .padding(.vertical, 8)
                         
                         // Profile Completeness
                         if extendedProfile.profileCompleteness < 100 {
-                            VStack(spacing: 4) {
+                            VStack(spacing: 8) {
                                 HStack {
                                     Text("Profile Completeness")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
                                     Spacer()
                                     Text("\(extendedProfile.profileCompleteness)%")
-                                        .font(.caption)
-                                        .fontWeight(.medium)
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
                                         .foregroundColor(.accentBlues)
                                 }
                                 
                                 ProgressView(value: Double(extendedProfile.profileCompleteness), total: 100)
-                                    .progressViewStyle(LinearProgressViewStyle())
-                                    .frame(height: 4)
+                                    .progressViewStyle(LinearProgressViewStyle(tint: .accentBlues))
+                                    .frame(height: 6)
                                     .scaleEffect(x: 1, y: 1, anchor: .center)
+                                    .background(Color.gray.opacity(0.1))
+                                    .cornerRadius(3)
                             }
-                            .padding(.horizontal, 20)
-                        }
-                        
-                        if let isEmailVerified = authService.currentUser?.isEmailVerified {
-                            HStack {
-                                Image(systemName: isEmailVerified ? "checkmark.seal.fill" : "exclamationmark.triangle.fill")
-                                    .foregroundColor(isEmailVerified ? .green : .orange)
-                                Text(isEmailVerified ? "Verified" : "Unverified")
-                                    .font(.caption)
-                                    .foregroundColor(isEmailVerified ? .green : .orange)
-                            }
-                        }
-                    }
-                    
-                    Button(action: {
-                        showingEditProfile = true
-                    }) {
-                        Text("Edit Profile")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundColor(.accentBlues)
-                            .padding(.horizontal, 20)
                             .padding(.vertical, 8)
-                            .background(Color.clear)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.accentBlues, lineWidth: 1)
-                            )
+                            .padding(.horizontal, 16)
+                            .background(Color.accentBlues.opacity(0.05))
+                            .cornerRadius(10)
+                        }
                     }
+                    .padding(20)
+                    .background(Color.cardBackground)
+                    .cornerRadius(16)
+                    .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+                    .padding(.top, 16)
                 }
                 .padding(.top, 20)
                 
                 // Stats Section
-                HStack(spacing: 0) {
-                    VStack {
-                        Text("\(userStatsService.userStats.propertiesSold)")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        Text("Properties\nSold")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
+                VStack(spacing: 16) {
+                    HStack {
+                        Text("Your Activity")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                        Spacer()
                     }
-                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 20)
                     
-                    Divider().frame(height: 40)
-                    
-                    VStack {
-                        Text("\(userStatsService.userStats.activeBids)")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        Text("Active\nBids")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
+                    HStack(spacing: 0) {
+                        // Properties Sold
+                        VStack(spacing: 6) {
+                            Text("\(userStatsService.userStats.propertiesSold)")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.accentBlues)
+                            Text("Properties\nSold")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color.accentBlues.opacity(0.05))
+                        .cornerRadius(12)
+                        
+                        Spacer(minLength: 12)
+                        
+                        // Active Bids
+                        VStack(spacing: 6) {
+                            Text("\(userStatsService.userStats.activeBids)")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.accentBlues)
+                            Text("Active\nBids")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color.accentBlues.opacity(0.05))
+                        .cornerRadius(12)
+                        
+                        Spacer(minLength: 12)
+                        
+                        // Watchlist Items
+                        VStack(spacing: 6) {
+                            Text("\(userStatsService.userStats.watchlistItems)")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.accentBlues)
+                            Text("Watchlist\nItems")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color.accentBlues.opacity(0.05))
+                        .cornerRadius(12)
                     }
-                    .frame(maxWidth: .infinity)
-                    
-                    Divider().frame(height: 40)
-                    
-                    VStack {
-                        Text("\(userStatsService.userStats.watchlistItems)")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        Text("Watchlist\nItems")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 20)
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 16)
+                .padding(.vertical, 20)
                 .background(Color.cardBackground)
-                .cornerRadius(12)
-                .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                .cornerRadius(16)
+                .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+                .padding(.top, 16)
                 
                 // Menu Items
-                VStack(spacing: 0) {
-                    ProfileMenuItem(icon: "house.fill", title: "My Properties", subtitle: "Manage your listings") {
-                        showingMyProperties = true
+                VStack(spacing: 16) {
+                    HStack {
+                        Text("Account & Settings")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                        Spacer()
                     }
-                    Divider().padding(.leading, 60)
+                    .padding(.horizontal, 20)
                     
-                    ProfileMenuItem(icon: "heart.fill", title: "Favorites", subtitle: "Your saved properties") {
-                        showingFavorites = true
+                    VStack(spacing: 0) {
+                        ProfileMenuItem(icon: "house.fill", title: "My Properties", subtitle: "Manage your listings") {
+                            showingMyProperties = true
+                        }
+                        
+                        ProfileMenuItem(icon: "heart.fill", title: "Favorites", subtitle: "Your saved properties") {
+                            showingFavorites = true
+                        }
+                        
+                        ProfileMenuItem(icon: "doc.text.fill", title: "Transaction History", subtitle: "View past transactions") {
+                            showingTransactionHistory = true
+                        }
+                        
+                        ProfileMenuItem(icon: "creditcard.fill", title: "Saved Cards", subtitle: "Manage payment methods") {
+                            showingSavedCards = true
+                        }
+                        
+                        ProfileMenuItem(icon: "bell.fill", title: "Notifications", subtitle: "Manage notifications") {
+                            showingNotifications = true
+                        }
+                        
+                        ProfileMenuItem(icon: "gearshape.fill", title: "Settings", subtitle: "App preferences") {
+                            showingSettings = true
+                        }
+                        
+                        ProfileMenuItem(icon: "questionmark.circle.fill", title: "Help & Support", subtitle: "Get help", isLast: true) {
+                            showingHelpSupport = true
+                        }
                     }
-                    Divider().padding(.leading, 60)
-                    
-                    ProfileMenuItem(icon: "doc.text.fill", title: "Transaction History", subtitle: "View past transactions") {
-                        showingTransactionHistory = true
-                    }
-                    Divider().padding(.leading, 60)
-                    
-                    ProfileMenuItem(icon: "creditcard.fill", title: "Saved Cards", subtitle: "Manage payment methods") {
-                        showingSavedCards = true
-                    }
-                    Divider().padding(.leading, 60)
-                    
-                    ProfileMenuItem(icon: "bell.fill", title: "Notifications", subtitle: "Manage notifications") {
-                        showingNotifications = true
-                    }
-                    Divider().padding(.leading, 60)
-                    
-                    ProfileMenuItem(icon: "gearshape.fill", title: "Settings", subtitle: "App preferences") {
-                        showingSettings = true
-                    }
-                    Divider().padding(.leading, 60)
-                    
-                    ProfileMenuItem(icon: "questionmark.circle.fill", title: "Help & Support", subtitle: "Get help") {
-                        showingHelpSupport = true
-                    }
+                    .background(Color.cardBackground)
+                    .cornerRadius(16)
                 }
+                .padding(.vertical, 20)
                 .background(Color.cardBackground)
-                .cornerRadius(12)
-                .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                .cornerRadius(16)
+                .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+                .padding(.top, 16)
                 
                 // Logout Button
                 Button(action: {
@@ -216,13 +303,14 @@ struct ProfileScreen: View {
                         Text("Sign Out")
                             .fontWeight(.medium)
                     }
-                    .foregroundColor(.red)
+                    .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(Color.cardBackground)
-                    .cornerRadius(12)
-                    .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                    .background(Color.red.opacity(0.9))
+                    .cornerRadius(16)
+                    .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
                 }
+                .padding(.top, 16)
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 20)
@@ -306,15 +394,18 @@ struct ProfileMenuItem: View {
     let icon: String
     let title: String
     let subtitle: String
+    var isLast: Bool = false
     let action: () -> Void
     
     var body: some View {
         Button(action: action) {
             HStack(spacing: 16) {
                 Image(systemName: icon)
-                    .font(.title3)
+                    .font(.system(size: 18))
                     .foregroundColor(.accentBlues)
-                    .frame(width: 24, height: 24)
+                    .frame(width: 28, height: 28)
+                    .background(Color.accentBlues.opacity(0.1))
+                    .clipShape(Circle())
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
@@ -334,10 +425,20 @@ struct ProfileMenuItem: View {
                     .foregroundColor(.secondary)
             }
             .padding(.horizontal, 20)
-            .padding(.vertical, 16)
+            .padding(.vertical, 14)
             .contentShape(Rectangle())
         }
         .buttonStyle(PlainButtonStyle())
+        .background(Color.cardBackground)
+        .overlay(
+            !isLast ?
+            VStack {
+                Spacer()
+                Divider()
+                    .padding(.leading, 64)
+                    .padding(.trailing, 20)
+            } : nil
+        )
     }
 }
 

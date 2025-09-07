@@ -299,21 +299,14 @@ struct HomeScreen: View {
                 }
             }
 
-            // Property detail sheet
+            // Navigation link to property detail full view (hidden until selected)
             if let property = selectedProperty {
-                ZStack {
-                    Color.black.opacity(0.4)
-                        .ignoresSafeArea()
-                        .onTapGesture { selectedProperty = nil }
-                    
-                    VStack {
-                        Spacer()
-                        PropertyDetailSheet(property: property, onClose: { selectedProperty = nil })
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
-                    }
-                }
-                .zIndex(2)
-                .animation(.easeInOut(duration: 0.3), value: selectedProperty != nil)
+                NavigationLink(
+                    destination: PropertyDetailFullView(property: property),
+                    isActive: .constant(true),
+                    label: { EmptyView() }
+                )
+                .hidden()
             }
         }
         .background(Color.backgrounds)
@@ -505,266 +498,349 @@ struct PropertyDetailSheet: View {
     @State private var currentTab = 0
     @State private var showingContactAlert = false
     @State private var showingCallAlert = false
+    @State private var selectedImageIndex = 0
+    @State private var scrollOffset: CGFloat = 0
     
     private var filteredPlaces: [NearbyPlace] {
         nearbyPlacesService.filterPlaces(by: selectedPlaceType)
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Header with close button
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(property.title)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.textPrimary)
-                        .lineLimit(2)
-                    
-                    Text(property.formattedPrice)
-                        .font(.title3)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.accentBlues)
+        VStack(spacing: 0) {
+            // Header with property title and close button
+            HStack(alignment: .center) {
+                Button(action: onClose) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.secondary)
+                        .padding(8)
+                        .background(Color.secondaryBackground.opacity(0.8))
+                        .clipShape(Circle())
                 }
                 
                 Spacer()
                 
-                Button(action: onClose) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(.secondaryTextColor)
+                // Share and favorite buttons
+                HStack(spacing: 16) {
+                    Button(action: {
+                        // Share functionality
+                    }) {
+                        Image(systemName: "square.and.arrow.up")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.secondary)
+                            .padding(8)
+                            .background(Color.secondaryBackground.opacity(0.8))
+                            .clipShape(Circle())
+                    }
+                    
+                    Button(action: {
+                        // Add to favorites
+                    }) {
+                        Image(systemName: "heart")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.secondary)
+                            .padding(8)
+                            .background(Color.secondaryBackground.opacity(0.8))
+                            .clipShape(Circle())
+                    }
                 }
             }
             .padding(.horizontal, 20)
-            .padding(.top, 20)
-            .padding(.bottom, 16)
+            .padding(.top, 16)
+            .zIndex(1)
             
-            TabView(selection: $currentTab) {
-                // First tab - Main info
-                VStack(alignment: .leading, spacing: 12) {
-                    AsyncImage(url: URL(string: property.primaryImage)) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } placeholder: {
+            // Image carousel
+            TabView(selection: $selectedImageIndex) {
+                ForEach(0..<(property.images.isEmpty ? 1 : property.images.count), id: \.self) { index in
+                    if property.images.isEmpty {
                         Rectangle()
                             .fill(Color.secondaryBackground)
                             .overlay(
                                 Image(systemName: "house.fill")
+                                    .font(.largeTitle)
                                     .foregroundColor(.secondaryTextColor)
                             )
-                    }
-                    .frame(height: 160)
-                    .clipped()
-                    .cornerRadius(10)
-                    
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text(property.description)
-                                .font(.body)
-                                .foregroundColor(.textPrimary)
-                            
-                            HStack(spacing: 16) {
-                                FeatureItem(icon: "bed.double.fill", value: "\(property.bedrooms) Beds")
-                                FeatureItem(icon: "bathtub.fill", value: "\(property.bathrooms) Baths")
-                                FeatureItem(icon: "square.fill", value: property.area)
-                            }
-                            
-                            Divider()
-                            
-                            Text("Location")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.textPrimary)
-                            
-                            Text("\(property.address.street), \(property.address.city), \(property.address.state) \(property.address.zipCode)")
-                                .font(.caption)
-                                .foregroundColor(.secondaryTextColor)
-                            
-                            Map(coordinateRegion: .constant(MKCoordinateRegion(
-                                center: property.coordinate,
-                                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                            )), annotationItems: [property]) { _ in
-                                MapMarker(coordinate: property.coordinate, tint: .red)
-                            }
-                            .frame(height: 120)
-                            .cornerRadius(10)
-                            .disabled(true)
-                            
-                            Divider()
-                            
-                            // Property features
-                            Text("Features")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.textPrimary)
-                            
-                            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                                ForEach(property.features, id: \.name) { feature in
-                                    HStack {
-                                        Image(systemName: feature.icon)
-                                            .foregroundColor(.accentBlues)
-                                        Text(feature.name)
-                                            .font(.caption)
-                                            .foregroundColor(.textPrimary)
-                                    }
-                                }
-                            }
-                            
-                            Divider()
-                            
-                            // Special features
-                            VStack(alignment: .leading, spacing: 8) {
-                                if property.hasWalkthroughVideo {
-                                    Button(action: {
-                                        // Open video walkthrough
-                                    }) {
-                                        Label("Virtual Tour", systemImage: "video.fill")
-                                            .font(.caption)
-                                            .foregroundColor(.white)
-                                            .padding(.horizontal, 12)
-                                            .padding(.vertical, 8)
-                                            .background(Color.accentBlues)
-                                            .cornerRadius(8)
-                                    }
-                                }
-                                
-                                if property.hasPanoramicImages {
-                                    Button(action: {
-                                        // Show 360 views
-                                    }) {
-                                        Label("360° Views", systemImage: "panorama")
-                                            .font(.caption)
-                                            .foregroundColor(.white)
-                                            .padding(.horizontal, 12)
-                                            .padding(.vertical, 8)
-                                            .background(Color.accentBlues)
-                                            .cornerRadius(8)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    .frame(maxHeight: 300)
-                }
-                .tag(0)
-                
-                // Second tab - Nearby places
-                VStack {
-                    if nearbyPlacesService.isLoading {
-                        VStack {
-                            ProgressView()
-                                .padding()
-                            Text("Loading nearby places...")
-                                .foregroundColor(.secondaryTextColor)
-                        }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    } else if !nearbyPlacesService.nearbyPlaces.isEmpty {
-                        NearbyPlacesView(
-                            places: nearbyPlacesService.nearbyPlaces,
-                            propertyCoordinate: property.coordinate,
-                            selectedType: $selectedPlaceType
-                        )
-                    } else if let error = nearbyPlacesService.error {
-                        VStack {
-                            Image(systemName: "exclamationmark.triangle")
-                                .foregroundColor(.red)
-                                .font(.title)
-                            Text("Error loading places")
-                                .font(.headline)
-                                .foregroundColor(.textPrimary)
-                            Text(error.localizedDescription)
-                                .font(.caption)
-                                .foregroundColor(.secondaryTextColor)
-                                .multilineTextAlignment(.center)
-                            
-                            Button("Try Again") {
-                                loadNearbyPlaces()
-                            }
-                            .padding(.top)
-                            .foregroundColor(.accentBlues)
-                        }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .padding()
                     } else {
-                        VStack {
-                            Image(systemName: "location.slash")
-                                .foregroundColor(.gray)
-                                .font(.title)
-                            Text("No nearby places found")
-                                .foregroundColor(.secondaryTextColor)
-                            
-                            Button("Reload") {
-                                loadNearbyPlaces()
-                            }
-                            .padding(.top)
+                        AsyncImage(url: URL(string: property.images[index])) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            Rectangle()
+                                .fill(Color.secondaryBackground)
+                                .overlay(
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle())
+                                        .tint(.accentBlues)
+                                )
+                        }
+                    }
+                }
+            }
+            .frame(height: 220)
+            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .automatic))
+            .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: .always))
+            
+            // Main content
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    // Property title and price
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(property.formattedPrice)
+                            .font(.title)
+                            .fontWeight(.bold)
                             .foregroundColor(.accentBlues)
+                        
+                        Text(property.title)
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.textPrimary)
+                            .lineLimit(2)
+                        
+                        Text("\(property.address.street), \(property.address.city)")
+                            .font(.subheadline)
+                            .foregroundColor(.secondaryTextColor)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
+                    
+                    // Key features in a horizontal scrollview
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 16) {
+                            FeatureTag(icon: "bed.double.fill", value: "\(property.bedrooms)", label: "Beds")
+                            FeatureTag(icon: "bathtub.fill", value: "\(property.bathrooms)", label: "Baths")
+                            FeatureTag(icon: "square.fill", value: property.area, label: "Area")
+                            FeatureTag(icon: "building.2.fill", value: property.propertyType.displayName, label: "Type")
+                            
+                            if property.status == .active {
+                                FeatureTag(icon: "tag.fill", value: "For Sale", label: "Status", color: .green)
+                            } else if property.status == .underOffer {
+                                FeatureTag(icon: "tag.fill", value: "Under Offer", label: "Status", color: .orange)
+                            }
                         }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(.horizontal, 20)
                     }
-                }
-                .tag(1)
-            }
-            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-            .frame(minHeight: 400, maxHeight: .infinity)
-            
-            // Custom tab indicator
-            HStack {
-                TabButton(title: "Details", isSelected: currentTab == 0) {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        currentTab = 0
-                    }
-                }
-                
-                TabButton(title: "Nearby", isSelected: currentTab == 1) {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        currentTab = 1
-                        loadNearbyPlaces()
-                    }
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
-            .background(Color.secondaryBackground.opacity(0.5))
-            
-            // Contact buttons section
-            VStack(spacing: 12) {
-                HStack(spacing: 12) {
-                    // Call button
-                    Button(action: {
-                        showingCallAlert = true
-                    }) {
-                        HStack {
-                            Image(systemName: "phone.fill")
-                            Text("Call")
+                    .padding(.vertical, 8)
+                    
+                    Divider()
+                        .padding(.horizontal, 20)
+                    
+                    // Custom tab buttons
+                    HStack(spacing: 0) {
+                        ForEach(["Details", "Nearby"], id: \.self) { tab in
+                            TabButton(
+                                title: tab,
+                                isSelected: tab == "Details" ? currentTab == 0 : currentTab == 1
+                            ) {
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    currentTab = tab == "Details" ? 0 : 1
+                                    if currentTab == 1 {
+                                        loadNearbyPlaces()
+                                    }
+                                }
+                            }
                         }
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color.green)
-                        .cornerRadius(12)
+                    }
+                    .padding(.horizontal, 20)
+                    
+                    // Tab content
+                    if currentTab == 0 {
+                        // Details tab
+                        VStack(alignment: .leading, spacing: 20) {
+                            // Description
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Description")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.textPrimary)
+                                
+                                Text(property.description)
+                                    .font(.subheadline)
+                                    .foregroundColor(.textPrimary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            .padding(.horizontal, 20)
+                            
+                            Divider()
+                                .padding(.horizontal, 20)
+                            
+                            // Features
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Features")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.textPrimary)
+                                
+                                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                                    ForEach(property.features, id: \.id) { feature in
+                                        HStack(spacing: 8) {
+                                            Image(systemName: feature.icon)
+                                                .foregroundColor(.accentBlues)
+                                                .frame(width: 24, height: 24)
+                                            
+                                            Text(feature.name)
+                                                .font(.subheadline)
+                                                .foregroundColor(.textPrimary)
+                                            
+                                            Spacer()
+                                        }
+                                        .padding(.vertical, 4)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 20)
+                            
+                            Divider()
+                                .padding(.horizontal, 20)
+                            
+                            // Location
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Location")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.textPrimary)
+                                
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("\(property.address.street), \(property.address.city), \(property.address.state) \(property.address.zipCode)")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondaryTextColor)
+                                    
+                                    Map(coordinateRegion: .constant(MKCoordinateRegion(
+                                        center: property.coordinate,
+                                        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                                    )), annotationItems: [property]) { _ in
+                                        MapMarker(coordinate: property.coordinate, tint: .red)
+                                    }
+                                    .frame(height: 180)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                                    )
+                                    .disabled(true)
+                                }
+                            }
+                            .padding(.horizontal, 20)
+                            
+                            // Virtual experiences
+                            if property.hasWalkthroughVideo || property.hasPanoramicImages {
+                                Divider()
+                                    .padding(.horizontal, 20)
+                                
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text("Virtual Experience")
+                                        .font(.headline)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.textPrimary)
+                                    
+                                    HStack(spacing: 12) {
+                                        if property.hasWalkthroughVideo {
+                                            VirtualExperienceButton(
+                                                title: "Virtual Tour",
+                                                icon: "video.fill",
+                                                action: {
+                                                    // Open video walkthrough
+                                                }
+                                            )
+                                        }
+                                        
+                                        if property.hasPanoramicImages {
+                                            VirtualExperienceButton(
+                                                title: "360° Views",
+                                                icon: "panorama",
+                                                action: {
+                                                    // Show 360 views
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                                .padding(.horizontal, 20)
+                            }
+                        }
+                        .padding(.vertical, 16)
+                    } else {
+                        // Nearby places tab
+                        VStack {
+                            if nearbyPlacesService.isLoading {
+                                VStack {
+                                    ProgressView()
+                                        .padding()
+                                    Text("Loading nearby places...")
+                                        .foregroundColor(.secondaryTextColor)
+                                }
+                                .frame(height: 300)
+                                .frame(maxWidth: .infinity)
+                            } else if !nearbyPlacesService.nearbyPlaces.isEmpty {
+                                NearbyPlacesView(
+                                    places: nearbyPlacesService.nearbyPlaces,
+                                    propertyCoordinate: property.coordinate,
+                                    selectedType: $selectedPlaceType
+                                )
+                            } else if let error = nearbyPlacesService.error {
+                                VStack(spacing: 12) {
+                                    Image(systemName: "exclamationmark.triangle")
+                                        .foregroundColor(.orange)
+                                        .font(.largeTitle)
+                                    
+                                    Text("Error loading places")
+                                        .font(.headline)
+                                        .foregroundColor(.textPrimary)
+                                    
+                                    Text(error.localizedDescription)
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondaryTextColor)
+                                        .multilineTextAlignment(.center)
+                                        .padding(.horizontal)
+                                    
+                                    Button(action: loadNearbyPlaces) {
+                                        Text("Try Again")
+                                            .font(.headline)
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 24)
+                                            .padding(.vertical, 12)
+                                            .background(Color.accentBlues)
+                                            .cornerRadius(8)
+                                    }
+                                    .padding(.top, 8)
+                                }
+                                .frame(height: 300)
+                                .frame(maxWidth: .infinity)
+                            } else {
+                                VStack(spacing: 12) {
+                                    Image(systemName: "location.slash")
+                                        .foregroundColor(.gray)
+                                        .font(.largeTitle)
+                                    
+                                    Text("No nearby places found")
+                                        .font(.headline)
+                                        .foregroundColor(.textPrimary)
+                                    
+                                    Button(action: loadNearbyPlaces) {
+                                        Text("Reload")
+                                            .font(.headline)
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 24)
+                                            .padding(.vertical, 12)
+                                            .background(Color.accentBlues)
+                                            .cornerRadius(8)
+                                    }
+                                    .padding(.top, 8)
+                                }
+                                .frame(height: 300)
+                                .frame(maxWidth: .infinity)
+                            }
+                        }
+                        .padding(.vertical, 16)
                     }
                     
-                    // Message button
-                    Button(action: {
-                        showingContactAlert = true
-                    }) {
-                        HStack {
-                            Image(systemName: "message.fill")
-                            Text("Message")
-                        }
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color.accentBlues)
-                        .cornerRadius(12)
-                    }
+                    // Spacer for bottom padding
+                    Spacer().frame(height: 80)
                 }
-                
+            }
+            
+            // Contact section (sticky at bottom)
+            VStack(spacing: 16) {
                 // Seller info
                 HStack(spacing: 12) {
                     AsyncImage(url: URL(string: property.seller.profileImageURL ?? "")) { image in
@@ -776,22 +852,28 @@ struct PropertyDetailSheet: View {
                             .resizable()
                             .foregroundColor(.gray)
                     }
-                    .frame(width: 40, height: 40)
+                    .frame(width: 44, height: 44)
                     .clipShape(Circle())
                     
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(property.seller.name)
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.textPrimary)
+                        HStack {
+                            Text(property.seller.name)
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.textPrimary)
+                            
+                            if property.seller.verificationStatus == .verified {
+                                Image(systemName: "checkmark.seal.fill")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                            }
+                        }
                         
                         HStack(spacing: 4) {
-                            HStack(spacing: 2) {
-                                ForEach(0..<5) { index in
-                                    Image(systemName: "star.fill")
-                                        .foregroundColor(index < Int(property.seller.rating) ? .yellow : .gray.opacity(0.3))
-                                        .font(.caption2)
-                                }
+                            ForEach(0..<5) { index in
+                                Image(systemName: "star.fill")
+                                    .font(.caption2)
+                                    .foregroundColor(index < Int(property.seller.rating) ? .yellow : .gray.opacity(0.3))
                             }
                             
                             Text("(\(property.seller.reviewCount))")
@@ -801,24 +883,53 @@ struct PropertyDetailSheet: View {
                     }
                     
                     Spacer()
-                    
-                    if property.seller.verificationStatus == .verified {
-                        HStack(spacing: 4) {
-                            Image(systemName: "checkmark.seal.fill")
-                                .foregroundColor(.green)
-                            Text("Verified")
-                                .font(.caption)
-                                .foregroundColor(.green)
+                }
+                
+                // Contact buttons
+                HStack(spacing: 12) {
+                    Button(action: {
+                        showingCallAlert = true
+                    }) {
+                        HStack {
+                            Image(systemName: "phone.fill")
+                                .font(.system(size: 16))
+                            Text("Call")
+                                .fontWeight(.semibold)
                         }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
+                    
+                    Button(action: {
+                        showingContactAlert = true
+                    }) {
+                        HStack {
+                            Image(systemName: "message.fill")
+                                .font(.system(size: 16))
+                            Text("Message")
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.accentBlues)
+                        .foregroundColor(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
                 }
             }
             .padding(.horizontal, 20)
-            .padding(.bottom, 20)
+            .padding(.vertical, 16)
+            .background(
+                Color.cardBackground
+                    .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: -5)
+            )
         }
         .background(Color.cardBackground)
-        .cornerRadius(20, corners: [.topLeft, .topRight])
-        .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: -5)
+        .edgesIgnoringSafeArea(.bottom)
+        .cornerRadius(16, corners: [.topLeft, .topRight])
         .alert("Call Seller", isPresented: $showingCallAlert) {
             Button("Call Now") {
                 makePhoneCall()
@@ -837,6 +948,11 @@ struct PropertyDetailSheet: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("How would you like to contact \(property.seller.name)?")
+        }
+        .onAppear {
+            if currentTab == 1 {
+                loadNearbyPlaces()
+            }
         }
     }
     
@@ -897,6 +1013,58 @@ struct FeatureItem: View {
                 .foregroundColor(.textPrimary)
         }
         .frame(maxWidth: .infinity)
+    }
+}
+
+struct FeatureTag: View {
+    let icon: String
+    let value: String
+    let label: String
+    var color: Color = .accentBlues
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 14))
+                    .foregroundColor(color)
+                
+                Text(value)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.textPrimary)
+            }
+            
+            Text(label)
+                .font(.system(size: 12))
+                .foregroundColor(.secondaryTextColor)
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+        .background(Color.secondaryBackground.opacity(0.5))
+        .cornerRadius(8)
+    }
+}
+
+struct VirtualExperienceButton: View {
+    let title: String
+    let icon: String
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 14))
+                
+                Text(title)
+                    .font(.system(size: 14, weight: .medium))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .foregroundColor(.white)
+            .background(Color.accentBlues)
+            .cornerRadius(8)
+        }
     }
 }
 

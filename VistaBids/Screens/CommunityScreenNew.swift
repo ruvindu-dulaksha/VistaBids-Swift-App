@@ -9,7 +9,7 @@ import SwiftUI
 
 struct CommunityScreenV2: View {
     @StateObject private var communityService = CommunityService()
-    @StateObject private var themeManager = ThemeManager()
+    @EnvironmentObject var themeManager: ThemeManager
     @State private var selectedTab = 0
     @State private var showingNewPost = false
     @State private var showingNewEvent = false
@@ -79,7 +79,8 @@ struct CommunityScreenV2: View {
                 ChatListView(communityService: communityService)
             }
         }
-        .preferredColorScheme(themeManager.currentTheme == .dark ? .dark : .light)
+        .preferredColorScheme(themeManager.currentTheme == .system ? nil : 
+                             (themeManager.isDarkMode ? .dark : .light))
     }
 }
 

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct CommunityScreen: View {
     @StateObject private var communityService = CommunityService()
-    @StateObject private var themeManager = ThemeManager()
+    @EnvironmentObject var themeManager: ThemeManager
     @State private var selectedTab = 0
     @State private var showingNewPost = false
     @State private var showingNewEvent = false
@@ -34,7 +34,7 @@ struct CommunityScreen: View {
                     LanguageSelectorOriginal(selectedLanguage: $selectedLanguage)
                 }
                 .padding()
-                .background(Color(UIColor.systemBackground))
+                .background(Color.backgrounds)
                 
                 // Segmented Control
                 Picker("Tabs", selection: $selectedTab) {
@@ -65,7 +65,7 @@ struct CommunityScreen: View {
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
             }
-            .background(Color(UIColor.systemGroupedBackground))
+            .background(Color.backgrounds)
             .sheet(isPresented: $showingNewPost) {
                 NewPostView(communityService: communityService)
             }
@@ -79,7 +79,8 @@ struct CommunityScreen: View {
                 ChatListView(communityService: communityService)
             }
         }
-        .preferredColorScheme(themeManager.currentTheme == .dark ? .dark : .light)
+        .preferredColorScheme(themeManager.currentTheme == .system ? nil : 
+                             (themeManager.isDarkMode ? .dark : .light))
     }
 }
 
@@ -114,7 +115,7 @@ struct LanguageSelectorOriginal: View {
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(Color.blue)
+            .background(Color.accentBlues)
             .foregroundColor(.white)
             .cornerRadius(8)
         }
@@ -154,7 +155,7 @@ struct FeedView: View {
                             .font(.title2)
                             .foregroundColor(.white)
                             .frame(width: 56, height: 56)
-                            .background(Color.blue)
+                            .background(Color.accentBlues)
                             .clipShape(Circle())
                             .shadow(radius: 4)
                     }
@@ -206,7 +207,7 @@ struct GroupsView: View {
                             .font(.title2)
                             .foregroundColor(.white)
                             .frame(width: 56, height: 56)
-                            .background(Color.green)
+                            .background(Color.accentBlues)
                             .clipShape(Circle())
                             .shadow(radius: 4)
                     }
@@ -258,7 +259,7 @@ struct EventsView: View {
                             .font(.title2)
                             .foregroundColor(.white)
                             .frame(width: 56, height: 56)
-                            .background(Color.orange)
+                            .background(Color.accentBlues)
                             .clipShape(Circle())
                             .shadow(radius: 4)
                     }
@@ -351,12 +352,12 @@ struct PostCardOriginal: View {
                                 if translatedPost?.isTranslated == true && translatedPost?.translatedLanguage == selectedLanguage {
                                     Color.green.opacity(0.1)
                                 } else {
-                                    Color.blue.opacity(0.1)
+                                    Color.accentBlues.opacity(0.1)
                                 }
                             }
                         )
                         .foregroundColor(
-                            translatedPost?.isTranslated == true && translatedPost?.translatedLanguage == selectedLanguage ? .green : .blue
+                            translatedPost?.isTranslated == true && translatedPost?.translatedLanguage == selectedLanguage ? .green : .accentBlues
                         )
                         .cornerRadius(8)
                     }
@@ -397,7 +398,7 @@ struct PostCardOriginal: View {
             if let location = post.location {
                 HStack {
                     Image(systemName: "location")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentBlues)
                     Text(location.address ?? "Unknown location")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -425,7 +426,7 @@ struct PostCardOriginal: View {
                         Image(systemName: "message")
                         Text("\(post.comments)")
                     }
-                    .foregroundColor(.blue)
+                    .foregroundColor(.accentBlues)
                 }
                 
                 Spacer()
@@ -434,13 +435,13 @@ struct PostCardOriginal: View {
                     // Share action
                 }) {
                     Image(systemName: "square.and.arrow.up")
-                        .foregroundColor(.green)
+                        .foregroundColor(.accentBlues)
                 }
             }
             .font(.caption)
         }
         .padding()
-        .background(Color(UIColor.systemBackground))
+        .background(Color.cardBackground)
         .cornerRadius(12)
         .shadow(radius: 2)
     }
@@ -511,7 +512,7 @@ struct GroupCardOriginal: View {
                         .foregroundColor(.primary)
                     Text(group.category.rawValue)
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentBlues)
                     Text("\(group.members.count) members")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -521,7 +522,7 @@ struct GroupCardOriginal: View {
                 
                 if group.isPrivate {
                     Image(systemName: "lock.fill")
-                        .foregroundColor(.orange)
+                        .foregroundColor(.accentBlues)
                         .font(.caption)
                 }
             }
@@ -532,7 +533,7 @@ struct GroupCardOriginal: View {
                 .lineLimit(2)
         }
         .padding()
-        .background(Color(UIColor.systemBackground))
+        .background(Color.cardBackground)
         .cornerRadius(12)
         .shadow(radius: 2)
     }
@@ -552,7 +553,7 @@ struct EventCardOriginal: View {
                         .foregroundColor(.primary)
                     Text(event.category.rawValue)
                         .font(.caption)
-                        .foregroundColor(.orange)
+                        .foregroundColor(.accentBlues)
                     Text(event.date, style: .date)
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -563,7 +564,7 @@ struct EventCardOriginal: View {
                 VStack {
                     Text("\(event.attendees.count)")
                         .font(.headline)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentBlues)
                     Text("attending")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -576,15 +577,15 @@ struct EventCardOriginal: View {
                 .lineLimit(2)
             
             HStack {
-                Image(systemName: "location")
-                    .foregroundColor(.blue)
-                Text(event.location.address)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
+                    Image(systemName: "location")
+                        .foregroundColor(.accentBlues)
+                    Text(event.location.address)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
         }
         .padding()
-        .background(Color(UIColor.systemBackground))
+        .background(Color.cardBackground)
         .cornerRadius(12)
         .shadow(radius: 2)
     }

@@ -2,7 +2,7 @@
 //  Publisher+Async.swift
 //  VistaBids
 //
-//  Created by AI Assistant on 2025-08-18.
+//  Created by Ruvindu Dulaksha on 2025-08-18.
 //
 
 import Foundation
