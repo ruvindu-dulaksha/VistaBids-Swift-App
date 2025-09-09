@@ -11,6 +11,10 @@ struct SellPropertyScreen: View {
     @State private var showingPropertyDetail = false
     @State private var showingPropertyChat = false
     @State private var showingCallAlert = false
+    @State private var showingFilterSheet = false
+    @State private var priceRange: ClosedRange<Double> = 0...10_000_000
+    @State private var bedroomFilter: Int? = nil
+    @State private var bathroomFilter: Int? = nil
     
     var filteredProperties: [SaleProperty] {
         var filtered = salePropertyService.properties
@@ -25,6 +29,15 @@ struct SellPropertyScreen: View {
         
         if let selectedFilter = selectedFilter {
             filtered = filtered.filter { $0.propertyType == selectedFilter }
+        }
+        
+        // Apply additional filters
+        filtered = filtered.filter { property in
+            let priceInRange = property.price >= priceRange.lowerBound && property.price <= priceRange.upperBound
+            let bedroomMatch = bedroomFilter == nil || property.bedrooms == bedroomFilter
+            let bathroomMatch = bathroomFilter == nil || property.bathrooms == bathroomFilter
+            
+            return priceInRange && bedroomMatch && bathroomMatch
         }
         
         return filtered
@@ -61,6 +74,13 @@ struct SellPropertyScreen: View {
                 if let property = selectedProperty {
                     Text("Would you like to call \(property.seller.name) at \(property.seller.phone ?? "N/A")?")
                 }
+            }
+            .sheet(isPresented: $showingFilterSheet) {
+                FilterSheetView(
+                    priceRange: $priceRange,
+                    bedroomFilter: $bedroomFilter,
+                    bathroomFilter: $bathroomFilter
+                )
             }
             .onAppear {
                 NSLog("🏠 SellPropertyScreen appeared, loading properties from Firestore")
@@ -122,7 +142,9 @@ struct SellPropertyScreen: View {
             .background(Color.inputFields)
             .cornerRadius(12)
             
-            Button(action: {}) {
+            Button(action: {
+                showingFilterSheet = true
+            }) {
                 Image(systemName: "slider.horizontal.3")
                     .padding(12)
                     .background(Color.accentBlues)
@@ -826,6 +848,151 @@ struct AddSalePropertySheet: View {
 
 #Preview {
     SellPropertyScreen()
+}
+
+// MARK: - Filter Sheet View
+struct FilterSheetView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var priceRange: ClosedRange<Double>
+    @Binding var bedroomFilter: Int?
+    @Binding var bathroomFilter: Int?
+    
+    @State private var minPrice: Double
+    @State private var maxPrice: Double
+    @State private var selectedBedrooms: Int?
+    @State private var selectedBathrooms: Int?
+    
+    init(priceRange: Binding<ClosedRange<Double>>, bedroomFilter: Binding<Int?>, bathroomFilter: Binding<Int?>) {
+        self._priceRange = priceRange
+        self._bedroomFilter = bedroomFilter
+        self._bathroomFilter = bathroomFilter
+        
+        // Initialize the local state with the current values
+        self._minPrice = State(initialValue: priceRange.wrappedValue.lowerBound)
+        self._maxPrice = State(initialValue: priceRange.wrappedValue.upperBound)
+        self._selectedBedrooms = State(initialValue: bedroomFilter.wrappedValue)
+        self._selectedBathrooms = State(initialValue: bathroomFilter.wrappedValue)
+    }
+    
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Price Range")) {
+                    VStack(alignment: .leading) {
+                        Text("Min: Rs. \(Int(minPrice))")
+                        Slider(value: $minPrice, in: 0...maxPrice)
+                            .accentColor(.accentBlues)
+                        
+                        Text("Max: Rs. \(Int(maxPrice))")
+                        Slider(value: $maxPrice, in: minPrice...10_000_000)
+                            .accentColor(.accentBlues)
+                    }
+                    .padding(.vertical, 8)
+                }
+                
+                Section(header: Text("Bedrooms")) {
+                    HStack {
+                        ForEach([1, 2, 3, 4, 5], id: \.self) { number in
+                            Button(action: {
+                                if selectedBedrooms == number {
+                                    selectedBedrooms = nil
+                                } else {
+                                    selectedBedrooms = number
+                                }
+                            }) {
+                                Text("\(number)")
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .background(selectedBedrooms == number ? Color.accentBlues : Color.inputFields)
+                                    .foregroundColor(selectedBedrooms == number ? .white : .textPrimary)
+                                    .cornerRadius(8)
+                            }
+                        }
+                        
+                        Button(action: {
+                            selectedBedrooms = nil
+                        }) {
+                            Text("Any")
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(selectedBedrooms == nil ? Color.accentBlues : Color.inputFields)
+                                .foregroundColor(selectedBedrooms == nil ? .white : .textPrimary)
+                                .cornerRadius(8)
+                        }
+                    }
+                    .padding(.vertical, 8)
+                }
+                
+                Section(header: Text("Bathrooms")) {
+                    HStack {
+                        ForEach([1, 2, 3, 4], id: \.self) { number in
+                            Button(action: {
+                                if selectedBathrooms == number {
+                                    selectedBathrooms = nil
+                                } else {
+                                    selectedBathrooms = number
+                                }
+                            }) {
+                                Text("\(number)")
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .background(selectedBathrooms == number ? Color.accentBlues : Color.inputFields)
+                                    .foregroundColor(selectedBathrooms == number ? .white : .textPrimary)
+                                    .cornerRadius(8)
+                            }
+                        }
+                        
+                        Button(action: {
+                            selectedBathrooms = nil
+                        }) {
+                            Text("Any")
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(selectedBathrooms == nil ? Color.accentBlues : Color.inputFields)
+                                .foregroundColor(selectedBathrooms == nil ? .white : .textPrimary)
+                                .cornerRadius(8)
+                        }
+                    }
+                    .padding(.vertical, 8)
+                }
+                
+                Section {
+                    Button("Reset All Filters") {
+                        minPrice = 0
+                        maxPrice = 10_000_000
+                        selectedBedrooms = nil
+                        selectedBathrooms = nil
+                    }
+                    .foregroundColor(.red)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                }
+            }
+            .navigationTitle("Filter Properties")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Apply") {
+                        applyFilters()
+                        dismiss()
+                    }
+                    .fontWeight(.semibold)
+                    .foregroundColor(.accentBlues)
+                }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                    .foregroundColor(.secondaryTextColor)
+                }
+            }
+        }
+    }
+    
+    private func applyFilters() {
+        priceRange = minPrice...maxPrice
+        bedroomFilter = selectedBedrooms
+        bathroomFilter = selectedBathrooms
+    }
 }
 
 // MARK: - Sale Property Chat View
