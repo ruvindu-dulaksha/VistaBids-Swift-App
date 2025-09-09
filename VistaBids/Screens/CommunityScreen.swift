@@ -282,10 +282,19 @@ struct EventsView: View {
 struct ChatView: View {
     @ObservedObject var communityService: CommunityService
     let selectedLanguage: String
-    @Environment(\.colorScheme) var colorScheme
+    @State private var internalSelectedLanguage: String
+    
+    init(communityService: CommunityService, selectedLanguage: String) {
+        self.communityService = communityService
+        self.selectedLanguage = selectedLanguage
+        _internalSelectedLanguage = State(initialValue: selectedLanguage)
+    }
     
     var body: some View {
-        ChatListView(communityService: communityService)
+        CommunityChatView(communityService: communityService)
+            .onChange(of: selectedLanguage) { _, newValue in
+                internalSelectedLanguage = newValue
+            }
     }
 }
 
@@ -409,9 +418,14 @@ struct PostCardOriginal: View {
             HStack {
                 Button(action: {
                     // Like action
+                    Task {
+                        if let id = post.id {
+                            await communityService.likePost(id)
+                        }
+                    }
                 }) {
                     HStack {
-                        Image(systemName: "heart")
+                        Image(systemName: post.likedBy.contains("currentUser") ? "heart.fill" : "heart")
                         Text("\(post.likes)")
                     }
                     .foregroundColor(.red)
@@ -420,7 +434,8 @@ struct PostCardOriginal: View {
                 Spacer()
                 
                 Button(action: {
-                    // Comment action
+                    // Comment action - This would typically open a comment sheet
+                    // We'll implement this in a future update
                 }) {
                     HStack {
                         Image(systemName: "message")
@@ -432,7 +447,17 @@ struct PostCardOriginal: View {
                 Spacer()
                 
                 Button(action: {
-                    // Share action
+                    // Share action using UIActivityViewController
+                    let content = post.content
+                    let shareItems: [Any] = [content]
+                    
+                    let ac = UIActivityViewController(activityItems: shareItems, applicationActivities: nil)
+                    
+                    // Present the activity controller
+                    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                       let rootViewController = windowScene.windows.first?.rootViewController {
+                        rootViewController.present(ac, animated: true)
+                    }
                 }) {
                     Image(systemName: "square.and.arrow.up")
                         .foregroundColor(.accentBlues)

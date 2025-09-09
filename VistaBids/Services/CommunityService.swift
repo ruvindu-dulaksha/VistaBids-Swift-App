@@ -502,6 +502,30 @@ class CommunityService: ObservableObject {
         }
     }
     
+    func translateMessage(message: ChatMessage, to language: String) async -> ChatMessage {
+        var updatedMessage = message
+        
+        // Skip translation if target language is the same as original
+        if message.originalLanguage == language {
+            updatedMessage.translatedContent = nil
+            return updatedMessage
+        }
+        
+        do {
+            print("🌐 CommunityService: Translating message from \(message.originalLanguage) to \(language)")
+            let translatedContent = try await translationService.translateText(message.content, to: language)
+            updatedMessage.translatedContent = translatedContent
+            print("🌐 CommunityService: Translation successful")
+        } catch {
+            print("🌐 CommunityService: Translation error: \(error.localizedDescription)")
+            // On error, clear any existing translation
+            updatedMessage.translatedContent = nil
+            self.error = "Translation failed: \(error.localizedDescription)"
+        }
+        
+        return updatedMessage
+    }
+    
     func sendMessage(toChatId chatId: String, content: String, messageType: MessageType = .text, imageURLs: [String] = []) async {
         guard let user = Auth.auth().currentUser else { return }
         
