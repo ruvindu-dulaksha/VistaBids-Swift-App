@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct CommunityScreenV2: View {
     @StateObject private var communityService = CommunityService()
@@ -295,6 +296,7 @@ struct PostCard: View {
     @ObservedObject var communityService: CommunityService
     @State private var translatedPost: CommunityPost?
     @State private var isTranslating = false
+    @State private var showingComments = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -389,9 +391,14 @@ struct PostCard: View {
             HStack {
                 Button(action: {
                     // Like action
+                    if let postId = post.id {
+                        Task {
+                            await communityService.likePost(postId)
+                        }
+                    }
                 }) {
                     HStack {
-                        Image(systemName: "heart")
+                        Image(systemName: post.likedBy.contains(Auth.auth().currentUser?.uid ?? "") ? "heart.fill" : "heart")
                         Text("\(post.likes)")
                     }
                     .foregroundColor(.red)
@@ -401,6 +408,7 @@ struct PostCard: View {
                 
                 Button(action: {
                     // Comment action
+                    showingComments = true
                 }) {
                     HStack {
                         Image(systemName: "message")
@@ -424,6 +432,11 @@ struct PostCard: View {
         .background(Color(UIColor.systemBackground))
         .cornerRadius(12)
         .shadow(radius: 2)
+        .sheet(isPresented: $showingComments) {
+            if let postId = post.id {
+                CommentView(postId: postId, communityService: communityService)
+            }
+        }
     }
     
     private func translatePost() {

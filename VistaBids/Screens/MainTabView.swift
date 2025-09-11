@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MainTabView: View {
     @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var translationManager: TranslationManager
     @StateObject private var notificationService = NotificationService.shared
     @State private var showingNewPost = false
     @State private var showingSettings = false
@@ -101,23 +102,30 @@ struct MainTabView: View {
     private var topBarActions: [AppBarAction] {
         switch selectedTab {
         case 0: return [
+            AppBarAction(icon: "", action: { }, customView: AnyView(TranslationIconView())),
             AppBarAction(icon: "", action: { }, customView: AnyView(NotificationBellView())),
             //AppBarAction(icon: "magnifyingglass", action: { /* Handle search */ })
         ]
         case 1: return [
+            AppBarAction(icon: "", action: { }, customView: AnyView(TranslationIconView())),
             AppBarAction(icon: "", action: { }, customView: AnyView(NotificationBellView()))
         ]
         case 2: return [
+            AppBarAction(icon: "", action: { }, customView: AnyView(TranslationIconView())),
             AppBarAction(icon: "", action: { }, customView: AnyView(NotificationBellView()))
         ]
         case 3: return [
             AppBarAction(icon: "plus", action: { 
                 showingNewPost = true 
             }),
+            AppBarAction(icon: "", action: { }, customView: AnyView(TranslationIconView())),
             AppBarAction(icon: "", action: { }, customView: AnyView(NotificationBellView()))
         ]
-        case 4: return []
+        case 4: return [
+            AppBarAction(icon: "", action: { }, customView: AnyView(TranslationIconView()))
+        ]
         default: return [
+            AppBarAction(icon: "", action: { }, customView: AnyView(TranslationIconView())),
             AppBarAction(icon: "", action: { }, customView: AnyView(NotificationBellView()))
         ]
         }
@@ -128,4 +136,5 @@ struct MainTabView: View {
     MainTabView()
         .environmentObject(FirebaseAuthService())
         .environmentObject(ThemeManager())
+        .environmentObject(TranslationManager())
 }

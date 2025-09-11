@@ -16,6 +16,7 @@ struct VistaBidsApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var themeManager = ThemeManager()
     @StateObject private var userStatsService = UserStatsService.shared
+    @StateObject private var translationManager = TranslationManager.shared
     
     init() {
         print("🚀 Initializing VistaBids App...")
@@ -36,6 +37,7 @@ struct VistaBidsApp: App {
             ContentView()
                 .environmentObject(themeManager)
                 .environmentObject(userStatsService)
+                .environmentObject(translationManager)
                 .preferredColorScheme(themeManager.currentTheme == .system ? nil : 
                                      (themeManager.isDarkMode ? .dark : .light))
                 .task {

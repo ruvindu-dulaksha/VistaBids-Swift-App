@@ -1,5 +1,6 @@
 import SwiftUI
 import Firebase
+import FirebaseAuth
 
 struct MyBidsView: View {
     @EnvironmentObject private var authService: FirebaseAuthService

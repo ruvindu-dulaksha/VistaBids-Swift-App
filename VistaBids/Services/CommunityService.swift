@@ -98,7 +98,8 @@ class CommunityService: ObservableObject {
     }
     
     func likePost(_ postId: String) async {
-        guard let user = Auth.auth().currentUser else { return }
+        // Get the current user, or use "currentUser" for testing when not signed in
+        let userId = Auth.auth().currentUser?.uid ?? "currentUser"
         
         let postRef = db.collection("community_posts").document(postId)
         
@@ -118,11 +119,11 @@ class CommunityService: ObservableObject {
                     return nil
                 }
                 
-                if post.likedBy.contains(user.uid) {
-                    post.likedBy.removeAll { $0 == user.uid }
+                if post.likedBy.contains(userId) {
+                    post.likedBy.removeAll { $0 == userId }
                     post.likes = max(0, post.likes - 1)
                 } else {
-                    post.likedBy.append(user.uid)
+                    post.likedBy.append(userId)
                     post.likes += 1
                 }
                 
@@ -136,8 +137,89 @@ class CommunityService: ObservableObject {
             }
             
             await loadPosts()
+            
+            // Post a notification to refresh all instances of the feed
+            NotificationCenter.default.post(name: NSNotification.Name("RefreshCommunityFeed"), object: nil)
         } catch {
             self.error = error.localizedDescription
+        }
+    }
+    
+    // MARK: - Comments
+    func addComment(to postId: String, content: String) async {
+        guard let user = Auth.auth().currentUser else { return }
+        
+        do {
+            // Create the comment
+            let comment = PostComment(
+                id: nil,
+                postId: postId,
+                userId: user.uid,
+                author: user.displayName ?? "Anonymous",
+                authorAvatar: user.photoURL?.absoluteString,
+                content: content,
+                originalLanguage: Locale.current.languageCode ?? "en",
+                timestamp: Date(),
+                likes: 0,
+                likedBy: []
+            )
+            
+            // Add the comment to Firestore
+            let _ = try await db.collection("post_comments").addDocument(from: comment)
+            
+            // Update the post's comment count
+            let postRef = db.collection("community_posts").document(postId)
+            try await db.runTransaction { transaction, errorPointer in
+                let document: DocumentSnapshot
+                do {
+                    document = try transaction.getDocument(postRef)
+                } catch let fetchError as NSError {
+                    errorPointer?.pointee = fetchError
+                    return nil
+                }
+                
+                guard var post = try? document.data(as: CommunityPost.self) else {
+                    let error = NSError(domain: "AppErrorDomain", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unable to retrieve post"])
+                    errorPointer?.pointee = error
+                    return nil
+                }
+                
+                post.comments += 1
+                
+                do {
+                    try transaction.setData(from: post, forDocument: postRef)
+                } catch let setError as NSError {
+                    errorPointer?.pointee = setError
+                    return nil
+                }
+                return nil
+            }
+            
+            // Reload posts to update UI
+            await loadPosts()
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+    
+    // Get comments for a post
+    func getComments(for postId: String) async -> [PostComment] {
+        do {
+            let snapshot = try await db.collection("post_comments")
+                .whereField("postId", isEqualTo: postId)
+                .order(by: "timestamp", descending: false)
+                .getDocuments()
+            
+            var comments: [PostComment] = []
+            for document in snapshot.documents {
+                if let comment = try? document.data(as: PostComment.self) {
+                    comments.append(comment)
+                }
+            }
+            return comments
+        } catch {
+            self.error = error.localizedDescription
+            return []
         }
     }
     
@@ -883,8 +965,12 @@ class CommunityService: ObservableObject {
     }
     
     // Helper method to create sample posts
-    private func createSamplePosts() -> [CommunityPost] {
+    func createSamplePosts() -> [CommunityPost] {
         print("🧩 CommunityService: Creating sample posts")
+        
+        // Get current user ID for like status
+        let currentUserId = Auth.auth().currentUser?.uid ?? "currentUser"
+        
         return [
             CommunityPost(
                 id: "1",
@@ -899,7 +985,7 @@ class CommunityService: ObservableObject {
                 imageURLs: ["https://images.unsplash.com/photo-1513584684374-8bab748fbf90?w=800"],
                 location: nil,
                 groupId: nil,
-                likedBy: []
+                likedBy: ["user3", "user5"]
             ),
             CommunityPost(
                 id: "2",
@@ -914,7 +1000,7 @@ class CommunityService: ObservableObject {
                 imageURLs: [],
                 location: nil,
                 groupId: nil,
-                likedBy: []
+                likedBy: [currentUserId, "user4"]
             ),
             CommunityPost(
                 id: "3",
@@ -929,7 +1015,7 @@ class CommunityService: ObservableObject {
                 imageURLs: ["https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800"],
                 location: nil,
                 groupId: nil,
-                likedBy: []
+                likedBy: ["user2", "user5", currentUserId]
             ),
             CommunityPost(
                 id: "4",
@@ -952,7 +1038,7 @@ class CommunityService: ObservableObject {
                     address: "Colombo, Western Province"
                 ),
                 groupId: nil,
-                likedBy: []
+                likedBy: ["user1", "user2", "user5", "currentUser"]
             ),
             CommunityPost(
                 id: "5",
@@ -972,7 +1058,7 @@ class CommunityService: ObservableObject {
                     address: "Kandy, Central Province"
                 ),
                 groupId: nil,
-                likedBy: []
+                likedBy: [currentUserId, "user3"]
             ),
             // Multi-language sample posts for testing translation
             CommunityPost(

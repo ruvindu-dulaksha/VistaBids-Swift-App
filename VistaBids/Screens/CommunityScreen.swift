@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct CommunityScreen: View {
     @StateObject private var communityService = CommunityService()
@@ -127,6 +128,7 @@ struct FeedView: View {
     @ObservedObject var communityService: CommunityService
     let selectedLanguage: String
     @State private var showingNewPost = false
+    @State private var refreshTrigger = false
     
     var body: some View {
         VStack {
@@ -169,6 +171,14 @@ struct FeedView: View {
         .onAppear {
             Task {
                 await communityService.loadPosts()
+            }
+            
+            // Create a notification observer to reload posts when comments are added or likes change
+            NotificationCenter.default.addObserver(forName: NSNotification.Name("RefreshCommunityFeed"), object: nil, queue: .main) { _ in
+                print("📢 Received notification to refresh community feed")
+                Task {
+                    await communityService.loadPosts()
+                }
             }
         }
     }
@@ -305,6 +315,8 @@ struct PostCardOriginal: View {
     @ObservedObject var communityService: CommunityService
     @State private var translatedPost: CommunityPost?
     @State private var isTranslating = false
+    @State private var showingComments = false
+    @State private var selectedPostId: String? = nil
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -420,12 +432,29 @@ struct PostCardOriginal: View {
                     // Like action
                     Task {
                         if let id = post.id {
+                            print("🧡 Liking post: \(id)")
                             await communityService.likePost(id)
+                            // This will force a UI refresh locally while waiting for the notification
+                            await MainActor.run {
+                                let currentUserId = Auth.auth().currentUser?.uid ?? "currentUser"
+                                if var localPostIndex = communityService.posts.firstIndex(where: { $0.id == id }) {
+                                    if communityService.posts[localPostIndex].likedBy.contains(currentUserId) {
+                                        communityService.posts[localPostIndex].likedBy.removeAll { $0 == currentUserId }
+                                        communityService.posts[localPostIndex].likes = max(0, communityService.posts[localPostIndex].likes - 1)
+                                    } else {
+                                        communityService.posts[localPostIndex].likedBy.append(currentUserId)
+                                        communityService.posts[localPostIndex].likes += 1
+                                    }
+                                }
+                            }
                         }
                     }
                 }) {
                     HStack {
-                        Image(systemName: post.likedBy.contains("currentUser") ? "heart.fill" : "heart")
+                        // Check if current user has liked the post
+                        // Get current user ID or use "currentUser" as fallback for testing
+                        let currentUserId = Auth.auth().currentUser?.uid ?? "currentUser"
+                        Image(systemName: post.likedBy.contains(currentUserId) ? "heart.fill" : "heart")
                         Text("\(post.likes)")
                     }
                     .foregroundColor(.red)
@@ -434,8 +463,13 @@ struct PostCardOriginal: View {
                 Spacer()
                 
                 Button(action: {
-                    // Comment action - This would typically open a comment sheet
-                    // We'll implement this in a future update
+                    // Comment action - Opens comment sheet
+                    if let id = post.id {
+                        print("💬 Opening comments for post: \(id)")
+                        showCommentSheet(for: id)
+                    } else {
+                        print("⚠️ Cannot open comments: post.id is nil")
+                    }
                 }) {
                     HStack {
                         Image(systemName: "message")
@@ -469,6 +503,23 @@ struct PostCardOriginal: View {
         .background(Color.cardBackground)
         .cornerRadius(12)
         .shadow(radius: 2)
+        .sheet(isPresented: $showingComments) {
+            if let postId = selectedPostId {
+                CommentView(postId: postId, communityService: communityService)
+            }
+        }
+    }
+    
+    private func showCommentSheet(for postId: String) {
+        // Set the selected post ID first, then show the sheet after a small delay
+        // to ensure the binding is updated before the sheet is presented
+        selectedPostId = postId
+        
+        // Ensure we're on the main thread when updating UI state
+        DispatchQueue.main.async {
+            print("📱 Opening comment sheet for post: \(postId)")
+            showingComments = true
+        }
     }
     
     private func translatePost() {

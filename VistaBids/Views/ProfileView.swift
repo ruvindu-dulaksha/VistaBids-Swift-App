@@ -1,5 +1,6 @@
 import SwiftUI
 import Firebase
+import FirebaseAuth
 
 struct ProfileView: View {
     @EnvironmentObject private var authService: FirebaseAuthService
@@ -11,14 +12,22 @@ struct ProfileView: View {
                 Section {
                     if let user = authService.currentUser {
                         HStack {
-                            AsyncImage(url: user.photoURL) { image in
-                                image.resizable()
-                            } placeholder: {
+                            if let photoURL = user.photoURL {
+                                AsyncImage(url: photoURL) { image in
+                                    image.resizable()
+                                } placeholder: {
+                                    Image(systemName: "person.circle.fill")
+                                        .resizable()
+                                }
+                                .frame(width: 60, height: 60)
+                                .clipShape(Circle())
+                            } else {
                                 Image(systemName: "person.circle.fill")
                                     .resizable()
+                                    .foregroundColor(.gray)
+                                    .frame(width: 60, height: 60)
+                                    .clipShape(Circle())
                             }
-                            .frame(width: 60, height: 60)
-                            .clipShape(Circle())
                             
                             VStack(alignment: .leading) {
                                 Text(user.displayName ?? "User")
