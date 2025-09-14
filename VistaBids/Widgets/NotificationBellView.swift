@@ -58,16 +58,6 @@ struct NotificationBellView: View {
                 }
             }
             .frame(width: 44, height: 44)
-            .contextMenu {
-                // Context menu for testing bid winner notification
-                Button(action: {
-                    // Create a test property for notification
-                    let testProperty = AuctionProperty.mockProperty()
-                    notificationManager.simulateWinningBid(property: testProperty)
-                }) {
-                    Label("🎉 Test Win Notification", systemImage: "trophy.fill")
-                }
-            }
             
             // Ripple effect for new notifications
             if notificationService.hasNewNotification {

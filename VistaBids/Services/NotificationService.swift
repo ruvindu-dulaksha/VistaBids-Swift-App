@@ -572,6 +572,93 @@ class NotificationService: NSObject, ObservableObject {
     }
 }
 
+extension NotificationService {
+    // MARK: - Demo & Sample Data Methods
+    
+    /// Creates sample notifications for development and demo purposes
+    func createSampleNotifications() async {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
+        let sampleNotifications: [AppNotification] = [
+            AppNotification(
+                id: UUID().uuidString,
+                userId: userId,
+                title: "🎉 Auction Won!",
+                body: "Congratulations! You won the auction for Beautiful Oceanfront Villa with a bid of $1,250,000. Complete payment within 24 hours.",
+                type: .auctionWon,
+                data: ["propertyId": "property-001", "winningBid": "1250000"],
+                timestamp: Date().addingTimeInterval(-300), // 5 minutes ago
+                isRead: false,
+                priority: .high
+            ),
+            AppNotification(
+                id: UUID().uuidString,
+                userId: userId,
+                title: "🔨 You've been outbid!",
+                body: "Someone placed a higher bid on Modern Downtown Condo. Current bid: $850,000. Place a new bid to stay in the auction.",
+                type: .outbid,
+                data: ["propertyId": "property-002", "currentBid": "850000"],
+                timestamp: Date().addingTimeInterval(-900), // 15 minutes ago
+                isRead: false,
+                priority: .high
+            ),
+            AppNotification(
+                id: UUID().uuidString,
+                userId: userId,
+                title: "⏰ Auction Starting Soon",
+                body: "Luxury Penthouse Suite auction starts in 15 minutes. Don't miss out on this premium property!",
+                type: .newBidding,
+                data: ["propertyId": "property-003", "startTime": "15"],
+                timestamp: Date().addingTimeInterval(-1800), // 30 minutes ago
+                isRead: true,
+                priority: .medium
+            ),
+            AppNotification(
+                id: UUID().uuidString,
+                userId: userId,
+                title: "🏠 New Property Listed",
+                body: "A new property matching your preferences has been listed: Cozy Family Home in Green Valley. Starting at $650,000.",
+                type: .newSelling,
+                data: ["propertyId": "property-004", "price": "650000"],
+                timestamp: Date().addingTimeInterval(-3600), // 1 hour ago
+                isRead: true,
+                priority: .medium
+            ),
+            AppNotification(
+                id: UUID().uuidString,
+                userId: userId,
+                title: "📅 Community Event",
+                body: "Real Estate Investment Workshop tomorrow at 2 PM. Learn valuable investment strategies from industry experts!",
+                type: .communityEvent,
+                data: ["eventId": "event-001", "eventTime": "tomorrow"],
+                timestamp: Date().addingTimeInterval(-7200), // 2 hours ago
+                isRead: false,
+                priority: .medium
+            ),
+            AppNotification(
+                id: UUID().uuidString,
+                userId: userId,
+                title: "🎯 Auction Ended",
+                body: "The auction for Suburban Family House has ended. Winner: John Doe with $920,000. Better luck next time!",
+                type: .auctionEnded,
+                data: ["propertyId": "property-005", "winner": "John Doe", "winningBid": "920000"],
+                timestamp: Date().addingTimeInterval(-10800), // 3 hours ago
+                isRead: true,
+                priority: .low
+            )
+        ]
+        
+        // Send each sample notification
+        for notification in sampleNotifications {
+            await sendLocalNotification(notification)
+            // Small delay between notifications
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+        }
+        
+        print("✅ Created \(sampleNotifications.count) sample notifications")
+    }
+}
+
 // MARK: - UNUserNotificationCenterDelegate
 extension NotificationService: @preconcurrency UNUserNotificationCenterDelegate {
     func userNotificationCenter(

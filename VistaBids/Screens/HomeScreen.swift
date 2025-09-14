@@ -406,17 +406,43 @@ struct PropertyCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             ZStack(alignment: .bottomTrailing) {
-                AsyncImage(url: URL(string: property.primaryImage)) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Rectangle()
-                        .fill(Color.secondaryBackground)
-                        .overlay(
-                            Image(systemName: "house.fill")
-                                .foregroundColor(.secondaryTextColor)
-                        )
+                AsyncImage(url: URL(string: property.primaryImage)) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    case .failure(_):
+                        // Show fallback image for failed loads
+                        if let fallbackImage = UIImage(named: "loginlogo") {
+                            Image(uiImage: fallbackImage)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } else {
+                            Rectangle()
+                                .fill(Color.secondaryBackground)
+                                .overlay(
+                                    Image(systemName: "house.fill")
+                                        .foregroundColor(.secondaryTextColor)
+                                )
+                        }
+                    case .empty:
+                        // Loading state
+                        Rectangle()
+                            .fill(Color.secondaryBackground)
+                            .overlay(
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                                    .tint(.accentBlues)
+                            )
+                    @unknown default:
+                        Rectangle()
+                            .fill(Color.secondaryBackground)
+                            .overlay(
+                                Image(systemName: "house.fill")
+                                    .foregroundColor(.secondaryTextColor)
+                            )
+                    }
                 }
                 .frame(height: 80)
                 .clipped()

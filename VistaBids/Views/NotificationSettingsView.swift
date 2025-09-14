@@ -300,32 +300,6 @@ struct NotificationSettingsView: View {
     // MARK: - Advanced Settings Section
     private var advancedSettingsSection: some View {
         Section {
-            Button(action: {
-                Task {
-                    await testNotification()
-                }
-            }) {
-                HStack {
-                    Image(systemName: "bell.and.waves.left.and.right")
-                        .foregroundColor(.blue)
-                        .frame(width: 24)
-                    
-                    Text("Send Test Notification")
-                        .foregroundColor(.primary)
-                    
-                    Spacer()
-                    
-                    if isLoading {
-                        ProgressView()
-                            .scaleEffect(0.8)
-                    } else {
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.secondary)
-                    }
-                }
-            }
-            .disabled(isLoading)
-            
             Button(action: clearAllNotifications) {
                 HStack {
                     Image(systemName: "trash")
@@ -431,28 +405,6 @@ struct NotificationSettingsView: View {
     private func openAppSettings() {
         if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
             UIApplication.shared.open(settingsUrl)
-        }
-    }
-    
-    private func testNotification() async {
-        isLoading = true
-        
-        let testNotification = AppNotification(
-            id: UUID().uuidString,
-            userId: "current-user",
-            title: "Test Notification",
-            body: "This is a test notification to verify your settings are working correctly.",
-            type: .general,
-            data: nil,
-            timestamp: Date(),
-            isRead: false,
-            priority: .medium
-        )
-        
-        await notificationService.sendLocalNotification(testNotification)
-        
-        await MainActor.run {
-            isLoading = false
         }
     }
     

@@ -9,6 +9,8 @@ import Foundation
 import Combine
 import UserNotifications
 import SwiftUI
+import FirebaseFirestore
+import FirebaseAuth
 
 @MainActor
 class AuctionTimerService: ObservableObject {
@@ -19,12 +21,25 @@ class AuctionTimerService: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     init() {
+        // Request notification permissions
+        requestNotificationPermissions()
+        
         // Clean up inactive timers periodically
         Task {
             Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { _ in
                 Task { @MainActor in
                     self.cleanupExpiredTimers()
                 }
+            }
+        }
+    }
+    
+    private func requestNotificationPermissions() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+            if granted {
+                print("✅ Notification permissions granted")
+            } else {
+                print("❌ Notification permissions denied: \(error?.localizedDescription ?? "Unknown error")")
             }
         }
     }
@@ -68,39 +83,69 @@ class AuctionTimerService: ObservableObject {
         guard var auctionTimer = activeAuctions[propertyId] else { return }
         
         let now = Date()
-        let timeRemaining: TimeInterval
+        var timeRemaining: TimeInterval
+        var statusChanged = false
         
         switch auctionTimer.status {
         case .upcoming:
             timeRemaining = auctionTimer.startTime.timeIntervalSince(now)
+            
+            // Schedule 15-minute warning before auction starts
+            if timeRemaining > 0 && timeRemaining <= 900 && timeRemaining > 870 { // Between 14.5-15 minutes
+                schedulePreAuctionWarning(for: auctionTimer, timeRemaining: timeRemaining)
+            }
+            
             if timeRemaining <= 0 {
-                // Auction should start
+                // Auction should start - transition to active
                 auctionTimer.status = .active
                 activeAuctions[propertyId] = auctionTimer
+                statusChanged = true
+                print("🟢 Auction started: \(auctionTimer.propertyTitle)")
                 scheduleAuctionStartNotification(for: auctionTimer)
+                
+                // Recalculate time remaining for active auction
+                timeRemaining = auctionTimer.endTime.timeIntervalSince(now)
             }
             
         case .active:
             timeRemaining = auctionTimer.endTime.timeIntervalSince(now)
             if timeRemaining <= 0 {
-                // Auction should end
+                // Auction should end - transition to ended
                 auctionTimer.status = .ended
                 activeAuctions[propertyId] = auctionTimer
-                stopTimer(for: propertyId)
+                statusChanged = true
+                print("🔴 Auction ended: \(auctionTimer.propertyTitle)")
                 scheduleAuctionEndNotification(for: auctionTimer)
+                
+                // Announce winner asynchronously
+                Task {
+                    await announceWinnerIfAvailable(for: propertyId)
+                }
+                
+                // Stop the timer completely
+                stopTimer(for: propertyId)
                 return
             }
             
         default:
-            timeRemaining = 0
+            // For ended, sold, cancelled - stop the timer
             stopTimer(for: propertyId)
             return
         }
         
-        auctionTimeRemaining[propertyId] = max(0, timeRemaining)
+        // Always use max(0, timeRemaining) to prevent negative values
+        let displayTimeRemaining = max(0, timeRemaining)
+        auctionTimeRemaining[propertyId] = displayTimeRemaining
         
-        // Schedule warning notifications
-        scheduleWarningNotifications(for: auctionTimer, timeRemaining: timeRemaining)
+        // Only schedule warning notifications for active auctions with time remaining
+        if auctionTimer.status == .active && displayTimeRemaining > 0 {
+            scheduleWarningNotifications(for: auctionTimer, timeRemaining: displayTimeRemaining)
+        }
+        
+        // Debug logging
+        if statusChanged {
+            print("📊 Timer update: \(auctionTimer.propertyTitle) - Status: \(auctionTimer.status), Time: \(formatTimeRemaining(displayTimeRemaining))")
+        }
     }
     
     func stopTimer(for propertyId: String) {
@@ -169,10 +214,11 @@ class AuctionTimerService: ObservableObject {
     // MARK: - Notification Scheduling
     private func scheduleAuctionStartNotification(for timer: AuctionTimer) {
         let content = UNMutableNotificationContent()
-        content.title = "Auction Started!"
+        content.title = "🔥 Auction Started!"
         content.body = "The auction for \(timer.propertyTitle) has begun. Start bidding now!"
         content.sound = .default
         content.badge = 1
+        content.categoryIdentifier = "AUCTION_START"
         
         let request = UNNotificationRequest(
             identifier: "auction_start_\(timer.propertyId)",
@@ -180,15 +226,22 @@ class AuctionTimerService: ObservableObject {
             trigger: nil // Immediate
         )
         
-        UNUserNotificationCenter.current().add(request)
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("❌ Failed to schedule auction start notification: \(error)")
+            } else {
+                print("✅ Scheduled auction start notification for: \(timer.propertyTitle)")
+            }
+        }
     }
     
     private func scheduleAuctionEndNotification(for timer: AuctionTimer) {
         let content = UNMutableNotificationContent()
-        content.title = "Auction Ended"
+        content.title = "⏰ Auction Ended"
         content.body = "The auction for \(timer.propertyTitle) has ended. Check the results!"
         content.sound = .default
         content.badge = 1
+        content.categoryIdentifier = "AUCTION_END"
         
         let request = UNNotificationRequest(
             identifier: "auction_end_\(timer.propertyId)",
@@ -196,7 +249,13 @@ class AuctionTimerService: ObservableObject {
             trigger: nil // Immediate
         )
         
-        UNUserNotificationCenter.current().add(request)
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("❌ Failed to schedule auction end notification: \(error)")
+            } else {
+                print("✅ Scheduled auction end notification for: \(timer.propertyTitle)")
+            }
+        }
     }
     
     private func scheduleWarningNotifications(for timer: AuctionTimer, timeRemaining: TimeInterval) {
@@ -215,13 +274,15 @@ class AuctionTimerService: ObservableObject {
     private func scheduleWarningNotification(for timer: AuctionTimer, timeRemaining: TimeInterval) {
         let content = UNMutableNotificationContent()
         content.sound = .default
+        content.categoryIdentifier = "AUCTION_WARNING"
         
         if timeRemaining <= 60 {
             content.title = "⚡ Last Chance!"
-            content.body = "Only \(Int(timeRemaining)) seconds left for \(timer.propertyTitle)"
+            content.body = "Only \(Int(timeRemaining)) seconds left for \(timer.propertyTitle)!"
+            content.badge = 1
         } else {
             let minutes = Int(timeRemaining / 60)
-            content.title = "Auction Ending Soon"
+            content.title = "⏰ Auction Ending Soon"
             content.body = "\(minutes) minute\(minutes == 1 ? "" : "s") left for \(timer.propertyTitle)"
         }
         
@@ -231,7 +292,140 @@ class AuctionTimerService: ObservableObject {
             trigger: nil // Immediate
         )
         
-        UNUserNotificationCenter.current().add(request)
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("❌ Failed to schedule warning notification: \(error)")
+            } else {
+                print("⚠️ Scheduled warning notification: \(Int(timeRemaining))s remaining for \(timer.propertyTitle)")
+            }
+        }
+    }
+    
+    private func schedulePreAuctionWarning(for timer: AuctionTimer, timeRemaining: TimeInterval) {
+        let minutes = Int(timeRemaining / 60)
+        
+        let content = UNMutableNotificationContent()
+        content.title = "📅 Auction Starting Soon"
+        content.body = "The auction for \(timer.propertyTitle) starts in \(minutes) minutes. Get ready to bid!"
+        content.sound = .default
+        content.badge = 1
+        content.categoryIdentifier = "AUCTION_UPCOMING"
+        
+        let request = UNNotificationRequest(
+            identifier: "auction_upcoming_\(timer.propertyId)_15min",
+            content: content,
+            trigger: nil // Immediate
+        )
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("❌ Failed to schedule pre-auction warning: \(error)")
+            } else {
+                print("📅 Scheduled 15-minute warning for: \(timer.propertyTitle)")
+            }
+        }
+    }
+    
+    private func scheduleWinnerNotification(for timer: AuctionTimer, winnerName: String, winningBid: Double) {
+        let content = UNMutableNotificationContent()
+        content.title = "🎉 Auction Complete!"
+        content.body = "The winner of \(timer.propertyTitle) is \(winnerName) with a bid of $\(String(format: "%.2f", winningBid))"
+        content.sound = .default
+        content.badge = 1
+        content.categoryIdentifier = "AUCTION_WINNER"
+        
+        let request = UNNotificationRequest(
+            identifier: "auction_winner_\(timer.propertyId)",
+            content: content,
+            trigger: nil // Immediate
+        )
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("❌ Failed to schedule winner notification: \(error)")
+            } else {
+                print("🎉 Scheduled winner notification for: \(timer.propertyTitle)")
+            }
+        }
+    }
+    
+    // Method to trigger winner notification when auction ends
+    func announceAuctionWinner(propertyId: String, winnerName: String, winningBid: Double) {
+        guard let timer = activeAuctions[propertyId] else { return }
+        scheduleWinnerNotification(for: timer, winnerName: winnerName, winningBid: winningBid)
+    }
+    
+    private func announceWinnerIfAvailable(for propertyId: String) async {
+        do {
+            let db = Firestore.firestore()
+            let propertySnapshot = try await db.collection("auction_properties").document(propertyId).getDocument()
+            
+            guard let propertyData = propertySnapshot.data(),
+                  let propertyTitle = propertyData["title"] as? String,
+                  let highestBidderName = propertyData["highestBidderName"] as? String,
+                  let highestBidderId = propertyData["highestBidderId"] as? String,
+                  let currentBid = propertyData["currentBid"] as? Double else {
+                print("❌ Could not get winner information for property \(propertyId)")
+                return
+            }
+            
+            // Create the timer object for notification
+            if let timer = activeAuctions[propertyId] {
+                scheduleWinnerNotification(for: timer, winnerName: highestBidderName, winningBid: currentBid)
+            } else {
+                // Create a temporary timer object if not found
+                guard let startTime = propertyData["auctionStartTime"] as? Timestamp,
+                      let endTime = propertyData["auctionEndTime"] as? Timestamp else { return }
+                
+                let tempTimer = AuctionTimer(
+                    propertyId: propertyId,
+                    propertyTitle: propertyTitle,
+                    startTime: startTime.dateValue(),
+                    endTime: endTime.dateValue(),
+                    duration: .oneHour, // Default
+                    status: .ended
+                )
+                scheduleWinnerNotification(for: tempTimer, winnerName: highestBidderName, winningBid: currentBid)
+            }
+            
+            // Check if current user is the winner and trigger payment alert
+            await checkAndTriggerPaymentAlert(propertyId: propertyId, winnerId: highestBidderId, propertyData: propertyData)
+            
+        } catch {
+            print("❌ Error announcing winner for property \(propertyId): \(error)")
+        }
+    }
+    
+    /// Check if current user won and trigger payment alert
+    private func checkAndTriggerPaymentAlert(propertyId: String, winnerId: String, propertyData: [String: Any]) async {
+        // Get current user ID
+        guard let currentUserId = Auth.auth().currentUser?.uid else { return }
+        
+        // Check if current user is the winner
+        if currentUserId == winnerId {
+            print("🎉 Current user won the auction! Triggering payment alert...")
+            
+            // Create auction property object for payment view
+            await MainActor.run {
+                triggerWinnerPaymentAlert(propertyId: propertyId, propertyData: propertyData)
+            }
+        }
+    }
+    
+    /// Trigger payment alert for auction winner
+    @MainActor
+    private func triggerWinnerPaymentAlert(propertyId: String, propertyData: [String: Any]) {
+        // Create a winning notification that will trigger the payment view
+        NotificationCenter.default.post(
+            name: NSNotification.Name("AuctionWonPaymentRequired"),
+            object: nil,
+            userInfo: [
+                "propertyId": propertyId,
+                "propertyData": propertyData
+            ]
+        )
+        
+        print("🎯 Payment alert triggered for property: \(propertyId)")
     }
 }
 

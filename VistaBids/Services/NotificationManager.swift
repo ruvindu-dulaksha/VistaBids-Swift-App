@@ -22,6 +22,23 @@ class NotificationManager: ObservableObject {
     private init() {
         requestNotificationPermission()
         setupNotificationCategories()
+        setupAuctionWinListener()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    private func setupAuctionWinListener() {
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("AuctionWonPaymentRequired"),
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            if let property = notification.object as? AuctionProperty {
+                self?.showWinNotification(for: property)
+            }
+        }
     }
     
     private func requestNotificationPermission() {

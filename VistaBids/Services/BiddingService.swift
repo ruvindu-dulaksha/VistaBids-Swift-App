@@ -15,7 +15,7 @@ import UserNotifications
 class BiddingService: ObservableObject {
     private let db = Firestore.firestore()
     private let propertyDataService = AuctionPropertyDataService()
-    private let auctionTimerService = AuctionTimerService()
+    let auctionTimerService = AuctionTimerService() // Make public for UI access
     private let paymentService = PaymentService()
     
     @Published var auctionProperties: [AuctionProperty] = []
@@ -82,6 +82,10 @@ class BiddingService: ObservableObject {
             throw BiddingError.userNotAuthenticated
         }
         
+        // Get current user info
+        let currentUser = Auth.auth().currentUser
+        let userName = currentUser?.displayName ?? "Anonymous Bidder"
+        
         // Create user bid record
         let bid = [
             "id": UUID().uuidString,
@@ -94,7 +98,35 @@ class BiddingService: ObservableObject {
         ] as [String : Any]
         
         try await db.collection("user_bids").addDocument(data: bid)
-        print("Bid placed: $\(amount) on property \(propertyId)")
+        
+        // Update the auction property with new highest bid
+        let propertyRef = db.collection("auction_properties").document(propertyId)
+        try await propertyRef.updateData([
+            "currentBid": amount,
+            "highestBidderId": currentUserId,
+            "highestBidderName": userName,
+            "updatedAt": Timestamp(date: Date())
+        ])
+        
+        // Add to bid history
+        let bidHistoryItem: [String: Any] = [
+            "bidAmount": amount,
+            "bidderId": currentUserId,
+            "bidderName": userName,
+            "timestamp": Timestamp(date: Date())
+        ]
+        
+        try await propertyRef.updateData([
+            "bidHistory": FieldValue.arrayUnion([bidHistoryItem])
+        ])
+        
+        print("Bid placed: $\(amount) on property \(propertyId) by \(userName)")
+        
+        // Send notifications to other bidders about being outbid
+        await sendOutbidNotifications(propertyId: propertyId, newBidAmount: amount, newBidderName: userName)
+        
+        // Trigger real-time update by refreshing local data
+        await loadAuctionProperties()
     }
     
     func addToWatchlist(propertyId: String) async throws {
@@ -151,6 +183,13 @@ class BiddingService: ObservableObject {
                 print("📦 No auction properties found in Firestore, using sample data")
                 auctionProperties = createSampleAuctionProperties()
                 
+                // Start timers for sample data
+                for property in auctionProperties {
+                    if property.status == .active || property.status == .upcoming {
+                        auctionTimerService.startAuctionTimer(for: property)
+                    }
+                }
+                
                 // Auto-populate Firestore with enhanced sample data for future use
                 print("🔄 Auto-populating Firestore with enhanced sample data")
                 Task {
@@ -202,6 +241,13 @@ class BiddingService: ObservableObject {
                 }
                 
                 auctionProperties = finalProperties
+                
+                // Start auction timers for active and upcoming auctions
+                for property in finalProperties {
+                    if property.status == .active || property.status == .upcoming {
+                        auctionTimerService.startAuctionTimer(for: property)
+                    }
+                }
                 
                 // Update any changed properties in Firestore
                 for (index, property) in processedProperties.enumerated() {
@@ -1031,6 +1077,80 @@ class BiddingService: ObservableObject {
     func sendChatMessage(message: AuctionChatMessage) async throws {
         // Placeholder implementation - does nothing
         print("Sending message: \(message.message)")
+    }
+    
+    // MARK: - Notification Methods
+    private func sendOutbidNotifications(propertyId: String, newBidAmount: Double, newBidderName: String) async {
+        do {
+            // Get the property title
+            let propertySnapshot = try await db.collection("auction_properties").document(propertyId).getDocument()
+            guard let propertyData = propertySnapshot.data(),
+                  let propertyTitle = propertyData["title"] as? String else {
+                print("❌ Could not get property title for notifications")
+                return
+            }
+            
+            // Get all users who have bid on this property (excluding the new bidder)
+            let bidsSnapshot = try await db.collection("user_bids")
+                .whereField("propertyId", isEqualTo: propertyId)
+                .whereField("status", isEqualTo: "active")
+                .getDocuments()
+            
+            var outbidUsers = Set<String>()
+            
+            for document in bidsSnapshot.documents {
+                if let userId = document.data()["userId"] as? String,
+                   userId != currentUserId { // Don't notify the bidder who just placed the bid
+                    outbidUsers.insert(userId)
+                }
+            }
+            
+            // Send notification to each outbid user
+            for userId in outbidUsers {
+                await sendOutbidNotification(
+                    to: userId,
+                    propertyTitle: propertyTitle,
+                    propertyId: propertyId,
+                    newBidAmount: newBidAmount,
+                    newBidderName: newBidderName
+                )
+            }
+            
+        } catch {
+            print("❌ Error sending outbid notifications: \(error)")
+        }
+    }
+    
+    private func sendOutbidNotification(to userId: String, propertyTitle: String, propertyId: String, newBidAmount: Double, newBidderName: String) async {
+        // Create notification content
+        let content = UNMutableNotificationContent()
+        content.title = "⚠️ You've been outbid!"
+        content.body = "\(newBidderName) placed a higher bid of $\(String(format: "%.0f", newBidAmount)) on \(propertyTitle)"
+        content.sound = .default
+        content.badge = 1
+        content.categoryIdentifier = "OUTBID_NOTIFICATION"
+        
+        // Add custom data
+        content.userInfo = [
+            "propertyId": propertyId,
+            "propertyTitle": propertyTitle,
+            "newBidAmount": newBidAmount,
+            "type": "outbid"
+        ]
+        
+        let request = UNNotificationRequest(
+            identifier: "outbid_\(propertyId)_\(userId)_\(UUID().uuidString)",
+            content: content,
+            trigger: nil // Immediate
+        )
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("❌ Failed to send outbid notification: \(error)")
+            } else {
+                print("📲 Sent outbid notification to user \(userId) for \(propertyTitle)")
+            }
+        }
     }
 }
 

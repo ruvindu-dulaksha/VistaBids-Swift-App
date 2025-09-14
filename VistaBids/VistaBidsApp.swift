@@ -53,6 +53,9 @@ struct VistaBidsApp: App {
                         SalePropertyService.shared.loadPropertiesFromFirestore()
                     }
                     
+                    // Create sample notifications for demonstration
+                    await createSampleNotifications()
+                    
                     // Auto-start auction on app launch
                     await autoStartAuctionOnLaunch()
                 }
@@ -378,5 +381,14 @@ struct VistaBidsApp: App {
         } catch {
             print("❌ Error scheduling notification: \(error)")
         }
+    }
+    
+    // MARK: - Sample Notifications
+    private func createSampleNotifications() async {
+        print("📱 Creating sample notifications...")
+        // Add a small delay to ensure authentication is complete
+        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+        
+        await NotificationService.shared.createSampleNotifications()
     }
 }

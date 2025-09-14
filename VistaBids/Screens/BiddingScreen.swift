@@ -135,7 +135,8 @@ struct BiddingScreen: View {
                                     onDetailTap: {
                                         selectedProperty = property
                                         showingPropertyDetail = true
-                                    }
+                                    },
+                                    biddingService: biddingService
                                 )
                                 .padding(.horizontal)
                             }
@@ -300,6 +301,7 @@ struct LiveAuctionCard: View {
     let property: AuctionProperty
     let onARTap: () -> Void
     let onDetailTap: () -> Void
+    @ObservedObject var biddingService: BiddingService
     
     var body: some View {
         Button(action: onDetailTap) {
@@ -308,7 +310,7 @@ struct LiveAuctionCard: View {
                 PropertyImageView(property: property, onARTap: onARTap)
                 
                 // Property Details
-                PropertyDetailsSection(property: property)
+                PropertyDetailsSection(property: property, biddingService: biddingService)
                 
                 // Action Buttons
                 PropertyActionButtons(property: property, onDetailTap: onDetailTap)
@@ -360,6 +362,7 @@ struct PropertyImageView: View {
 
 struct PropertyDetailsSection: View {
     let property: AuctionProperty
+    @ObservedObject var biddingService: BiddingService
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -380,10 +383,10 @@ struct PropertyDetailsSection: View {
                 .font(.subheadline)
                 .foregroundColor(.secondaryTextColor)
             
-            // Auction timing
-            auctionTimingInfo
+            // Live auction timing with countdown
+            liveAuctionTimingInfo
                 .font(.caption)
-                .foregroundColor(.gray)
+                .foregroundColor(timingTextColor)
                 .padding(.vertical, 2)
             
             HStack {
@@ -457,40 +460,85 @@ struct PropertyDetailsSection: View {
         .padding(.horizontal, 12)
     }
     
-    private var auctionTimingInfo: some View {
+    private var liveAuctionTimingInfo: some View {
         Group {
-            switch property.status {
-            case .upcoming:
+            if let propertyId = property.id {
+                let timerService = biddingService.auctionTimerService
+                let timeRemainingText = timerService.getTimeRemainingText(for: propertyId)
+                
+                HStack(spacing: 4) {
+                    // Dynamic icon based on status
+                    Image(systemName: iconForStatus)
+                        .font(.caption2)
+                        .foregroundColor(timingTextColor)
+                    
+                    Text(timeRemainingText)
+                        .fontWeight(.medium)
+                        .foregroundColor(timingTextColor)
+                    
+                    // Add pulsing effect for active auctions
+                    if property.status == .active,
+                       let timeRemaining = timerService.auctionTimeRemaining[propertyId],
+                       timeRemaining > 0 && timeRemaining <= 300 {
+                        Image(systemName: "dot.radiowaves.left.and.right")
+                            .font(.caption2)
+                            .foregroundColor(.red)
+                            .symbolEffect(.pulse, options: .repeating)
+                    }
+                }
+            } else {
                 HStack(spacing: 4) {
                     Image(systemName: "clock.fill")
                         .font(.caption2)
-                    Text("Starts \(property.auctionStartTime, formatter: dateFormatter)")
-                }
-            case .active:
-                HStack(spacing: 4) {
-                    Image(systemName: "timer")
-                        .font(.caption2)
-                    Text("Ends \(property.auctionEndTime, formatter: dateFormatter)")
-                }
-            case .ended:
-                HStack(spacing: 4) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.caption2)
-                    Text("Ended \(property.auctionEndTime, formatter: dateFormatter)")
-                }
-            case .sold:
-                HStack(spacing: 4) {
-                    Image(systemName: "bag.fill")
-                        .font(.caption2)
-                    Text("Sold on \(property.auctionEndTime, formatter: dateFormatter)")
-                }
-            case .cancelled:
-                HStack(spacing: 4) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.caption2)
-                    Text("Cancelled")
+                    Text("Loading...")
                 }
             }
+        }
+    }
+    
+    private var iconForStatus: String {
+        switch property.status {
+        case .upcoming:
+            return "clock.fill"
+        case .active:
+            if let propertyId = property.id,
+               let timeRemaining = biddingService.auctionTimerService.auctionTimeRemaining[propertyId],
+               timeRemaining <= 300 {
+                return "timer" // Critical time
+            }
+            return "timer"
+        case .ended:
+            return "checkmark.circle.fill"
+        case .sold:
+            return "bag.fill"
+        case .cancelled:
+            return "xmark.circle.fill"
+        }
+    }
+    
+    private var timingTextColor: Color {
+        guard let propertyId = property.id else { return .gray }
+        
+        switch property.status {
+        case .upcoming:
+            return .blue
+        case .active:
+            if let timeRemaining = biddingService.auctionTimerService.auctionTimeRemaining[propertyId] {
+                if timeRemaining <= 60 {
+                    return .red
+                } else if timeRemaining <= 300 {
+                    return .orange
+                } else {
+                    return .green
+                }
+            }
+            return .green
+        case .ended:
+            return .gray
+        case .sold:
+            return .purple
+        case .cancelled:
+            return .red
         }
     }
     
