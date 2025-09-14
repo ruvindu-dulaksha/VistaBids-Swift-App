@@ -11,6 +11,7 @@ import CoreLocation
 
 struct NewPostView: View {
     @ObservedObject var communityService: CommunityService
+    @StateObject private var imageUploadService = ImageUploadService()
     @Environment(\.dismiss) var dismiss
     
     @State private var postContent = ""
@@ -93,32 +94,46 @@ struct NewPostView: View {
                         
                         // Selected images
                         if !selectedImageData.isEmpty {
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 8) {
-                                    ForEach(Array(selectedImageData.enumerated()), id: \.offset) { index, imageData in
-                                        if let uiImage = UIImage(data: imageData) {
-                                            ZStack(alignment: .topTrailing) {
-                                                Image(uiImage: uiImage)
-                                                    .resizable()
-                                                    .aspectRatio(contentMode: .fill)
-                                                    .frame(width: 100, height: 100)
-                                                    .cornerRadius(8)
-                                                    .clipped()
-                                                
-                                                Button(action: {
-                                                    removeImage(at: index)
-                                                }) {
-                                                    Image(systemName: "xmark.circle.fill")
-                                                        .foregroundColor(.white)
-                                                        .background(Color.black.opacity(0.6))
-                                                        .clipShape(Circle())
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Selected Images (\(selectedImageData.count)/5)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 12) {
+                                        ForEach(Array(selectedImageData.enumerated()), id: \.offset) { index, imageData in
+                                            if let uiImage = UIImage(data: imageData) {
+                                                ZStack(alignment: .topTrailing) {
+                                                    Image(uiImage: uiImage)
+                                                        .resizable()
+                                                        .aspectRatio(contentMode: .fill)
+                                                        .frame(width: 120, height: 120)
+                                                        .cornerRadius(12)
+                                                        .clipped()
+                                                        .overlay(
+                                                            RoundedRectangle(cornerRadius: 12)
+                                                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                                        )
+                                                    
+                                                    Button(action: {
+                                                        removeImage(at: index)
+                                                    }) {
+                                                        Image(systemName: "xmark.circle.fill")
+                                                            .font(.system(size: 20))
+                                                            .foregroundColor(.white)
+                                                            .background(
+                                                                Circle()
+                                                                    .fill(Color.black.opacity(0.7))
+                                                                    .frame(width: 24, height: 24)
+                                                            )
+                                                    }
+                                                    .padding(6)
                                                 }
-                                                .padding(4)
                                             }
                                         }
                                     }
+                                    .padding(.horizontal, 4)
                                 }
-                                .padding(.horizontal, 2)
                             }
                         }
                     }
@@ -198,10 +213,30 @@ struct NewPostView: View {
         isPosting = true
         
         Task {
-            // In a real app, you would upload images to Firebase Storage first
-            // For now, we'll use placeholder URLs
-            let imageURLs = selectedImageData.enumerated().map { index, _ in
-                "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=600&fit=crop&auto=format&q=60&ixid=M3wxMjA3fDB8MHxzZWFyY2h8\(index + 1)fHxob3VzZXxlbnwwfHwwfHx8MA%3D%3D"
+            var imageURLs: [String] = []
+            
+            // Upload actual images if any are selected
+            if !selectedImageData.isEmpty {
+                do {
+                    // Convert Data to UIImage for the upload service
+                    var imagesToUpload: [UIImage] = []
+                    for imageData in selectedImageData {
+                        if let uiImage = UIImage(data: imageData) {
+                            imagesToUpload.append(uiImage)
+                        }
+                    }
+                    
+                    // Generate unique post ID for organizing images
+                    let postId = UUID().uuidString
+                    
+                    // Upload images using the ImageUploadService
+                    imageURLs = try await imageUploadService.uploadPropertyImages(imagesToUpload, propertyId: "community_post_\(postId)")
+                    
+                    print("✅ Successfully uploaded \(imageURLs.count) images for community post")
+                } catch {
+                    print("❌ Failed to upload images: \(error.localizedDescription)")
+                    // Continue with post creation even if image upload fails
+                }
             }
             
             await communityService.createPost(

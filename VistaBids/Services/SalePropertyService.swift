@@ -9,6 +9,7 @@ import Foundation
 import SwiftUI
 import FirebaseFirestore
 import FirebaseAuth
+import os.log
 
 @MainActor
 class SalePropertyService: ObservableObject {
@@ -19,6 +20,7 @@ class SalePropertyService: ObservableObject {
     @Published var errorMessage: String? = nil
     
     private let db = Firestore.firestore()
+    private let logger = Logger(subsystem: "co.dulaksha.VistaBids", category: "SalePropertyService")
     
     private init() {
         NSLog("🏠 SalePropertyService: Initializing...")
@@ -34,97 +36,46 @@ class SalePropertyService: ObservableObject {
     }
     
     func fetchProperties() async {
-        NSLog("🏠 SalePropertyService: Starting fetchProperties() - async method")
-        
-        await MainActor.run {
-            isLoading = true
-            errorMessage = nil
-        }
+        logger.info("🏠 SalePropertyService: Starting fetchProperties")
         
         do {
-            // Check authentication first
-            if let currentUser = Auth.auth().currentUser {
-                NSLog("🏠 SalePropertyService: User authenticated - UID: \(currentUser.uid)")
-            } else {
-                NSLog("🏠 SalePropertyService: No authenticated user - proceeding anyway for public data")
-            }
+            let snapshot = try await db.collection("sale_properties").getDocuments()
+            logger.info("🏠 SalePropertyService: Got \(snapshot.documents.count) documents from Firestore")
             
-            NSLog("🏠 SalePropertyService: Querying Firestore collection 'sale_properties'...")
-            
-            // Setup more resilient query with retry
-            let settings = FirestoreSettings()
-            settings.isPersistenceEnabled = true
-            let localDB = Firestore.firestore()
-            localDB.settings = settings
-            
-            // Retry logic for fetching documents
-            var retryCount = 0
-            var snapshot: QuerySnapshot?
-            var lastError: Error?
-            
-            while retryCount < 3 && snapshot == nil {
-                do {
-                    snapshot = try await localDB.collection("sale_properties").getDocuments()
-                    NSLog("🏠 SalePropertyService: Query completed on attempt \(retryCount + 1) - found \(snapshot?.documents.count ?? 0) documents")
-                    break
-                } catch let error {
-                    lastError = error
-                    retryCount += 1
-                    NSLog("🏠 SalePropertyService: Error on attempt \(retryCount): \(error.localizedDescription). Retrying...")
-                    try await Task.sleep(nanoseconds: 1_000_000_000) // Wait 1 second before retry
+            // Debug: Print all document IDs and some basic data
+            for document in snapshot.documents {
+                let data = document.data()
+                logger.debug("🏠 Document ID: \(document.documentID)")
+                logger.debug("🏠 Document data keys: \(data.keys)")
+                if let title = data["title"] as? String {
+                    logger.debug("🏠 Document title: \(title)")
+                }
+                if let price = data["price"] as? Double {
+                    logger.debug("🏠 Document price: \(price)")
                 }
             }
             
-            if let snapshot = snapshot {
-                var fetchedProperties: [SaleProperty] = []
-                
-                for document in snapshot.documents {
-                    NSLog("🏠 SalePropertyService: Processing document ID: \(document.documentID)")
-                    
-                    do {
-                        // First try to decode directly
-                        if let property = try? document.data(as: SaleProperty.self) {
-                            fetchedProperties.append(property)
-                            NSLog("🏠 SalePropertyService: Successfully decoded property: \(property.title)")
-                        } else {
-                            // Manual decoding as fallback
-                            let data = document.data()
-                            NSLog("🏠 SalePropertyService: Attempting manual decoding for \(document.documentID)")
-                            
-                            // Try to map Firestore fields to SaleProperty structure
-                            if let manualProperty = createPropertyFromData(documentID: document.documentID, data: data) {
-                                fetchedProperties.append(manualProperty)
-                                NSLog("🏠 SalePropertyService: Successfully manual decoded property: \(manualProperty.title)")
-                            } else {
-                                NSLog("🏠 SalePropertyService: Manual decoding failed for \(document.documentID)")
-                            }
-                        }
-                    } catch {
-                        NSLog("🏠 SalePropertyService: Error decoding document \(document.documentID): \(error)")
-                        NSLog("🏠 SalePropertyService: Document data: \(document.data())")
-                    }
+            var newProperties: [SaleProperty] = []
+            
+            for document in snapshot.documents {
+                let data = document.data()
+                if let property = createPropertyFromData(documentID: document.documentID, data: data) {
+                    newProperties.append(property)
+                    logger.info("🏠 Successfully created property: \(property.title)")
+                } else {
+                    logger.error("🏠 Failed to create property from document: \(document.documentID)")
                 }
-                
-                NSLog("🏠 SalePropertyService: Successfully processed \(fetchedProperties.count) properties")
-                
-                await MainActor.run {
-                    self.properties = fetchedProperties
-                    self.isLoading = false
-                    NSLog("🏠 SalePropertyService: Updated @Published properties array with \(fetchedProperties.count) items")
-                }
-            } else if let error = lastError {
-                throw error
-            } else {
-                throw NSError(domain: "SalePropertyService", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to fetch properties after multiple attempts"])
             }
             
+            logger.info("🏠 SalePropertyService: Created \(newProperties.count) properties")
+            logger.info("🏠 SalePropertyService: Property titles: \(newProperties.map { $0.title })")
+            
+            DispatchQueue.main.async {
+                self.properties = newProperties
+                self.logger.info("🏠 SalePropertyService: Updated properties array with \(self.properties.count) items")
+            }
         } catch {
-            NSLog("🏠 SalePropertyService: Error fetching properties: \(error)")
-            
-            await MainActor.run {
-                self.errorMessage = error.localizedDescription
-                self.isLoading = false
-            }
+            logger.error("🏠 SalePropertyService: Error fetching properties: \(error)")
         }
     }
     

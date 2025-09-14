@@ -10,7 +10,6 @@ import SwiftUI
 // MARK: - Chat List View
 struct ChatListView: View {
     @ObservedObject var communityService: CommunityService
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) var colorScheme
     @State private var searchText = ""
     
@@ -27,67 +26,49 @@ struct ChatListView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // Search bar
-                SearchBar(text: $searchText, placeholder: "Search chats")
-                
-                // Chat list
-                List {
-                    ForEach(filteredChats) { chat in
-                        NavigationLink(destination: ChatDetailView(chatRoom: chat)) {
-                            ChatRowView(chatRoom: chat)
-                        }
-                        .listRowBackground(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+        VStack(spacing: 0) {
+            // Search bar
+            SearchBar(text: $searchText, placeholder: "Search chats")
+            
+            // Chat list
+            List {
+                ForEach(filteredChats) { chat in
+                    NavigationLink(destination: ChatDetailView(chatRoom: chat)) {
+                        ChatRowView(chatRoom: chat)
                     }
+                    .listRowBackground(colorScheme == .dark ? Color(.systemGray6) : Color.white)
                 }
-                .listStyle(PlainListStyle())
-                .overlay(
-                    Group {
-                        if communityService.isLoading {
-                            ProgressView()
-                                .scaleEffect(1.5)
-                        } else if filteredChats.isEmpty {
-                            VStack {
-                                Image(systemName: "message.fill")
-                                    .font(.largeTitle)
-                                    .foregroundColor(.gray)
-                                    .padding(.bottom, 8)
-                                Text("No chats yet")
-                                    .font(.title3)
-                                    .foregroundColor(.gray)
-                                Text("Start a conversation to see it here")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
+            }
+            .listStyle(PlainListStyle())
+            .overlay(
+                Group {
+                    if communityService.isLoading {
+                        ProgressView()
+                            .scaleEffect(1.5)
+                    } else if filteredChats.isEmpty {
+                        VStack {
+                            Image(systemName: "message.fill")
+                                .font(.largeTitle)
+                                .foregroundColor(.gray)
+                                .padding(.bottom, 8)
+                            Text("No chats yet")
+                                .font(.title3)
+                                .foregroundColor(.gray)
+                            Text("Start a conversation to see it here")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
                     }
-                )
-            }
-            .navigationTitle("Chats")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Close") {
-                        dismiss()
-                    }
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        // Create new chat action
-                    }) {
-                        Image(systemName: "plus.message")
-                    }
-                }
-            }
-            .onAppear {
-                Task {
-                    await communityService.loadChatRooms()
-                }
-            }
-            .refreshable {
+            )
+        }
+        .onAppear {
+            Task {
                 await communityService.loadChatRooms()
             }
+        }
+        .refreshable {
+            await communityService.loadChatRooms()
         }
     }
 }

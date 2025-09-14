@@ -64,7 +64,7 @@ struct NearbyPlacesView: View {
                         center: propertyCoordinate,
                         span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
                     )), annotationItems: filteredPlaces) { place in
-                        MapMarker(coordinate: place.coordinate, tint: Color(place.type.color))
+                        MapMarker(coordinate: place.coordinate, tint: place.type.color)
                     }
                     .frame(height: 150)
                     .cornerRadius(12)
@@ -87,7 +87,7 @@ struct NearbyPlacesView: View {
                     ForEach(filteredPlaces) { place in
                         HStack {
                             Image(systemName: place.type.icon)
-                                .foregroundColor(Color(place.type.color))
+                                .foregroundColor(place.type.color)
                                 .frame(width: 30)
                             
                             VStack(alignment: .leading) {

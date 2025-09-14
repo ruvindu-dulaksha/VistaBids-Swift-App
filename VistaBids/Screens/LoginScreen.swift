@@ -9,7 +9,7 @@ import SwiftUI
 import FirebaseAuth
 
 struct LoginScreen: View {
-    @EnvironmentObject private var authService: FirebaseAuthService
+    @EnvironmentObject private var authService: APIService
     @StateObject private var biometricService = BiometricAuthService()
     @StateObject private var credentialsService = BiometricCredentialsService()
     @StateObject private var appLockService = AppLockService()

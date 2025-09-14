@@ -140,13 +140,19 @@ struct NewPostViewV2: View {
     private var imagesView: some View {
         Group {
             if !selectedImageData.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(Array(selectedImageData.enumerated()), id: \.offset) { index, imageData in
-                            imageItemView(index: index, imageData: imageData)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Selected Images (\(selectedImageData.count)/5)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(Array(selectedImageData.enumerated()), id: \.offset) { index, imageData in
+                                imageItemView(index: index, imageData: imageData)
+                            }
                         }
+                        .padding(.horizontal, 4)
                     }
-                    .padding(.horizontal, 2)
                 }
             }
         }
@@ -159,19 +165,27 @@ struct NewPostViewV2: View {
                     Image(uiImage: uiImage)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(width: 100, height: 100)
-                        .cornerRadius(8)
+                        .frame(width: 120, height: 120)
+                        .cornerRadius(12)
                         .clipped()
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        )
                     
                     Button(action: {
                         removeImage(at: index)
                     }) {
                         Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 20))
                             .foregroundColor(.white)
-                            .background(Color.black.opacity(0.6))
-                            .clipShape(Circle())
+                            .background(
+                                Circle()
+                                    .fill(Color.black.opacity(0.7))
+                                    .frame(width: 24, height: 24)
+                            )
                     }
-                    .padding(4)
+                    .padding(6)
                 }
             }
         }

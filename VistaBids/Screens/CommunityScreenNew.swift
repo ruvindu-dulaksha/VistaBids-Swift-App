@@ -23,7 +23,7 @@ struct CommunityScreenV2: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                // Header with language selector
+                // Header
                 HStack {
                     Text("Community")
                         .font(.largeTitle)
@@ -31,8 +31,6 @@ struct CommunityScreenV2: View {
                         .foregroundColor(.primary)
                     
                     Spacer()
-                    
-                    LanguageSelector(selectedLanguage: $selectedLanguage)
                 }
                 .padding()
                 .background(Color(UIColor.systemBackground))
@@ -68,7 +66,7 @@ struct CommunityScreenV2: View {
             }
             .background(Color(UIColor.systemGroupedBackground))
             .sheet(isPresented: $showingNewPost) {
-                NewPostViewV2(communityService: communityService)
+                NewPostView(communityService: communityService)
             }
             .sheet(isPresented: $showingNewEvent) {
                 NewEventView(communityService: communityService)
@@ -127,14 +125,13 @@ struct LanguageSelector: View {
 struct FeedViewV2: View {
     @ObservedObject var communityService: CommunityService
     let selectedLanguage: String
-    @State private var showingNewPost = false
     
     var body: some View {
         VStack {
             ScrollView {
                 LazyVStack(spacing: 16) {
                     ForEach(communityService.posts) { post in
-                        PostCard(post: post, selectedLanguage: selectedLanguage, communityService: communityService)
+                        CommunityPostRowView(post: post, communityService: communityService, selectedLanguage: selectedLanguage)
                             .padding(.horizontal)
                     }
                 }
@@ -144,29 +141,7 @@ struct FeedViewV2: View {
                 await communityService.loadPosts()
             }
         }
-        .overlay(
-            VStack {
-                Spacer()
-                HStack {
-                    Spacer()
-                    Button(action: {
-                        showingNewPost = true
-                    }) {
-                        Image(systemName: "plus")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                            .frame(width: 56, height: 56)
-                            .background(Color.blue)
-                            .clipShape(Circle())
-                            .shadow(radius: 4)
-                    }
-                    .padding()
-                }
-            }
-        )
-        .sheet(isPresented: $showingNewPost) {
-            NewPostViewV2(communityService: communityService)
-        }
+
         .onAppear {
             Task {
                 await communityService.loadPosts()
@@ -179,7 +154,6 @@ struct FeedViewV2: View {
 struct GroupsViewV2: View {
     @ObservedObject var communityService: CommunityService
     let selectedLanguage: String
-    @State private var showingNewGroup = false
     
     var body: some View {
         VStack {
@@ -196,29 +170,7 @@ struct GroupsViewV2: View {
                 await communityService.loadGroups()
             }
         }
-        .overlay(
-            VStack {
-                Spacer()
-                HStack {
-                    Spacer()
-                    Button(action: {
-                        showingNewGroup = true
-                    }) {
-                        Image(systemName: "plus")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                            .frame(width: 56, height: 56)
-                            .background(Color.green)
-                            .clipShape(Circle())
-                            .shadow(radius: 4)
-                    }
-                    .padding()
-                }
-            }
-        )
-        .sheet(isPresented: $showingNewGroup) {
-            NewGroupView(communityService: communityService)
-        }
+
         .onAppear {
             Task {
                 await communityService.loadGroups()
@@ -231,7 +183,6 @@ struct GroupsViewV2: View {
 struct EventsViewV2: View {
     @ObservedObject var communityService: CommunityService
     let selectedLanguage: String
-    @State private var showingNewEvent = false
     
     var body: some View {
         VStack {
@@ -248,29 +199,7 @@ struct EventsViewV2: View {
                 await communityService.loadEvents()
             }
         }
-        .overlay(
-            VStack {
-                Spacer()
-                HStack {
-                    Spacer()
-                    Button(action: {
-                        showingNewEvent = true
-                    }) {
-                        Image(systemName: "plus")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                            .frame(width: 56, height: 56)
-                            .background(Color.orange)
-                            .clipShape(Circle())
-                            .shadow(radius: 4)
-                    }
-                    .padding()
-                }
-            }
-        )
-        .sheet(isPresented: $showingNewEvent) {
-            NewEventView(communityService: communityService)
-        }
+
         .onAppear {
             Task {
                 await communityService.loadEvents()
@@ -290,11 +219,10 @@ struct ChatViewV2: View {
 }
 
 // MARK: - Post Card
-struct PostCard: View {
+struct CommunityPostRowView: View {
     let post: CommunityPost
+    let communityService: CommunityService
     let selectedLanguage: String
-    @ObservedObject var communityService: CommunityService
-    @State private var translatedPost: CommunityPost?
     @State private var isTranslating = false
     @State private var showingComments = false
     
@@ -327,52 +255,60 @@ struct PostCard: View {
                 }
                 
                 Spacer()
-                
-                if post.originalLanguage != selectedLanguage {
-                    Button(action: {
-                        translatePost()
-                    }) {
-                        HStack {
-                            Image(systemName: isTranslating ? "clock" : "translate")
-                            Text(isTranslating ? "Translating..." : "Translate")
-                        }
-                        .font(.caption)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.blue.opacity(0.1))
-                        .foregroundColor(.blue)
-                        .cornerRadius(8)
-                    }
-                    .disabled(isTranslating)
-                }
             }
             
             // Content
-            Text(translatedPost?.translatedContent ?? post.content)
+            Text(post.content)
                 .font(.body)
                 .foregroundColor(.primary)
             
             // Images if any
             if !post.imageURLs.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(post.imageURLs, id: \.self) { url in
-                            AsyncImage(url: URL(string: url)) { image in
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 200, height: 150)
-                                    .clipped()
-                                    .cornerRadius(8)
-                            } placeholder: {
-                                Rectangle()
-                                    .fill(Color.gray.opacity(0.3))
-                                    .frame(width: 200, height: 150)
-                                    .cornerRadius(8)
+                if post.imageURLs.count == 1 {
+                    // Single image - full width with proper aspect ratio
+                    AsyncImage(url: URL(string: post.imageURLs[0])) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(maxHeight: 300)
+                            .cornerRadius(12)
+                            .clipped()
+                    } placeholder: {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(height: 200)
+                            .cornerRadius(12)
+                            .overlay(
+                                ProgressView()
+                                    .tint(.gray)
+                            )
+                    }
+                } else {
+                    // Multiple images - horizontal scroll with improved sizing
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(post.imageURLs, id: \.self) { url in
+                                AsyncImage(url: URL(string: url)) { image in
+                                    image
+                                        .resizable()
+                                        .aspectRatio(1.2, contentMode: .fill)
+                                        .frame(width: 240, height: 200)
+                                        .clipped()
+                                        .cornerRadius(12)
+                                } placeholder: {
+                                    Rectangle()
+                                        .fill(Color.gray.opacity(0.2))
+                                        .frame(width: 240, height: 200)
+                                        .cornerRadius(12)
+                                        .overlay(
+                                            ProgressView()
+                                                .tint(.gray)
+                                        )
+                                }
                             }
                         }
+                        .padding(.horizontal, 4)
                     }
-                    .padding(.horizontal)
                 }
             }
             
@@ -439,13 +375,6 @@ struct PostCard: View {
         }
     }
     
-    private func translatePost() {
-        isTranslating = true
-        Task {
-            translatedPost = await communityService.translatePost(post, to: selectedLanguage)
-            isTranslating = false
-        }
-    }
 }
 
 // MARK: - Group Card

@@ -75,16 +75,16 @@ class TransactionReceiptGenerator {
         var yPosition: CGFloat = 120
         
         // Transaction ID
-        drawTextLine("Transaction ID: \(transaction.paymentReference)", at: &yPosition, in: pageRect, attributes: attributes)
+        drawTextLine("Transaction ID: \(transaction.transactionId)", at: &yPosition, in: pageRect, attributes: attributes)
         
         // Date
         let dateFormatter = DateFormatter()
         dateFormatter.dateStyle = .full
         dateFormatter.timeStyle = .medium
-        drawTextLine("Date: \(dateFormatter.string(from: transaction.transactionDate))", at: &yPosition, in: pageRect, attributes: attributes)
+        drawTextLine("Date: \(dateFormatter.string(from: transaction.date))", at: &yPosition, in: pageRect, attributes: attributes)
         
         // Payment Status
-        drawTextLine("Status: \(transaction.paymentStatus.rawValue.capitalized)", at: &yPosition, in: pageRect, attributes: attributes)
+        drawTextLine("Status: \(transaction.status.rawValue.capitalized)", at: &yPosition, in: pageRect, attributes: attributes)
     }
     
     private func drawPropertyDetails(_ transaction: TransactionHistory, in context: CGContext, pageRect: CGRect, attributes: [NSAttributedString.Key: Any]) {
@@ -93,7 +93,6 @@ class TransactionReceiptGenerator {
         drawSectionHeader("Property Details", at: &yPosition, in: pageRect)
         
         drawTextLine("Property: \(transaction.propertyTitle)", at: &yPosition, in: pageRect, attributes: attributes)
-        drawTextLine("Property ID: \(transaction.propertyId)", at: &yPosition, in: pageRect, attributes: attributes)
     }
     
     private func drawPaymentDetails(_ transaction: TransactionHistory, in context: CGContext, pageRect: CGRect, attributes: [NSAttributedString.Key: Any]) {
@@ -102,24 +101,29 @@ class TransactionReceiptGenerator {
         drawSectionHeader("Payment Details", at: &yPosition, in: pageRect)
         
         // Amount details
-        drawTextLine("Bid Amount: $\(String(format: "%.2f", transaction.bidAmount))", at: &yPosition, in: pageRect, attributes: attributes)
-        drawTextLine("Service Fee: $\(String(format: "%.2f", transaction.fees.serviceFee))", at: &yPosition, in: pageRect, attributes: attributes)
-        drawTextLine("Processing Fee: $\(String(format: "%.2f", transaction.fees.processingFee))", at: &yPosition, in: pageRect, attributes: attributes)
-        drawTextLine("Taxes: $\(String(format: "%.2f", transaction.fees.taxes))", at: &yPosition, in: pageRect, attributes: attributes)
+        drawTextLine("Amount: $\(String(format: "%.2f", transaction.amount))", at: &yPosition, in: pageRect, attributes: attributes)
         
-        // Total
-        let boldAttributes = [
-            NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 14)
-        ]
-        yPosition += 20
-        drawTextLine("Total Amount: $\(String(format: "%.2f", transaction.totalAmount))", at: &yPosition, in: pageRect, attributes: boldAttributes)
+        if let fees = transaction.fees {
+            drawTextLine("Fees: $\(String(format: "%.2f", fees))", at: &yPosition, in: pageRect, attributes: attributes)
+            
+            // Total
+            let boldAttributes = [
+                NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 14)
+            ]
+            let total = transaction.amount + fees
+            drawTextLine("Total Amount: $\(String(format: "%.2f", total))", at: &yPosition, in: pageRect, attributes: boldAttributes)
+        } else {
+            // Total
+            let boldAttributes = [
+                NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 14)
+            ]
+            drawTextLine("Total Amount: $\(String(format: "%.2f", transaction.amount))", at: &yPosition, in: pageRect, attributes: boldAttributes)
+        }
         
         // Payment Method
         yPosition += 20
-        drawTextLine("Payment Method: \(transaction.paymentMethod.displayText)", at: &yPosition, in: pageRect, attributes: attributes)
-        
-        if let cardDetails = transaction.cardDetails {
-            drawTextLine("Card: \(cardDetails.cardType.rawValue.capitalized) ending in \(cardDetails.lastFourDigits)", at: &yPosition, in: pageRect, attributes: attributes)
+        if let paymentMethod = transaction.paymentMethod {
+            drawTextLine("Payment Method: \(paymentMethod.displayText)", at: &yPosition, in: pageRect, attributes: attributes)
         }
     }
     

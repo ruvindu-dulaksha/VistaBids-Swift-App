@@ -6,26 +6,31 @@
 //
 
 import Foundation
+import UIKit
 import FirebaseFirestore
 
 // MARK: - PaymentMethod
 enum PaymentMethod: String, Codable, CaseIterable {
     case creditCard = "credit_card"
     case debitCard = "debit_card"
-    case applePay = "apple_pay"
     case bankTransfer = "bank_transfer"
+    case digitalWallet = "digital_wallet"
     
-    var displayText: String {
+    var displayName: String {
         switch self {
         case .creditCard:
             return "Credit Card"
         case .debitCard:
             return "Debit Card"
-        case .applePay:
-            return "Apple Pay"
         case .bankTransfer:
             return "Bank Transfer"
+        case .digitalWallet:
+            return "Digital Wallet"
         }
+    }
+    
+    var displayText: String {
+        return displayName
     }
     
     var icon: String {
@@ -34,12 +39,84 @@ enum PaymentMethod: String, Codable, CaseIterable {
             return "creditcard"
         case .debitCard:
             return "creditcard.circle"
-        case .applePay:
-            return "applelogo"
         case .bankTransfer:
             return "building.columns"
+        case .digitalWallet:
+            return "wallet.pass"
         }
     }
+}
+
+// MARK: - PaymentStatus
+enum PaymentStatus: String, Codable {
+    case pending = "pending"
+    case processing = "processing"
+    case completed = "completed"
+    case failed = "failed"
+    case refunded = "refunded"
+    case cancelled = "cancelled"
+    
+    var displayText: String {
+        switch self {
+        case .pending:
+            return "Pending"
+        case .processing:
+            return "Processing"
+        case .completed:
+            return "Completed"
+        case .failed:
+            return "Failed"
+        case .refunded:
+            return "Refunded"
+        case .cancelled:
+            return "Cancelled"
+        }
+    }
+    
+    var color: UIColor {
+        switch self {
+        case .pending:
+            return .systemYellow
+        case .processing:
+            return .systemBlue
+        case .completed:
+            return .systemGreen
+        case .failed:
+            return .systemRed
+        case .refunded:
+            return .systemOrange
+        case .cancelled:
+            return .systemGray
+        }
+    }
+}
+
+// MARK: - TransactionStatus
+enum TransactionStatus: String, Codable {
+    case pending = "pending"
+    case completed = "completed"
+    case failed = "failed"
+    case refunded = "refunded"
+    
+    var displayName: String {
+        switch self {
+        case .pending:
+            return "Pending"
+        case .completed:
+            return "Completed"
+        case .failed:
+            return "Failed"
+        case .refunded:
+            return "Refunded"
+        }
+    }
+}
+
+// MARK: - TransactionType
+enum TransactionType: String, Codable {
+    case payment = "payment"
+    case refund = "refund"
+    case auctionWin = "auction_win"
 }
 
 // MARK: - DeliveryStatus
@@ -65,10 +142,32 @@ enum CardVerificationMethod: String, Codable {
     case threeDSecure = "3d_secure"
 }
 
-// MARK: - TransactionType
-enum TransactionType: String, Codable {
-    case auctionWin = "auction_win"
-    case refund = "refund"
+// MARK: - PaymentReminder
+struct PaymentReminder: Codable, Identifiable {
+    var id = UUID()
+    let auctionId: String
+    let propertyTitle: String
+    let propertyImageURL: String
+    let amount: Double
+    let currency: String
+    let deadline: Date
+    let isUrgent: Bool
+    
+    enum CodingKeys: String, CodingKey {
+        case auctionId, propertyTitle, propertyImageURL, amount, currency, deadline, isUrgent
+    }
+    
+    init(auctionId: String, propertyTitle: String, propertyImageURL: String, amount: Double, currency: String = "USD", deadline: Date) {
+        self.auctionId = auctionId
+        self.propertyTitle = propertyTitle
+        self.propertyImageURL = propertyImageURL
+        self.amount = amount
+        self.currency = currency
+        self.deadline = deadline
+        
+        // Mark as urgent if less than 2 hours remaining
+        self.isUrgent = deadline.timeIntervalSinceNow < 2 * 60 * 60
+    }
 }
 
 // MARK: - CardDetails
@@ -110,27 +209,30 @@ struct TransactionFees: Codable {
 // MARK: - TransactionHistory
 struct TransactionHistory: Codable, Identifiable {
     @DocumentID var id: String?
+    let transactionId: String
     let userId: String
-    let userName: String
-    let propertyId: String
     let propertyTitle: String
-    let propertyImages: [String]
-    let auctionId: String
-    let bidAmount: Double
-    let finalPrice: Double
-    let transactionType: TransactionType
-    let paymentMethod: PaymentMethod
-    let paymentStatus: PaymentStatus
-    let transactionDate: Date
-    let paymentDate: Date?
-    let paymentReference: String
-    let cardDetails: CardDetails?
-    let billingAddress: BillingAddress
-    let fees: TransactionFees
-    let notes: String?
+    let amount: Double
+    let currency: String
+    let type: TransactionType
+    let status: TransactionStatus
+    let paymentMethod: PaymentMethod?
+    let date: Date
+    let fees: Double?
+    let description: String?
     
-    var totalAmount: Double {
-        return finalPrice + fees.totalFees
+    init(transactionId: String, userId: String, propertyTitle: String, amount: Double, currency: String = "USD", type: TransactionType, status: TransactionStatus, paymentMethod: PaymentMethod? = nil, date: Date = Date(), fees: Double? = nil, description: String? = nil) {
+        self.transactionId = transactionId
+        self.userId = userId
+        self.propertyTitle = propertyTitle
+        self.amount = amount
+        self.currency = currency
+        self.type = type
+        self.status = status
+        self.paymentMethod = paymentMethod
+        self.date = date
+        self.fees = fees
+        self.description = description
     }
 }
 

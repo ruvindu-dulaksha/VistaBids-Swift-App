@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SignUpScreen: View {
-    @EnvironmentObject private var authService: FirebaseAuthService
+    @EnvironmentObject private var authService: APIService
     @State private var email = ""
     @State private var password = ""
     @State private var phoneNumber = ""
@@ -172,7 +172,7 @@ struct SignUpScreen: View {
             // Successfully signed up - navigation will be handled by the auth state change
             print("✅ Sign up successful, user logged in automatically")
         } catch {
-            errorMessage = FirebaseAuthService.mapError(error)
+            errorMessage = APIService.mapError(error)
             showError = true
             print("❌ Sign up failed: \(error.localizedDescription)")
         }
@@ -189,7 +189,7 @@ struct SignUpScreen: View {
             // Successfully signed up with Google - navigation will be handled by the auth state change
             print("✅ Google sign up successful")
         } catch {
-            errorMessage = FirebaseAuthService.mapError(error)
+            errorMessage = APIService.mapError(error)
             showError = true
             print("❌ Google sign up failed: \(error.localizedDescription)")
         }

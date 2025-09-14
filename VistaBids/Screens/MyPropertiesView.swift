@@ -35,7 +35,7 @@ struct MyPropertiesView: View {
                         Spacer()
                     }
                 } else if userStatsService.myProperties.isEmpty {
-                    EmptyStateView(
+                    PropertyEmptyStateView(
                         icon: "house.fill",
                         title: "No Properties Yet",
                         message: "Start your property business by listing your first property",
@@ -260,7 +260,7 @@ struct AddPropertyFormView: View {
     }
 }
 
-struct EmptyStateView: View {
+struct PropertyEmptyStateView: View {
     let icon: String
     let title: String
     let message: String

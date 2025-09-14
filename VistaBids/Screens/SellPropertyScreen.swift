@@ -1,6 +1,7 @@
 import SwiftUI
 import PhotosUI
 import FirebaseFirestore
+import os.log
 
 struct SellPropertyScreen: View {
     @StateObject private var salePropertyService = SalePropertyService.shared
@@ -16,30 +17,63 @@ struct SellPropertyScreen: View {
     @State private var bedroomFilter: Int? = nil
     @State private var bathroomFilter: Int? = nil
     
+    private let logger = Logger(subsystem: "co.dulaksha.VistaBids", category: "SellPropertyScreen")
+    
     var filteredProperties: [SaleProperty] {
         var filtered = salePropertyService.properties
         
+        // Log filtering information for debugging
+        print("🔍 Starting filtering: Total properties from Firestore: \(filtered.count)")
+        
+        // If no filters are applied and search text is empty, return all properties
+        let hasNoFilters = searchText.isEmpty && 
+                          selectedFilter == nil && 
+                          bedroomFilter == nil && 
+                          bathroomFilter == nil &&
+                          priceRange == (0...10_000_000)
+        
+        if hasNoFilters {
+            print("🔍 No filters applied - showing all \(filtered.count) properties")
+            return filtered
+        }
+        
+        // Apply text search if provided
         if !searchText.isEmpty {
             filtered = filtered.filter { property in
                 property.title.localizedCaseInsensitiveContains(searchText) ||
                 property.address.city.localizedCaseInsensitiveContains(searchText) ||
                 property.address.state.localizedCaseInsensitiveContains(searchText)
             }
+            print("🔍 After search text filter: \(filtered.count) properties")
         }
         
+        // Apply property type filter if selected
         if let selectedFilter = selectedFilter {
             filtered = filtered.filter { $0.propertyType == selectedFilter }
+            print("🔍 After property type filter: \(filtered.count) properties")
         }
         
-        // Apply additional filters
-        filtered = filtered.filter { property in
-            let priceInRange = property.price >= priceRange.lowerBound && property.price <= priceRange.upperBound
-            let bedroomMatch = bedroomFilter == nil || property.bedrooms == bedroomFilter
-            let bathroomMatch = bathroomFilter == nil || property.bathrooms == bathroomFilter
-            
-            return priceInRange && bedroomMatch && bathroomMatch
+        // Apply price range filter if changed from default
+        if priceRange != (0...10_000_000) {
+            filtered = filtered.filter { property in
+                property.price >= priceRange.lowerBound && property.price <= priceRange.upperBound
+            }
+            print("🔍 After price range filter: \(filtered.count) properties")
         }
         
+        // Apply bedroom filter if selected
+        if let bedrooms = bedroomFilter {
+            filtered = filtered.filter { $0.bedrooms == bedrooms }
+            print("🔍 After bedroom filter (\(bedrooms)): \(filtered.count) properties")
+        }
+        
+        // Apply bathroom filter if selected
+        if let bathrooms = bathroomFilter {
+            filtered = filtered.filter { $0.bathrooms == bathrooms }
+            print("🔍 After bathroom filter (\(bathrooms)): \(filtered.count) properties")
+        }
+        
+        print("🔍 Final filtered count: \(filtered.count) properties")
         return filtered
     }
     
@@ -79,11 +113,19 @@ struct SellPropertyScreen: View {
                 FilterSheetView(
                     priceRange: $priceRange,
                     bedroomFilter: $bedroomFilter,
-                    bathroomFilter: $bathroomFilter
+                    bathroomFilter: $bathroomFilter,
+                    onDismiss: { success in
+                        if !success {
+                            // If dismissed without applying, reset to default values
+                            print("🔄 Filter sheet dismissed without applying - keeping current filters")
+                        } else {
+                            print("✅ Filter sheet applied with filters - Price: \(priceRange.lowerBound) to \(priceRange.upperBound), Bedrooms: \(String(describing: bedroomFilter)), Bathrooms: \(String(describing: bathroomFilter))")
+                        }
+                    }
                 )
             }
             .onAppear {
-                NSLog("🏠 SellPropertyScreen appeared, loading properties from Firestore")
+                logger.info("🏠 SellPropertyScreen appeared, loading properties from Firestore")
                 salePropertyService.loadPropertiesFromFirestore()
             }
             .toolbar {
@@ -363,17 +405,17 @@ struct SalePropertyCard: View {
                 
                 // Seller Info
                 HStack(spacing: 8) {
-                                            AsyncImage(url: URL(string: property.seller.profileImageURL ?? "")) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        } placeholder: {
-                            Image(systemName: "person.circle.fill")
-                                .resizable()
-                                .foregroundColor(.gray)
-                        }
-                        .frame(width: 24, height: 24)
-                        .clipShape(Circle())
+                    AsyncImage(url: URL(string: property.seller.profileImageURL ?? "")) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Image(systemName: "person.circle.fill")
+                            .resizable()
+                            .foregroundColor(.gray)
+                    }
+                    .frame(width: 24, height: 24)
+                    .clipShape(Circle())
                     
                     Text(property.seller.name)
                         .font(.caption)
@@ -383,7 +425,7 @@ struct SalePropertyCard: View {
                         Image(systemName: "star.fill")
                             .foregroundColor(.yellow)
                             .font(.caption2)
-                                                    Text(String(format: "%.1f", property.seller.rating ?? 0.0))
+                        Text(String(format: "%.1f", property.seller.rating ?? 0.0))
                             .font(.caption2)
                             .foregroundColor(.secondaryTextColor)
                     }
@@ -451,7 +493,7 @@ struct SalePropertyCard: View {
             .fontWeight(.bold)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(property.isNew ? Color("AccentBlue") : Color.orange)
+            .background(property.isNew ? Color.accentBlues : Color.orange)
             .foregroundColor(.white)
             .cornerRadius(6)
     }
@@ -857,15 +899,19 @@ struct FilterSheetView: View {
     @Binding var bedroomFilter: Int?
     @Binding var bathroomFilter: Int?
     
+    var onDismiss: (Bool) -> Void
+    
     @State private var minPrice: Double
     @State private var maxPrice: Double
     @State private var selectedBedrooms: Int?
     @State private var selectedBathrooms: Int?
+    @State private var filterApplied = false
     
-    init(priceRange: Binding<ClosedRange<Double>>, bedroomFilter: Binding<Int?>, bathroomFilter: Binding<Int?>) {
+    init(priceRange: Binding<ClosedRange<Double>>, bedroomFilter: Binding<Int?>, bathroomFilter: Binding<Int?>, onDismiss: @escaping (Bool) -> Void = { _ in }) {
         self._priceRange = priceRange
         self._bedroomFilter = bedroomFilter
         self._bathroomFilter = bathroomFilter
+        self.onDismiss = onDismiss
         
         // Initialize the local state with the current values
         self._minPrice = State(initialValue: priceRange.wrappedValue.lowerBound)
@@ -880,77 +926,99 @@ struct FilterSheetView: View {
                 Section(header: Text("Price Range")) {
                     VStack(alignment: .leading) {
                         Text("Min: Rs. \(Int(minPrice))")
-                        Slider(value: $minPrice, in: 0...maxPrice)
+                        Slider(value: $minPrice, in: 0...maxPrice, onEditingChanged: { editing in
+                            if !editing {
+                                // Update binding when user finishes dragging
+                                priceRange = minPrice...maxPrice
+                            }
+                        })
                             .accentColor(.accentBlues)
                         
                         Text("Max: Rs. \(Int(maxPrice))")
-                        Slider(value: $maxPrice, in: minPrice...10_000_000)
+                        Slider(value: $maxPrice, in: minPrice...10_000_000, onEditingChanged: { editing in
+                            if !editing {
+                                // Update binding when user finishes dragging
+                                priceRange = minPrice...maxPrice
+                            }
+                        })
                             .accentColor(.accentBlues)
                     }
                     .padding(.vertical, 8)
                 }
                 
                 Section(header: Text("Bedrooms")) {
-                    HStack {
-                        ForEach([1, 2, 3, 4, 5], id: \.self) { number in
-                            Button(action: {
-                                if selectedBedrooms == number {
-                                    selectedBedrooms = nil
-                                } else {
-                                    selectedBedrooms = number
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            ForEach([1, 2, 3, 4, 5], id: \.self) { number in
+                                Button(action: {
+                                    if selectedBedrooms == number {
+                                        selectedBedrooms = nil
+                                    } else {
+                                        selectedBedrooms = number
+                                    }
+                                    // Apply immediately for better user feedback
+                                    bedroomFilter = selectedBedrooms
+                                }) {
+                                    Text("\(number)")
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
+                                        .background(selectedBedrooms == number ? Color.accentBlues : Color.inputFields)
+                                        .foregroundColor(selectedBedrooms == number ? .white : .textPrimary)
+                                        .cornerRadius(8)
                                 }
+                            }
+                            
+                            Button(action: {
+                                selectedBedrooms = nil
+                                // Apply immediately for better user feedback
+                                bedroomFilter = nil
                             }) {
-                                Text("\(number)")
+                                Text("Any")
                                     .padding(.horizontal, 16)
                                     .padding(.vertical, 8)
-                                    .background(selectedBedrooms == number ? Color.accentBlues : Color.inputFields)
-                                    .foregroundColor(selectedBedrooms == number ? .white : .textPrimary)
+                                    .background(selectedBedrooms == nil ? Color.accentBlues : Color.inputFields)
+                                    .foregroundColor(selectedBedrooms == nil ? .white : .textPrimary)
                                     .cornerRadius(8)
                             }
-                        }
-                        
-                        Button(action: {
-                            selectedBedrooms = nil
-                        }) {
-                            Text("Any")
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(selectedBedrooms == nil ? Color.accentBlues : Color.inputFields)
-                                .foregroundColor(selectedBedrooms == nil ? .white : .textPrimary)
-                                .cornerRadius(8)
                         }
                     }
                     .padding(.vertical, 8)
                 }
                 
                 Section(header: Text("Bathrooms")) {
-                    HStack {
-                        ForEach([1, 2, 3, 4], id: \.self) { number in
-                            Button(action: {
-                                if selectedBathrooms == number {
-                                    selectedBathrooms = nil
-                                } else {
-                                    selectedBathrooms = number
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            ForEach([1, 2, 3, 4], id: \.self) { number in
+                                Button(action: {
+                                    if selectedBathrooms == number {
+                                        selectedBathrooms = nil
+                                    } else {
+                                        selectedBathrooms = number
+                                    }
+                                    // Apply immediately for better user feedback
+                                    bathroomFilter = selectedBathrooms
+                                }) {
+                                    Text("\(number)")
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
+                                        .background(selectedBathrooms == number ? Color.accentBlues : Color.inputFields)
+                                        .foregroundColor(selectedBathrooms == number ? .white : .textPrimary)
+                                        .cornerRadius(8)
                                 }
+                            }
+                            
+                            Button(action: {
+                                selectedBathrooms = nil
+                                // Apply immediately for better user feedback
+                                bathroomFilter = nil
                             }) {
-                                Text("\(number)")
+                                Text("Any")
                                     .padding(.horizontal, 16)
                                     .padding(.vertical, 8)
-                                    .background(selectedBathrooms == number ? Color.accentBlues : Color.inputFields)
-                                    .foregroundColor(selectedBathrooms == number ? .white : .textPrimary)
+                                    .background(selectedBathrooms == nil ? Color.accentBlues : Color.inputFields)
+                                    .foregroundColor(selectedBathrooms == nil ? .white : .textPrimary)
                                     .cornerRadius(8)
                             }
-                        }
-                        
-                        Button(action: {
-                            selectedBathrooms = nil
-                        }) {
-                            Text("Any")
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(selectedBathrooms == nil ? Color.accentBlues : Color.inputFields)
-                                .foregroundColor(selectedBathrooms == nil ? .white : .textPrimary)
-                                .cornerRadius(8)
                         }
                     }
                     .padding(.vertical, 8)
@@ -958,10 +1026,23 @@ struct FilterSheetView: View {
                 
                 Section {
                     Button("Reset All Filters") {
+                        // Reset all filter values
                         minPrice = 0
                         maxPrice = 10_000_000
                         selectedBedrooms = nil
                         selectedBathrooms = nil
+                        
+                        // Immediately apply the reset
+                        priceRange = minPrice...maxPrice
+                        bedroomFilter = nil
+                        bathroomFilter = nil
+                        
+                        print("🔄 Reset all filters - showing all properties")
+                        
+                        // Close the filter sheet after reset
+                        filterApplied = true
+                        onDismiss(true)
+                        dismiss()
                     }
                     .foregroundColor(.red)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -973,6 +1054,8 @@ struct FilterSheetView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Apply") {
                         applyFilters()
+                        filterApplied = true
+                        onDismiss(true)
                         dismiss()
                     }
                     .fontWeight(.semibold)
@@ -980,6 +1063,8 @@ struct FilterSheetView: View {
                 }
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
+                        filterApplied = false
+                        onDismiss(false)
                         dismiss()
                     }
                     .foregroundColor(.secondaryTextColor)
@@ -989,9 +1074,17 @@ struct FilterSheetView: View {
     }
     
     private func applyFilters() {
+        // Update the price range
         priceRange = minPrice...maxPrice
+        
+        // Update bedroom filter
         bedroomFilter = selectedBedrooms
+        
+        // Update bathroom filter
         bathroomFilter = selectedBathrooms
+        
+        // Log filter values for debugging
+        print("📋 Applied filters - Price: \(minPrice) to \(maxPrice), Bedrooms: \(String(describing: selectedBedrooms)), Bathrooms: \(String(describing: selectedBathrooms))")
     }
 }
 
@@ -1196,7 +1289,18 @@ struct SalePropertyChatView: View {
         
         if price >= 1_000_000 {
             let millionValue = price / 1_000_000
-            return "Rs. \(String(format: "%.1f", millionValue))M"
+            if millionValue.truncatingRemainder(dividingBy: 1) == 0 {
+                return "Rs. \(Int(millionValue))M"
+            } else {
+                return "Rs. \(String(format: "%.1f", millionValue))M"
+            }
+        } else if price >= 100_000 {
+            let hundredThousandValue = price / 100_000
+            if hundredThousandValue.truncatingRemainder(dividingBy: 1) == 0 {
+                return "Rs. \(Int(hundredThousandValue))L"
+            } else {
+                return "Rs. \(String(format: "%.1f", hundredThousandValue))L"
+            }
         } else {
             let formattedValue = formatter.string(from: NSNumber(value: price)) ?? "0"
             return "Rs. \(formattedValue)"

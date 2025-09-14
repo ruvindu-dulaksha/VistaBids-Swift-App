@@ -320,6 +320,13 @@ struct PostCardOriginal: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+            // Debug info - remove this later
+            if post.originalLanguage != selectedLanguage {
+                Text("🔍 Debug: Post(\(post.originalLanguage)) vs Selected(\(selectedLanguage))")
+                    .font(.caption2)
+                    .foregroundColor(.orange)
+            }
+            
             // Header
             HStack {
                 AsyncImage(url: URL(string: post.authorAvatar ?? "")) { image in
@@ -350,6 +357,7 @@ struct PostCardOriginal: View {
                 
                 if post.originalLanguage != selectedLanguage {
                     Button(action: {
+                        print("🔄 Translate button tapped - Post Language: \(post.originalLanguage), Selected: \(selectedLanguage)")
                         translatePost()
                     }) {
                         HStack {
@@ -387,31 +395,57 @@ struct PostCardOriginal: View {
             }
             
             // Content
-            Text(translatedPost?.translatedContent ?? post.content)
+            Text(getDisplayContent())
                 .font(.body)
                 .foregroundColor(.primary)
             
             // Images if any
             if !post.imageURLs.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(post.imageURLs, id: \.self) { url in
-                            AsyncImage(url: URL(string: url)) { image in
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 200, height: 150)
-                                    .clipped()
-                                    .cornerRadius(8)
-                            } placeholder: {
-                                Rectangle()
-                                    .fill(Color.gray.opacity(0.3))
-                                    .frame(width: 200, height: 150)
-                                    .cornerRadius(8)
+                if post.imageURLs.count == 1 {
+                    // Single image - full width with proper aspect ratio
+                    AsyncImage(url: URL(string: post.imageURLs[0])) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(maxHeight: 300)
+                            .cornerRadius(12)
+                            .clipped()
+                    } placeholder: {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(height: 200)
+                            .cornerRadius(12)
+                            .overlay(
+                                ProgressView()
+                                    .tint(.gray)
+                            )
+                    }
+                } else {
+                    // Multiple images - horizontal scroll with improved sizing
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(post.imageURLs, id: \.self) { url in
+                                AsyncImage(url: URL(string: url)) { image in
+                                    image
+                                        .resizable()
+                                        .aspectRatio(1.2, contentMode: .fill)
+                                        .frame(width: 240, height: 200)
+                                        .clipped()
+                                        .cornerRadius(12)
+                                } placeholder: {
+                                    Rectangle()
+                                        .fill(Color.gray.opacity(0.2))
+                                        .frame(width: 240, height: 200)
+                                        .cornerRadius(12)
+                                        .overlay(
+                                            ProgressView()
+                                                .tint(.gray)
+                                        )
+                                }
                             }
                         }
+                        .padding(.horizontal, 4)
                     }
-                    .padding(.horizontal)
                 }
             }
             
@@ -524,26 +558,58 @@ struct PostCardOriginal: View {
     
     private func translatePost() {
         isTranslating = true
+        // Clear any previous errors
+        communityService.error = nil
+        
         Task {
             do {
-                translatedPost = await communityService.translatePost(post, to: selectedLanguage)
+                let result = await communityService.translatePost(post, to: selectedLanguage)
                 
-                // Check if translation was successful
-                if let error = communityService.error {
-                    print("⚠️ Translation error: \(error)")
-                    // Reset to show original post on error
-                    translatedPost = post
-                } else if translatedPost?.isTranslated == true {
-                    print("✅ Translation successful to \(selectedLanguage)")
-                } else {
-                    print("ℹ️ No translation needed - same language")
+                // Update UI on main thread
+                await MainActor.run {
+                    translatedPost = result
+                    
+                    // Check if translation was successful
+                    if let error = communityService.error {
+                        print("⚠️ Translation error: \(error)")
+                        // Reset to show original post on error
+                        translatedPost = post
+                    } else if result.isTranslated == true {
+                        print("✅ Translation successful to \(selectedLanguage)")
+                        print("🌐 Translated content: \(result.translatedContent ?? "None")")
+                    } else {
+                        print("ℹ️ No translation needed - same language")
+                    }
+                    
+                    isTranslating = false
                 }
             } catch {
-                print("⚠️ Translation failed: \(error.localizedDescription)")
-                translatedPost = post // Show original on error
+                await MainActor.run {
+                    print("⚠️ Translation failed: \(error.localizedDescription)")
+                    translatedPost = post // Show original on error
+                    isTranslating = false
+                }
             }
-            isTranslating = false
         }
+    }
+    
+    private func getDisplayContent() -> String {
+        // Debug logging
+        print("🔍 getDisplayContent() - translatedPost: \(translatedPost != nil)")
+        print("🔍 translatedPost?.isTranslated: \(translatedPost?.isTranslated ?? false)")
+        print("🔍 translatedPost?.translatedContent: \(translatedPost?.translatedContent ?? "nil")")
+        print("🔍 post.content: \(post.content)")
+        
+        // If we have a translated post and it has translated content, use it
+        if let translated = translatedPost,
+           translated.isTranslated == true,
+           let translatedContent = translated.translatedContent,
+           !translatedContent.isEmpty {
+            return translatedContent
+        }
+        
+        // Otherwise use original content
+        return post.content
     }
     
     private func languageDisplayName(_ code: String) -> String {

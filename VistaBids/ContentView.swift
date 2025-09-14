@@ -12,9 +12,10 @@ import Firebase
 import Foundation
 
 struct ContentView: View {
-    @StateObject private var authService = FirebaseAuthService()
+    @StateObject private var authService = APIService()
     @StateObject private var appLockService = AppLockService()
     @StateObject private var credentialsService = BiometricCredentialsService()
+    @StateObject private var notificationManager = NotificationManager.shared
     @EnvironmentObject var themeManager: ThemeManager
     @State private var showSplash = true
     
@@ -40,6 +41,7 @@ struct ContentView: View {
                     MainTabView()
                         .environmentObject(authService)
                         .environmentObject(themeManager)
+                        .environmentObject(notificationManager)
                 } else {
                     LoginScreen()
                 }
@@ -49,6 +51,19 @@ struct ContentView: View {
         .environmentObject(appLockService)
         .environmentObject(credentialsService)
         .environmentObject(themeManager)
+        .environmentObject(notificationManager)
+        .overlay(
+            // Global notification overlay
+            ZStack {
+                if notificationManager.showBidWinnerNotification,
+                   let property = notificationManager.winningProperty {
+                    BidWinnerNotificationView(
+                        property: property,
+                        showNotification: $notificationManager.showBidWinnerNotification
+                    )
+                }
+            }
+        )
         .onReceive(authService.$isLoggedIn) { isLoggedIn in
             // When auth state changes, re-evaluate lock state
             if isLoggedIn {

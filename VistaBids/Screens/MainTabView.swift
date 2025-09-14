@@ -9,9 +9,8 @@ import SwiftUI
 
 struct MainTabView: View {
     @EnvironmentObject var themeManager: ThemeManager
-    @EnvironmentObject var translationManager: TranslationManager
+    @EnvironmentObject var notificationManager: NotificationManager
     @StateObject private var notificationService = NotificationService.shared
-    @State private var showingNewPost = false
     @State private var showingSettings = false
     @State private var selectedTab = 0
     
@@ -80,9 +79,6 @@ struct MainTabView: View {
             UITabBar.appearance().standardAppearance = appearance
             UITabBar.appearance().scrollEdgeAppearance = appearance
         }
-        .sheet(isPresented: $showingNewPost) {
-            NewPostView(communityService: CommunityService())
-        }
         .sheet(isPresented: $showingSettings) {
             ProfileScreen() // Use ProfileScreen
         }
@@ -102,30 +98,20 @@ struct MainTabView: View {
     private var topBarActions: [AppBarAction] {
         switch selectedTab {
         case 0: return [
-            AppBarAction(icon: "", action: { }, customView: AnyView(TranslationIconView())),
             AppBarAction(icon: "", action: { }, customView: AnyView(NotificationBellView())),
             //AppBarAction(icon: "magnifyingglass", action: { /* Handle search */ })
         ]
         case 1: return [
-            AppBarAction(icon: "", action: { }, customView: AnyView(TranslationIconView())),
             AppBarAction(icon: "", action: { }, customView: AnyView(NotificationBellView()))
         ]
         case 2: return [
-            AppBarAction(icon: "", action: { }, customView: AnyView(TranslationIconView())),
             AppBarAction(icon: "", action: { }, customView: AnyView(NotificationBellView()))
         ]
         case 3: return [
-            AppBarAction(icon: "plus", action: { 
-                showingNewPost = true 
-            }),
-            AppBarAction(icon: "", action: { }, customView: AnyView(TranslationIconView())),
             AppBarAction(icon: "", action: { }, customView: AnyView(NotificationBellView()))
         ]
-        case 4: return [
-            AppBarAction(icon: "", action: { }, customView: AnyView(TranslationIconView()))
-        ]
+        case 4: return []
         default: return [
-            AppBarAction(icon: "", action: { }, customView: AnyView(TranslationIconView())),
             AppBarAction(icon: "", action: { }, customView: AnyView(NotificationBellView()))
         ]
         }
@@ -134,7 +120,6 @@ struct MainTabView: View {
 
 #Preview {
     MainTabView()
-        .environmentObject(FirebaseAuthService())
+        .environmentObject(APIService())
         .environmentObject(ThemeManager())
-        .environmentObject(TranslationManager())
 }

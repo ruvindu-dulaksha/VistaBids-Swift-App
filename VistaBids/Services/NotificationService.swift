@@ -75,7 +75,7 @@ struct AppNotification: Identifiable, Codable {
     
     enum NotificationPriority: String, Codable {
         case low = "low"
-        case normal = "normal"
+        case medium = "medium"
         case high = "high"
         case urgent = "urgent"
     }
@@ -214,6 +214,84 @@ class NotificationService: NSObject, ObservableObject {
         }
     }
     
+    func sendLocalNotification(_ notification: AppNotification) async {
+        let content = UNMutableNotificationContent()
+        content.title = notification.title
+        content.body = notification.body
+        content.sound = .default
+        content.badge = NSNumber(value: unreadCount + 1)
+        
+        if let data = notification.data {
+            content.userInfo = data
+        }
+        
+        let request = UNNotificationRequest(
+            identifier: notification.id,
+            content: content,
+            trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+        )
+        
+        do {
+            try await UNUserNotificationCenter.current().add(request)
+            print("✅ Local notification sent: \(notification.title)")
+        } catch {
+            print("❌ Error sending local notification: \(error)")
+        }
+    }
+    
+    func clearAllNotifications() async {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
+        do {
+            let batch = db.batch()
+            
+            for notification in notifications {
+                let ref = db.collection("notifications").document(notification.id)
+                batch.deleteDocument(ref)
+            }
+            
+            try await batch.commit()
+            
+            // Clear local state
+            notifications.removeAll()
+            unreadCount = 0
+            
+            // Clear badge
+            UIApplication.shared.applicationIconBadgeNumber = 0
+            
+            print("✅ Cleared all notifications")
+        } catch {
+            print("❌ Error clearing all notifications: \(error)")
+        }
+    }
+    
+    func updateNotificationPreferences() async {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
+        let preferences = [
+            "pushNotificationsEnabled": UserDefaults.standard.bool(forKey: "pushNotificationsEnabled"),
+            "emailNotificationsEnabled": UserDefaults.standard.bool(forKey: "emailNotificationsEnabled"),
+            "smsNotificationsEnabled": UserDefaults.standard.bool(forKey: "smsNotificationsEnabled"),
+            "biddingNotifications": UserDefaults.standard.bool(forKey: "biddingNotifications"),
+            "auctionNotifications": UserDefaults.standard.bool(forKey: "auctionNotifications"),
+            "paymentNotifications": UserDefaults.standard.bool(forKey: "paymentNotifications"),
+            "communityNotifications": UserDefaults.standard.bool(forKey: "communityNotifications"),
+            "marketingNotifications": UserDefaults.standard.bool(forKey: "marketingNotifications"),
+            "quietHoursEnabled": UserDefaults.standard.bool(forKey: "quietHoursEnabled"),
+            "selectedSound": UserDefaults.standard.string(forKey: "selectedSound") ?? "Default",
+            "lastUpdated": FieldValue.serverTimestamp()
+        ] as [String : Any]
+        
+        do {
+            try await db.collection("users").document(userId).updateData([
+                "notificationPreferences": preferences
+            ])
+            print("✅ Updated notification preferences")
+        } catch {
+            print("❌ Error updating notification preferences: \(error)")
+        }
+    }
+    
     func markAllAsRead() async {
         guard let userId = Auth.auth().currentUser?.uid else { return }
         
@@ -267,7 +345,7 @@ class NotificationService: NSObject, ObservableObject {
         body: String,
         type: AppNotification.NotificationType,
         data: [String: String]? = nil,
-        priority: AppNotification.NotificationPriority = .normal,
+        priority: AppNotification.NotificationPriority = .medium,
         excludeUserId: String? = nil
     ) async {
         do {
@@ -321,7 +399,7 @@ class NotificationService: NSObject, ObservableObject {
         body: String,
         type: AppNotification.NotificationType,
         data: [String: String]? = nil,
-        priority: AppNotification.NotificationPriority = .normal
+        priority: AppNotification.NotificationPriority = .medium
     ) async {
         do {
             let notification = AppNotification(
@@ -396,7 +474,7 @@ class NotificationService: NSObject, ObservableObject {
             body: body,
             type: .newBidding,
             data: data,
-            priority: .normal,
+            priority: .medium,
             excludeUserId: property.sellerId
         )
     }
@@ -415,7 +493,7 @@ class NotificationService: NSObject, ObservableObject {
             body: body,
             type: .newSelling,
             data: data,
-            priority: .normal,
+            priority: .medium,
             excludeUserId: property.seller.id
         )
     }
@@ -469,7 +547,7 @@ class NotificationService: NSObject, ObservableObject {
             body: body,
             type: .communityEvent,
             data: data,
-            priority: .normal,
+            priority: .medium,
             excludeUserId: event.userId
         )
     }
@@ -489,7 +567,7 @@ class NotificationService: NSObject, ObservableObject {
             body: body,
             type: .groupMessage,
             data: data,
-            priority: .normal
+            priority: .medium
         )
     }
 }

@@ -7,19 +7,16 @@
 
 import SwiftUI
 import FirebaseAuth
-import CoreLocation
 
 struct ForgetPasswordScreen: View {
     @Environment(\.dismiss) var dismiss
-    @StateObject private var authService = FirebaseAuthService()
-    @StateObject private var locationManager = LocationManager()
+    @StateObject private var authService = APIService()
     @State private var email: String = ""
     @State private var showingAlert = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
     @State private var isLoading = false
     @State private var validationError = ""
-    @State private var showLocationInfo = false
 
     var body: some View {
         VStack {
@@ -35,123 +32,12 @@ struct ForgetPasswordScreen: View {
                 .foregroundColor(.textPrimary)
                 .padding(.top, 8)
 
-            Text("Enter your email address and we'll send you a link to reset your password.")
+            Text("Enter your email address and we'll send you a secure link to reset your password.")
                 .font(.system(size: 14))
                 .foregroundColor(.textPrimary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
                 .padding(.top, 8)
-
-            // Location Section
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Text("Your Location")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.textPrimary)
-                    
-                    Spacer()
-                    
-                    Button(action: {
-                        withAnimation {
-                            showLocationInfo.toggle()
-                        }
-                    }) {
-                        Image(systemName: showLocationInfo ? "chevron.up" : "chevron.down")
-                            .foregroundColor(.accentBlues)
-                    }
-                }
-                .onTapGesture {
-                    withAnimation {
-                        showLocationInfo.toggle()
-                    }
-                }
-                
-                if showLocationInfo {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Button(action: {
-                                locationManager.requestPermission()
-                            }) {
-                                HStack {
-                                    Image(systemName: "location")
-                                        .foregroundColor(.white)
-                                    Text("Get Location")
-                                        .foregroundColor(.white)
-                                        .font(.system(size: 14, weight: .medium))
-                                }
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(Color.accentBlues)
-                                .cornerRadius(6)
-                            }
-                            
-                            if locationManager.isLoading {
-                                ProgressView()
-                                    .scaleEffect(0.8)
-                                    .padding(.leading, 8)
-                            }
-                            
-                            Spacer()
-                        }
-                        
-                        // Location Status
-                        switch locationManager.authorizationStatus {
-                        case .notDetermined:
-                            Text("Location permission not requested")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                        case .denied, .restricted:
-                            Text("Location access denied. Please enable in Settings.")
-                                .font(.caption)
-                                .foregroundColor(.red)
-                        case .authorizedWhenInUse, .authorizedAlways:
-                            if let location = locationManager.location {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("📍 Current Location:")
-                                        .font(.caption)
-                                        .foregroundColor(.textPrimary)
-                                    
-                                    Text("Latitude: \(location.coordinate.latitude, specifier: "%.6f")")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                    
-                                    Text("Longitude: \(location.coordinate.longitude, specifier: "%.6f")")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                    
-                                    Text("Accuracy: ±\(location.horizontalAccuracy, specifier: "%.0f")m")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                }
-                                .padding(8)
-                                .background(Color.inputFields.opacity(0.5))
-                                .cornerRadius(6)
-                            } else {
-                                Text("Tap 'Get Location' to fetch your current location")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                            }
-                        @unknown default:
-                            Text("Unknown location status")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                        }
-                        
-                        // Error Message
-                        if let errorMessage = locationManager.errorMessage {
-                            Text("Error: \(errorMessage)")
-                                .font(.caption)
-                                .foregroundColor(.red)
-                        }
-                    }
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-                }
-            }
-            .padding(.horizontal)
-            .padding(.top, 16)
-            .background(Color.white.opacity(0.1))
-            .cornerRadius(8)
-            .padding(.horizontal)
 
             VStack(alignment: .leading, spacing: 8) {
                 // Email Field
@@ -174,7 +60,7 @@ struct ForgetPasswordScreen: View {
                         .padding(.horizontal)
                 }
             }
-            .padding(.top, 16)
+            .padding(.top, 24)
 
             // Submit Button
             Button(action: {
@@ -186,7 +72,7 @@ struct ForgetPasswordScreen: View {
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             .scaleEffect(0.8)
                     }
-                    Text(isLoading ? "Sending..." : "Send Reset Link")
+                    Text(isLoading ? "Sending Email..." : "Send Reset Email")
                         .bold()
                 }
                 .frame(maxWidth: .infinity)
@@ -195,7 +81,7 @@ struct ForgetPasswordScreen: View {
                 .foregroundColor(.white)
                 .cornerRadius(8)
                 .padding(.horizontal)
-                .padding(.top, 16)
+                .padding(.top, 24)
             }
             .disabled(isLoading)
 
@@ -204,7 +90,7 @@ struct ForgetPasswordScreen: View {
         .background(Color.backgrounds.ignoresSafeArea())
         .alert(alertTitle, isPresented: $showingAlert) {
             Button("OK") {
-                if alertTitle == "Success" {
+                if alertTitle == "Email Sent" {
                     dismiss()
                 }
             }
@@ -236,8 +122,8 @@ struct ForgetPasswordScreen: View {
                 try await authService.resetPassword(email: email)
                 await MainActor.run {
                     isLoading = false
-                    alertTitle = "Success"
-                    alertMessage = "Password reset link sent to \(email). Please check your email and follow the instructions to reset your password."
+                    alertTitle = "Email Sent"
+                    alertMessage = "We've sent a password reset link to \(email). Please check your email and follow the instructions to create a new password. The link will expire in 24 hours."
                     showingAlert = true
                 }
             } catch {

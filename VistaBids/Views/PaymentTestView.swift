@@ -90,7 +90,7 @@ struct PaymentTestView: View {
         .sheet(isPresented: $showingPayment) {
             PaymentView(
                 property: testProperty,
-                winningAmount: testProperty.currentBid
+                showPaymentView: $showingPayment
             )
         }
         .alert("Success", isPresented: $showingSuccess) {

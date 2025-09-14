@@ -1,480 +1,627 @@
 //
-//  PaymentView.swift
+//  PaymentViewFixed.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2025-08-24.
+//  Created by GitHub Copilot on 2025-09-13.
 //
 
 import SwiftUI
-import PassKit
-import CoreLocation
-import FirebaseFirestore
 
 struct PaymentView: View {
     let property: AuctionProperty
-    let winningAmount: Double
-    
-    @StateObject private var paymentService = PaymentService()
-    @Environment(\.dismiss) private var dismiss
-    
-    @State private var selectedPaymentMethod: PaymentMethod = .applePay
-    @State private var showingCardForm = false
-    @State private var showingApplePay = false
-    @State private var showingSuccessMessage = false
-    @State private var transactionId: String?
-    
-    // Card details
+    @Binding var showPaymentView: Bool
     @State private var cardNumber = ""
-    @State private var expiryMonth = 1
-    @State private var expiryYear = Calendar.current.component(.year, from: Date())
+    @State private var expiryDate = ""
     @State private var cvv = ""
-    @State private var cardholderName = ""
+    @State private var cardHolderName = ""
+    @State private var showOTPView = false
+    @State private var isProcessing = false
+    @State private var selectedPaymentMethod = 0
+    @Environment(\.colorScheme) var colorScheme
     
-    // Billing address
-    @State private var billingStreet = ""
-    @State private var billingCity = ""
-    @State private var billingState = ""
-    @State private var billingPostalCode = ""
-    @State private var billingCountry = "United States"
-    
-    private var totalAmount: Double {
-        let serviceFee = winningAmount * 0.025
-        let processingFee = winningAmount * 0.01
-        let taxes = (winningAmount + serviceFee + processingFee) * 0.08
-        return winningAmount + serviceFee + processingFee + taxes
+    init(property: AuctionProperty, showPaymentView: Binding<Bool>) {
+        print("💳 PaymentViewFixed initialized for property: \(property.title)")
+        self.property = property
+        self._showPaymentView = showPaymentView
     }
     
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Property Summary
-                    propertyCard
-                    
-                    // Payment Amount Summary
-                    paymentSummary
-                    
-                    // Payment Method Selection
-                    paymentMethodSelection
-                    
-                    // Billing Information
-                    if selectedPaymentMethod != .applePay {
-                        billingInformation
-                    }
-                    
-                    // Pay Button
-                    payButton
-                    
-                    // Security Information
-                    securityInfo
-                }
-                .padding()
-            }
-            .navigationTitle("Complete Payment")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden()
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-            }
-            .alert("Payment Successful!", isPresented: $showingSuccessMessage) {
-                Button("View Transaction") {
-                    // Navigate to transaction details
-                    dismiss()
-                }
-                Button("Done") {
-                    dismiss()
-                }
-            } message: {
-                Text("Your payment has been processed successfully. Transaction ID: \(transactionId ?? "N/A")")
-            }
-            .alert("Payment Error", isPresented: .constant(paymentService.paymentError != nil)) {
-                Button("Try Again") {
-                    paymentService.paymentError = nil
-                }
-                Button("Cancel") {
-                    dismiss()
-                }
-            } message: {
-                Text(paymentService.paymentError ?? "An error occurred")
-            }
-        }
-    }
-    
-    private var propertyCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("🎉 Congratulations! You won the auction")
-                .font(.headline)
-                .foregroundColor(.green)
-            
-            HStack {
-                AsyncImage(url: URL(string: property.images.first ?? "")) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.3))
-                }
-                .frame(width: 80, height: 80)
-                .cornerRadius(8)
+            ZStack {
+                // Premium background
+                LinearGradient(
+                    colors: [
+                        Color.backgrounds,
+                        Color.secondaryBackground,
+                        Color.accentBlues.opacity(0.03)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
                 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(property.title)
-                        .font(.headline)
-                        .lineLimit(2)
-                    
-                    Text(property.address.fullAddress)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
-                    
-                    Text("Winning Bid: $\(winningAmount, specifier: "%.2f")")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.green)
-                }
-                
-                Spacer()
-            }
-        }
-        .padding()
-        .background(Color(.systemGray6))
-        .cornerRadius(12)
-    }
-    
-    private var paymentSummary: some View {
-        VStack(spacing: 12) {
-            Text("Payment Summary")
-                .font(.headline)
-            
-            VStack(spacing: 8) {
-                HStack {
-                    Text("Property Price")
-                    Spacer()
-                    Text("$\(winningAmount, specifier: "%.2f")")
-                }
-                
-                HStack {
-                    Text("Service Fee (2.5%)")
-                    Spacer()
-                    Text("$\(winningAmount * 0.025, specifier: "%.2f")")
-                }
-                
-                HStack {
-                    Text("Processing Fee (1%)")
-                    Spacer()
-                    Text("$\(winningAmount * 0.01, specifier: "%.2f")")
-                }
-                
-                HStack {
-                    Text("Taxes (8%)")
-                    Spacer()
-                    Text("$\((winningAmount + winningAmount * 0.025 + winningAmount * 0.01) * 0.08, specifier: "%.2f")")
-                }
-                
-                Divider()
-                
-                HStack {
-                    Text("Total")
-                        .fontWeight(.bold)
-                    Spacer()
-                    Text("$\(totalAmount, specifier: "%.2f")")
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
-                }
-            }
-        }
-        .padding()
-        .background(Color(.systemGray6))
-        .cornerRadius(12)
-    }
-    
-    private var paymentMethodSelection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Payment Method")
-                .font(.headline)
-            
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: 12) {
-                ForEach(PaymentMethod.allCases, id: \.self) { method in
-                    let isEnabled = method == .applePay ? paymentService.canMakeApplePayPayments() : true
-                    let isSelected = selectedPaymentMethod == method
-                    
-                    PaymentMethodCard(
-                        method: method,
-                        isSelected: isSelected,
-                        isEnabled: isEnabled
-                    ) {
-                        selectedPaymentMethod = method
-                        if method != .applePay {
-                            showingCardForm = true
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Header
+                        VStack(spacing: 16) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.accentBlues.opacity(0.1))
+                                    .frame(width: 80, height: 80)
+                                
+                                Image(systemName: "creditcard.and.123")
+                                    .font(.system(size: 32, weight: .medium))
+                                    .foregroundColor(.accentBlues)
+                            }
+                            
+                            VStack(spacing: 8) {
+                                Text("Secure Payment")
+                                    .font(.title.bold())
+                                    .foregroundColor(.textPrimary)
+                                
+                                Text("Complete your property purchase")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondaryTextColor)
+                                    .fontWeight(.medium)
+                            }
                         }
-                    }
-                }
-            }
-        }
-        .padding()
-        .background(Color(.systemGray6))
-        .cornerRadius(12)
-    }
-    
-    private var billingInformation: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Billing Information")
-                .font(.headline)
-            
-            VStack(spacing: 12) {
-                TextField("Cardholder Name", text: $cardholderName)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                
-                TextField("Card Number", text: $cardNumber)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .keyboardType(.numberPad)
-                
-                HStack {
-                    Picker("Month", selection: $expiryMonth) {
-                        ForEach(1...12, id: \.self) { month in
-                            Text(String(format: "%02d", month)).tag(month)
+                        .padding(.top, 10)
+                        
+                        // Property summary with better image handling
+                        VStack(spacing: 0) {
+                            // Image section
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(Color.lightGray.opacity(0.3))
+                                    .frame(height: 200)
+                                
+                                if let firstImage = property.images.first, !firstImage.isEmpty {
+                                    AsyncImage(url: URL(string: firstImage)) { phase in
+                                        switch phase {
+                                        case .success(let image):
+                                            image
+                                                .resizable()
+                                                .aspectRatio(contentMode: .fill)
+                                                .frame(height: 200)
+                                                .clipped()
+                                        case .failure(_):
+                                            VStack(spacing: 8) {
+                                                Image(systemName: "house.fill")
+                                                    .font(.system(size: 40))
+                                                    .foregroundColor(.accentBlues)
+                                                Text("Property Image")
+                                                    .font(.headline)
+                                                    .foregroundColor(.textPrimary)
+                                                Text("Image failed to load")
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondaryTextColor)
+                                            }
+                                        case .empty:
+                                            VStack(spacing: 8) {
+                                                ProgressView()
+                                                    .scaleEffect(1.2)
+                                                    .tint(.accentBlues)
+                                                Text("Loading image...")
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondaryTextColor)
+                                            }
+                                        @unknown default:
+                                            VStack(spacing: 8) {
+                                                Image(systemName: "house.fill")
+                                                    .font(.system(size: 40))
+                                                    .foregroundColor(.accentBlues)
+                                                Text("Property")
+                                                    .font(.headline)
+                                                    .foregroundColor(.textPrimary)
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    VStack(spacing: 8) {
+                                        Image(systemName: "house.circle.fill")
+                                            .font(.system(size: 40))
+                                            .foregroundColor(.accentBlues)
+                                        Text("Property Purchase")
+                                            .font(.headline)
+                                            .foregroundColor(.textPrimary)
+                                        Text("No image available")
+                                            .font(.caption)
+                                            .foregroundColor(.secondaryTextColor)
+                                    }
+                                }
+                            }
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            
+                            // Property details
+                            VStack(spacing: 16) {
+                                VStack(spacing: 8) {
+                                    Text(property.title)
+                                        .font(.title3.bold())
+                                        .foregroundColor(.textPrimary)
+                                        .multilineTextAlignment(.center)
+                                        .lineLimit(2)
+                                    
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "location.fill")
+                                            .foregroundColor(.accentBlues)
+                                            .font(.subheadline)
+                                        
+                                        Text(property.address.fullAddress)
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondaryTextColor)
+                                            .fontWeight(.medium)
+                                            .multilineTextAlignment(.center)
+                                            .lineLimit(2)
+                                    }
+                                }
+                                
+                                // Price display
+                                VStack(spacing: 8) {
+                                    Text("Purchase Amount")
+                                        .font(.caption)
+                                        .foregroundColor(.secondaryTextColor)
+                                        .fontWeight(.medium)
+                                        .textCase(.uppercase)
+                                    
+                                    Text("$\(Int(property.finalPrice ?? property.currentBid))")
+                                        .font(.title.bold())
+                                        .foregroundColor(.green)
+                                        .padding(.horizontal, 20)
+                                        .padding(.vertical, 12)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .fill(Color.green.opacity(0.08))
+                                        )
+                                }
+                            }
+                            .padding(24)
                         }
-                    }
-                    .pickerStyle(MenuPickerStyle())
-                    
-                    Picker("Year", selection: $expiryYear) {
-                        ForEach(Calendar.current.component(.year, from: Date())...(Calendar.current.component(.year, from: Date()) + 10), id: \.self) { year in
-                            Text(String(year)).tag(year)
-                        }
-                    }
-                    .pickerStyle(MenuPickerStyle())
-                    
-                    TextField("CVV", text: $cvv)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .keyboardType(.numberPad)
-                        .frame(width: 80)
-                }
-                
-                Divider()
-                
-                Text("Billing Address")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                
-                TextField("Street Address", text: $billingStreet)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                
-                HStack {
-                    TextField("City", text: $billingCity)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                    
-                    TextField("State", text: $billingState)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                }
-                
-                HStack {
-                    TextField("Postal Code", text: $billingPostalCode)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                    
-                    TextField("Country", text: $billingCountry)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                }
-            }
-        }
-    }
-    
-    private var payButton: some View {
-        VStack(spacing: 12) {
-            if selectedPaymentMethod == .applePay {
-                PayWithApplePayButton(.buy) {
-                    processApplePayPayment()
-                }
-                .frame(height: 50)
-                .cornerRadius(8)
-            } else {
-                Button(action: processCardPayment) {
-                    HStack {
-                        if paymentService.isProcessingPayment {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .scaleEffect(0.8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(Color.cardBackground)
+                                .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+                        )
+                        
+                        // Payment method selector
+                        VStack(spacing: 16) {
+                            HStack {
+                                Image(systemName: "wallet.pass.fill")
+                                    .foregroundColor(.accentBlues)
+                                    .font(.title3)
+                                Text("Payment Method")
+                                    .font(.headline.bold())
+                                    .foregroundColor(.textPrimary)
+                                Spacer()
+                            }
+                            
+                            HStack(spacing: 12) {
+                                // Credit Card
+                                Button(action: { selectedPaymentMethod = 0 }) {
+                                    VStack(spacing: 12) {
+                                        Image(systemName: "creditcard.fill")
+                                            .font(.title2)
+                                            .foregroundColor(selectedPaymentMethod == 0 ? .white : .accentBlues)
+                                        
+                                        VStack(spacing: 4) {
+                                            Text("Credit Card")
+                                                .font(.subheadline.bold())
+                                                .foregroundColor(selectedPaymentMethod == 0 ? .white : .textPrimary)
+                                            
+                                            Text("Visa, Mastercard")
+                                                .font(.caption)
+                                                .foregroundColor(selectedPaymentMethod == 0 ? .white.opacity(0.8) : .secondaryTextColor)
+                                        }
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 16)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(selectedPaymentMethod == 0 ? Color.accentBlues : Color.cardBackground)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(selectedPaymentMethod == 0 ? Color.clear : Color.accentBlues.opacity(0.2), lineWidth: 1)
+                                            )
+                                    )
+                                }
+                                
+                                // Apple Pay
+                                Button(action: { selectedPaymentMethod = 1 }) {
+                                    VStack(spacing: 12) {
+                                        Image(systemName: "apple.logo")
+                                            .font(.title2)
+                                            .foregroundColor(selectedPaymentMethod == 1 ? .white : .accentBlues)
+                                        
+                                        VStack(spacing: 4) {
+                                            Text("Apple Pay")
+                                                .font(.subheadline.bold())
+                                                .foregroundColor(selectedPaymentMethod == 1 ? .white : .textPrimary)
+                                            
+                                            Text("Quick & Secure")
+                                                .font(.caption)
+                                                .foregroundColor(selectedPaymentMethod == 1 ? .white.opacity(0.8) : .secondaryTextColor)
+                                        }
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 16)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(selectedPaymentMethod == 1 ? Color.accentBlues : Color.cardBackground)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(selectedPaymentMethod == 1 ? Color.clear : Color.accentBlues.opacity(0.2), lineWidth: 1)
+                                            )
+                                    )
+                                }
+                            }
                         }
                         
-                        Text(paymentService.isProcessingPayment ? "Processing..." : "Pay $\(totalAmount, specifier: "%.2f")")
-                            .fontWeight(.semibold)
+                        // Payment form for credit card
+                        if selectedPaymentMethod == 0 {
+                            VStack(spacing: 20) {
+                                HStack {
+                                    Image(systemName: "creditcard.trianglebadge.exclamationmark")
+                                        .foregroundColor(.accentBlues)
+                                        .font(.title3)
+                                    Text("Card Details")
+                                        .font(.headline.bold())
+                                        .foregroundColor(.textPrimary)
+                                    Spacer()
+                                    
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "lock.shield.fill")
+                                            .foregroundColor(.green)
+                                            .font(.caption)
+                                        Text("Secure")
+                                            .font(.caption.bold())
+                                            .foregroundColor(.green)
+                                    }
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(
+                                        Capsule()
+                                            .fill(Color.green.opacity(0.1))
+                                    )
+                                }
+                                
+                                VStack(spacing: 16) {
+                                    // Card holder name
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        HStack(spacing: 6) {
+                                            Image(systemName: "person.fill")
+                                                .foregroundColor(.accentBlues)
+                                                .font(.caption)
+                                            Text("Cardholder Name")
+                                                .font(.subheadline.bold())
+                                                .foregroundColor(.textPrimary)
+                                        }
+                                        
+                                        TextField("Enter full name as on card", text: $cardHolderName)
+                                            .padding(.horizontal, 16)
+                                            .padding(.vertical, 16)
+                                            .background(Color.inputFields)
+                                            .cornerRadius(12)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(Color.accentBlues.opacity(0.2), lineWidth: 1)
+                                            )
+                                            .autocapitalization(.words)
+                                    }
+                                    
+                                    // Card number
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        HStack(spacing: 6) {
+                                            Image(systemName: "creditcard.fill")
+                                                .foregroundColor(.accentBlues)
+                                                .font(.caption)
+                                            Text("Card Number")
+                                                .font(.subheadline.bold())
+                                                .foregroundColor(.textPrimary)
+                                        }
+                                        
+                                        TextField("1234 5678 9012 3456", text: $cardNumber)
+                                            .padding(.horizontal, 16)
+                                            .padding(.vertical, 16)
+                                            .background(Color.inputFields)
+                                            .cornerRadius(12)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(Color.accentBlues.opacity(0.2), lineWidth: 1)
+                                            )
+                                            .keyboardType(.numberPad)
+                                            .onChange(of: cardNumber) { _, newValue in
+                                                cardNumber = formatCardNumber(newValue)
+                                            }
+                                    }
+                                    
+                                    HStack(spacing: 16) {
+                                        // Expiry date
+                                        VStack(alignment: .leading, spacing: 8) {
+                                            HStack(spacing: 6) {
+                                                Image(systemName: "calendar")
+                                                    .foregroundColor(.accentBlues)
+                                                    .font(.caption)
+                                                Text("Expiry Date")
+                                                    .font(.subheadline.bold())
+                                                    .foregroundColor(.textPrimary)
+                                            }
+                                            
+                                            TextField("MM/YY", text: $expiryDate)
+                                                .padding(.horizontal, 16)
+                                                .padding(.vertical, 16)
+                                                .background(Color.inputFields)
+                                                .cornerRadius(12)
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 12)
+                                                        .stroke(Color.accentBlues.opacity(0.2), lineWidth: 1)
+                                                )
+                                                .keyboardType(.numberPad)
+                                                .onChange(of: expiryDate) { _, newValue in
+                                                    expiryDate = formatExpiryDate(newValue)
+                                                }
+                                        }
+                                        
+                                        // CVV
+                                        VStack(alignment: .leading, spacing: 8) {
+                                            HStack(spacing: 6) {
+                                                Image(systemName: "lock.fill")
+                                                    .foregroundColor(.accentBlues)
+                                                    .font(.caption)
+                                                Text("CVV")
+                                                    .font(.subheadline.bold())
+                                                    .foregroundColor(.textPrimary)
+                                            }
+                                            
+                                            SecureField("123", text: $cvv)
+                                                .padding(.horizontal, 16)
+                                                .padding(.vertical, 16)
+                                                .background(Color.inputFields)
+                                                .cornerRadius(12)
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 12)
+                                                        .stroke(Color.accentBlues.opacity(0.2), lineWidth: 1)
+                                                )
+                                                .keyboardType(.numberPad)
+                                                .onChange(of: cvv) { _, newValue in
+                                                    if newValue.count > 3 {
+                                                        cvv = String(newValue.prefix(3))
+                                                    }
+                                                }
+                                        }
+                                    }
+                                }
+                            }
+                            .padding(24)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(Color.cardBackground)
+                                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+                            )
+                        }
+                        
+                        // Security section
+                        VStack(spacing: 16) {
+                            HStack {
+                                Image(systemName: "shield.checkered")
+                                    .foregroundColor(.green)
+                                    .font(.title3)
+                                Text("Security & Privacy")
+                                    .font(.headline.bold())
+                                    .foregroundColor(.textPrimary)
+                                Spacer()
+                            }
+                            
+                            VStack(spacing: 12) {
+                                SecurityInfoRow(
+                                    icon: "lock.shield.fill",
+                                    text: "256-bit SSL encryption protects your payment data",
+                                    color: .green
+                                )
+                                
+                                SecurityInfoRow(
+                                    icon: "envelope.fill",
+                                    text: "OTP verification sent to your registered email",
+                                    color: .accentBlues
+                                )
+                                
+                                SecurityInfoRow(
+                                    icon: "eye.slash.fill",
+                                    text: "Your card details are never stored on our servers",
+                                    color: .purple
+                                )
+                            }
+                        }
+                        .padding(20)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.green.opacity(0.03))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(Color.green.opacity(0.2), lineWidth: 1)
+                                )
+                        )
+                        
+                        Spacer(minLength: 20)
+                        
+                        // Payment button
+                        Button(action: processPayment) {
+                            HStack(spacing: 16) {
+                                if isProcessing {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .scaleEffect(1.1)
+                                } else {
+                                    Image(systemName: "lock.shield.fill")
+                                        .font(.title3.bold())
+                                }
+                                
+                                VStack(spacing: 2) {
+                                    Text(isProcessing ? "Processing Payment..." : "Complete Secure Payment")
+                                        .fontWeight(.bold)
+                                        .font(.headline)
+                                    
+                                    if !isProcessing {
+                                        Text("$\(Int(property.finalPrice ?? property.currentBid))")
+                                            .font(.title2.bold())
+                                    }
+                                }
+                                
+                                if !isProcessing {
+                                    Image(systemName: "arrow.right.circle.fill")
+                                        .font(.title2)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 20)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(
+                                        isFormValid
+                                        ? LinearGradient(
+                                            colors: [Color.accentBlues, Color.accentBlues.opacity(0.8)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                        : LinearGradient(
+                                            colors: [Color.disabledBackground, Color.disabledBackground],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                            )
+                            .foregroundColor(isFormValid ? .white : .disabledText)
+                            .scaleEffect(isProcessing ? 0.98 : 1.0)
+                            .shadow(
+                                color: isFormValid ? Color.accentBlues.opacity(0.4) : Color.clear,
+                                radius: isFormValid ? 12 : 0,
+                                x: 0,
+                                y: isFormValid ? 6 : 0
+                            )
+                            .animation(.easeInOut(duration: 0.2), value: isProcessing)
+                        }
+                        .disabled(!isFormValid || isProcessing)
                     }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 40)
                 }
-                .disabled(paymentService.isProcessingPayment || !isFormValid)
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: {
+                        showPaymentView = false
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondaryTextColor)
+                                .font(.title3)
+                            Text("Cancel")
+                                .foregroundColor(.textPrimary)
+                                .fontWeight(.medium)
+                        }
+                    }
+                }
             }
         }
-    }
-    
-    private var securityInfo: some View {
-        VStack(spacing: 8) {
-            HStack {
-                Image(systemName: "lock.shield")
-                    .foregroundColor(.green)
-                Text("Your payment is secured with bank-level encryption")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                Spacer()
-            }
-            
-            HStack {
-                Image(systemName: "checkmark.shield")
-                    .foregroundColor(.green)
-                Text("PCI DSS compliant payment processing")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                Spacer()
-            }
+        .fullScreenCover(isPresented: $showOTPView) {
+            OTPVerificationView(
+                property: property,
+                cardDetails: CardFormData(
+                    cardNumber: cardNumber,
+                    expiryDate: expiryDate,
+                    cvv: cvv,
+                    cardHolderName: cardHolderName
+                ),
+                showOTPView: $showOTPView,
+                showPaymentView: $showPaymentView
+            )
         }
-        .padding()
-        .background(Color(.systemGray6))
-        .cornerRadius(8)
     }
     
     private var isFormValid: Bool {
-        if selectedPaymentMethod == .applePay {
+        if selectedPaymentMethod == 1 { // Apple Pay
             return true
         }
         
-        return !cardholderName.isEmpty &&
-               !cardNumber.isEmpty &&
-               cardNumber.count >= 13 &&
-               !cvv.isEmpty &&
-               cvv.count >= 3 &&
-               !billingStreet.isEmpty &&
-               !billingCity.isEmpty &&
-               !billingState.isEmpty &&
-               !billingPostalCode.isEmpty
+        return !cardHolderName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+               cardNumber.replacingOccurrences(of: " ", with: "").count >= 16 &&
+               expiryDate.count == 5 &&
+               cvv.count == 3
     }
     
-    private func processCardPayment() {
-        let cardDetails = CardDetails(
-            cardType: .unknown, // This should be determined based on the card number
-            lastFourDigits: String(cardNumber.suffix(4)),
-            expiryMonth: expiryMonth,
-            expiryYear: expiryYear,
-            cardholderName: cardholderName,
-            isVerified: true,
-            verificationMethod: .cvv
-        )
+    private func processPayment() {
+        print("💳 Processing payment for: \(property.title)")
+        print("💳 Payment method: \(selectedPaymentMethod == 0 ? "Credit Card" : "Apple Pay")")
+        print("💳 Amount: $\(Int(property.finalPrice ?? property.currentBid))")
         
-        let billingAddress = BillingAddress(
-            street: billingStreet,
-            city: billingCity,
-            state: billingState,
-            postalCode: billingPostalCode,
-            country: billingCountry
-        )
+        isProcessing = true
         
-        Task {
-            do {
-                let transactionId = try await paymentService.processAuctionPayment(
-                    propertyId: property.id ?? "",
-                    amount: winningAmount,
-                    paymentMethod: selectedPaymentMethod,
-                    cardDetails: cardDetails,
-                    billingAddress: billingAddress
-                )
-                
-                self.transactionId = transactionId
-                showingSuccessMessage = true
-                
-            } catch {
-                // Error is handled by the alert
-            }
+        // Simulate processing delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            isProcessing = false
+            showOTPView = true
         }
     }
     
-    private func processApplePayPayment() {
-        let request = paymentService.createApplePayRequest(for: totalAmount, propertyTitle: property.title)
-        // In a real app, you would handle the Apple Pay authorization and payment processing
-        // For now, simulate a successful payment
-        Task {
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
-            transactionId = UUID().uuidString
-            showingSuccessMessage = true
+    private func formatCardNumber(_ input: String) -> String {
+        let digits = input.replacingOccurrences(of: " ", with: "")
+        let limited = String(digits.prefix(16))
+        
+        var formatted = ""
+        for (index, character) in limited.enumerated() {
+            if index > 0 && index % 4 == 0 {
+                formatted += " "
+            }
+            formatted += String(character)
+        }
+        return formatted
+    }
+    
+    private func formatExpiryDate(_ input: String) -> String {
+        let digits = input.replacingOccurrences(of: "/", with: "")
+        let limited = String(digits.prefix(4))
+        
+        if limited.count >= 2 {
+            let month = String(limited.prefix(2))
+            let year = String(limited.dropFirst(2))
+            return "\(month)/\(year)"
+        }
+        return limited
+    }
+}
+
+// Security info row component
+struct SecurityInfoRow: View {
+    let icon: String
+    let text: String
+    let color: Color
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .foregroundColor(color)
+                .font(.subheadline)
+                .frame(width: 20)
+            
+            Text(text)
+                .font(.subheadline)
+                .foregroundColor(.textPrimary)
+                .multilineTextAlignment(.leading)
+            
+            Spacer()
         }
     }
 }
 
-struct PaymentMethodCard: View {
-    let method: PaymentMethod
-    let isSelected: Bool
-    let isEnabled: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 8) {
-                Image(systemName: method.icon)
-                    .font(.title2)
-                    .foregroundColor(isEnabled ? .primary : .gray)
-                
-                Text(method.displayText)
-                    .font(.caption)
-                    .foregroundColor(isEnabled ? .primary : .gray)
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 60)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(isSelected ? Color.blue.opacity(0.1) : Color(.systemGray6))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
-                    )
-            )
-        }
-        .disabled(!isEnabled)
-    }
+struct CardFormData {
+    let cardNumber: String
+    let expiryDate: String
+    let cvv: String
+    let cardHolderName: String
 }
 
 #Preview {
     PaymentView(
-        property: AuctionProperty(
-            id: "preview-property",
-            sellerId: "seller1",
-            sellerName: "John Doe",
-            title: "Beautiful Modern Home",
-            description: "A stunning property...",
-            startingPrice: 500000,
-            currentBid: 750000,
-            highestBidderId: "bidder1",
-            highestBidderName: "Jane Smith",
-            images: [],
-            videos: [],
-            arModelURL: nil,
-            address: PropertyAddress(street: "123 Main St", city: "San Francisco", state: "CA", postalCode: "94102", country: "USA"),
-            location: GeoPoint(latitude: 37.7749, longitude: -122.4194),
-            features: PropertyFeatures(bedrooms: 3, bathrooms: 2, area: 1500, yearBuilt: 2020, parkingSpaces: 2, hasGarden: true, hasPool: false, hasGym: false, floorNumber: nil, totalFloors: nil, propertyType: "House"),
-            auctionStartTime: Date(),
-            auctionEndTime: Date().addingTimeInterval(3600),
-            auctionDuration: .thirtyMinutes,
-            status: .ended,
-            category: .residential,
-            bidHistory: [],
-            watchlistUsers: [],
-            createdAt: Date(),
-            updatedAt: Date(),
-            winnerId: "bidder1",
-            winnerName: "Jane Smith",
-            finalPrice: 750000,
-            paymentStatus: .pending,
-            transactionId: nil,
-            panoramicImages: [],
-            walkthroughVideoURL: nil
-        ),
-        winningAmount: 750000
+        property: AuctionProperty.mockProperty(),
+        showPaymentView: .constant(true)
     )
 }

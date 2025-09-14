@@ -11,7 +11,7 @@ import FirebaseCore
 import GoogleSignIn
 import UIKit
 
-class FirebaseAuthService: ObservableObject {
+class APIService: ObservableObject {
     @Published var currentUser: User?
     @Published var isLoggedIn = false
     

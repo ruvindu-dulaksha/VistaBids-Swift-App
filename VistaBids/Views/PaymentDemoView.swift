@@ -131,7 +131,7 @@ struct PaymentDemoView: View {
         .sheet(isPresented: $showingPaymentSheet) {
             PaymentView(
                 property: demoProperty,
-                winningAmount: demoProperty.finalPrice ?? 0
+                showPaymentView: $showingPaymentSheet
             )
         }
     }

@@ -98,7 +98,7 @@ struct EnhancedBiddingView: View {
         .sheet(isPresented: $showPaymentView) {
             PaymentView(
                 property: property,
-                winningAmount: property.finalPrice ?? property.currentBid
+                showPaymentView: $showPaymentView
             )
         }
         .alert("Auction Winner! 🎉", isPresented: $showWinnerDialog) {

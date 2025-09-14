@@ -7,9 +7,10 @@
 
 import SwiftUI
 import FirebaseFirestore
+import Firebase
 
 struct ProfileScreen: View {
-    @EnvironmentObject private var authService: FirebaseAuthService
+    @EnvironmentObject private var authService: APIService
     @EnvironmentObject var themeManager: ThemeManager
     @StateObject private var userStatsService = UserStatsService.shared
     @State private var showingEditProfile = false
@@ -42,6 +43,11 @@ struct ProfileScreen: View {
                             Text(authService.currentUser?.email ?? "")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
+                                .onAppear {
+                                    print("🔍 PROFILE DEBUG - Current User Email: \(authService.currentUser?.email ?? "no email")")
+                                    print("🔍 PROFILE DEBUG - User ID: \(authService.currentUser?.uid ?? "no uid")")
+                                    print("🔍 PROFILE DEBUG - Display Name: \(authService.currentUser?.displayName ?? "no name")")
+                                }
                         }
                         
                         if let isEmailVerified = authService.currentUser?.isEmailVerified {
@@ -445,7 +451,7 @@ struct ProfileMenuItem: View {
 // MARK: - Edit Profile View
 struct ProfileEditView: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var authService: FirebaseAuthService
+    @EnvironmentObject private var authService: APIService
     @StateObject private var userStatsService = UserStatsService.shared
     @Binding var extendedProfile: ExtendedUserProfile  // Add binding to parent's profile
     @State private var displayName = ""
@@ -819,7 +825,7 @@ enum ProfileError: LocalizedError {
 struct ProfileSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var themeManager: ThemeManager
-    @EnvironmentObject private var authService: FirebaseAuthService
+    @EnvironmentObject private var authService: APIService
     @EnvironmentObject private var appLockService: AppLockService
     @StateObject private var biometricAuthService = BiometricAuthService()
     @StateObject private var biometricCredentialsService = BiometricCredentialsService()
@@ -1241,7 +1247,7 @@ struct ProfileImageView: View {
 // MARK: - Saved Cards View
 struct SavedCardsView: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var authService: FirebaseAuthService
+    @EnvironmentObject private var authService: APIService
     @StateObject private var cardsService = SavedCardsService.shared
     @State private var showingAddCard = false
     @State private var showingDeleteAlert = false
@@ -1932,6 +1938,6 @@ struct AddCardView: View {
 
 #Preview {
     ProfileScreen()
-        .environmentObject(FirebaseAuthService())
+        .environmentObject(APIService())
         .environmentObject(ThemeManager())
 }

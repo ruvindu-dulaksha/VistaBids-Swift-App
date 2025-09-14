@@ -116,24 +116,15 @@ class PaymentService: ObservableObject {
             
             // Create transaction record
             let transaction = TransactionHistory(
+                transactionId: transactionId,
                 userId: currentUserId,
-                userName: Auth.auth().currentUser?.displayName ?? "Anonymous",
-                propertyId: propertyId,
                 propertyTitle: property.title,
-                propertyImages: property.images,
-                auctionId: propertyId,
-                bidAmount: amount,
-                finalPrice: amount,
-                transactionType: .auctionWin,
+                amount: amount,
+                type: .auctionWin,
+                status: .pending,
                 paymentMethod: paymentMethod,
-                paymentStatus: .processing,
-                transactionDate: Date(),
-                paymentDate: nil,
-                paymentReference: transactionId,
-                cardDetails: cardDetails,
-                billingAddress: billingAddress,
-                fees: fees,
-                notes: "Auction win payment for \(property.title)"
+                fees: fees.serviceFee + fees.processingFee + fees.taxes,
+                description: "Auction win payment for \(property.title)"
             )
             
             // Simulate payment processing delay
@@ -143,29 +134,19 @@ class PaymentService: ObservableObject {
             _ = try await db.collection("transactions").addDocument(from: transaction)
             
             // Send push notification
-            await sendPaymentNotification(propertyTitle: transaction.propertyTitle, amount: transaction.finalPrice)
+            await sendPaymentNotification(propertyTitle: transaction.propertyTitle, amount: transaction.amount)
             
             // Update payment status to completed
             let completedTransaction = TransactionHistory(
-                id: transaction.id,
-                userId: transaction.userId,
-                userName: transaction.userName,
-                propertyId: transaction.propertyId,
-                propertyTitle: transaction.propertyTitle,
-                propertyImages: transaction.propertyImages,
-                auctionId: transaction.auctionId,
-                bidAmount: transaction.bidAmount,
-                finalPrice: transaction.finalPrice,
-                transactionType: transaction.transactionType,
-                paymentMethod: transaction.paymentMethod,
-                paymentStatus: .completed,
-                transactionDate: transaction.transactionDate,
-                paymentDate: Date(),
-                paymentReference: transaction.paymentReference,
-                cardDetails: transaction.cardDetails,
-                billingAddress: transaction.billingAddress,
-                fees: transaction.fees,
-                notes: transaction.notes
+                transactionId: transactionId,
+                userId: currentUserId,
+                propertyTitle: property.title,
+                amount: amount,
+                type: .auctionWin,
+                status: .completed,
+                paymentMethod: paymentMethod,
+                fees: fees.serviceFee + fees.processingFee + fees.taxes,
+                description: "Auction win payment for \(property.title)"
             )
             
             try await db.collection("transactions").document(transactionId).setData(from: completedTransaction)
@@ -289,8 +270,149 @@ class PaymentService: ObservableObject {
     }
     
     // MARK: - Transaction History
-    func getTransactionHistory() -> [TransactionHistory] {
-        return transactions
+    func getTransactionHistory() async -> [TransactionHistory] {
+        guard let userId = Auth.auth().currentUser?.uid else {
+            // Return mock data for demo purposes when not authenticated
+            return createMockTransactionHistory()
+        }
+        
+        do {
+            let snapshot = try await db.collection("transactions")
+                .whereField("userId", isEqualTo: userId)
+                .order(by: "date", descending: true)
+                .getDocuments()
+            
+            var transactions: [TransactionHistory] = []
+            
+            for document in snapshot.documents {
+                do {
+                    let transaction = try document.data(as: TransactionHistory.self)
+                    transactions.append(transaction)
+                } catch {
+                    print("Error decoding transaction: \(error)")
+                    continue
+                }
+            }
+            
+            // If no transactions found, return mock data for demo
+            return transactions.isEmpty ? createMockTransactionHistory() : transactions
+            
+        } catch {
+            print("Error fetching transaction history: \(error)")
+            return createMockTransactionHistory()
+        }
+    }
+    
+    // MARK: - Payment Reminders
+    
+    func getPendingPaymentReminders() async -> [PaymentReminder] {
+        guard let userId = Auth.auth().currentUser?.uid else {
+            // Return mock payment reminders for demo
+            return createMockPaymentReminders()
+        }
+        
+        do {
+            let snapshot = try await db.collection("auctions")
+                .whereField("winnerId", isEqualTo: userId)
+                .whereField("paymentStatus", isEqualTo: "pending")
+                .getDocuments()
+            
+            var reminders: [PaymentReminder] = []
+            
+            for document in snapshot.documents {
+                let data = document.data()
+                
+                guard let propertyTitle = data["propertyTitle"] as? String,
+                      let winningBid = data["winningBid"] as? Double,
+                      let auctionEndTime = (data["endTime"] as? Timestamp)?.dateValue() else {
+                    continue
+                }
+                
+                let propertyImageURL = (data["propertyImages"] as? [String])?.first ?? ""
+                let paymentDeadline = auctionEndTime.addingTimeInterval(24 * 60 * 60) // 24 hours after auction end
+                
+                // Only include if deadline hasn't passed yet (give some grace period)
+                if paymentDeadline.timeIntervalSinceNow > -60 * 60 { // 1 hour grace period
+                    let reminder = PaymentReminder(
+                        auctionId: document.documentID,
+                        propertyTitle: propertyTitle,
+                        propertyImageURL: propertyImageURL,
+                        amount: winningBid,
+                        deadline: paymentDeadline
+                    )
+                    reminders.append(reminder)
+                }
+            }
+            
+            // Sort by deadline (most urgent first)
+            return reminders.sorted { $0.deadline < $1.deadline }
+            
+        } catch {
+            print("Error fetching pending payment reminders: \(error)")
+            return createMockPaymentReminders()
+        }
+    }
+    
+    // MARK: - Mock Data for Testing
+    
+    private func createMockTransactionHistory() -> [TransactionHistory] {
+        let userId = Auth.auth().currentUser?.uid ?? "mock_user"
+        
+        return [
+            TransactionHistory(
+                transactionId: "txn_001",
+                userId: userId,
+                propertyTitle: "Modern Villa in Beverly Hills",
+                amount: 125000.0,
+                type: .payment,
+                status: .completed,
+                paymentMethod: .creditCard,
+                date: Date().addingTimeInterval(-86400 * 7), // 1 week ago
+                fees: 2500.0,
+                description: "Auction payment"
+            ),
+            TransactionHistory(
+                transactionId: "txn_002",
+                userId: userId,
+                propertyTitle: "Downtown Penthouse",
+                amount: 89000.0,
+                type: .payment,
+                status: .completed,
+                paymentMethod: .bankTransfer,
+                date: Date().addingTimeInterval(-86400 * 14), // 2 weeks ago
+                fees: 1780.0,
+                description: "Auction payment"
+            ),
+            TransactionHistory(
+                transactionId: "txn_003",
+                userId: userId,
+                propertyTitle: "Seaside Cottage",
+                amount: 5000.0,
+                type: .refund,
+                status: .completed,
+                date: Date().addingTimeInterval(-86400 * 21), // 3 weeks ago
+                description: "Partial refund for cancelled auction"
+            )
+        ]
+    }
+    
+    private func createMockPaymentReminders() -> [PaymentReminder] {
+        return [
+            PaymentReminder(
+                auctionId: "auction_001",
+                propertyTitle: "Luxury Beachfront Condo",
+                propertyImageURL: "https://example.com/property1.jpg",
+                amount: 85000.0,
+                deadline: Date().addingTimeInterval(90 * 60) // 1.5 hours from now
+            ),
+            PaymentReminder(
+                auctionId: "auction_002",
+                propertyTitle: "Mountain View Estate",
+                propertyImageURL: "https://example.com/property2.jpg",
+                amount: 165000.0,
+                deadline: Date().addingTimeInterval(6 * 60 * 60) // 6 hours from now
+            )
+        ]
     }
     
     func getPurchaseHistory() -> [UserPurchaseHistory] {
@@ -341,42 +463,32 @@ class PaymentService: ObservableObject {
     // MARK: - Refund Processing
     func processRefund(transactionId: String, reason: String) async throws {
         // Find the transaction
-        guard let transaction = transactions.first(where: { $0.paymentReference == transactionId }) else {
+        guard let transaction = transactions.first(where: { $0.transactionId == transactionId }) else {
             throw PaymentError.transactionNotFound
         }
         
         // Create a refund transaction record
         let refundTransaction = TransactionHistory(
+            transactionId: UUID().uuidString,
             userId: transaction.userId,
-            userName: transaction.userName,
-            propertyId: transaction.propertyId,
             propertyTitle: transaction.propertyTitle,
-            propertyImages: transaction.propertyImages,
-            auctionId: transaction.auctionId,
-            bidAmount: -transaction.finalPrice,
-            finalPrice: -transaction.finalPrice,
-            transactionType: .refund,
+            amount: -transaction.amount,
+            type: .refund,
+            status: .completed,
             paymentMethod: transaction.paymentMethod,
-            paymentStatus: .completed,
-            transactionDate: Date(),
-            paymentDate: Date(),
-            paymentReference: UUID().uuidString,
-            cardDetails: transaction.cardDetails,
-            billingAddress: transaction.billingAddress,
-            fees: TransactionFees(serviceFee: 0.0, processingFee: 0.0, taxes: 0.0),
-            notes: "Refund for transaction: \(transactionId)"
+            description: "Refund for transaction: \(transactionId) - \(reason)"
         )
         
         // Add to transaction history
         transactions.append(refundTransaction)
         
         // Save refund transaction to Firestore
-        _ = try await db.collection("transactions").addDocument(data: try Firestore.Encoder().encode(refundTransaction))
+        _ = try await db.collection("transactions").addDocument(from: refundTransaction)
         
         // Update original transaction status
         if let transactionDocId = transaction.id {
             try await db.collection("transactions").document(transactionDocId).updateData([
-                "paymentStatus": PaymentStatus.refunded.rawValue
+                "status": TransactionStatus.refunded.rawValue
             ])
         }
         

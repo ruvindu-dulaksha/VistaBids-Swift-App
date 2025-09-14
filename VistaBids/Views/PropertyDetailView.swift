@@ -16,6 +16,7 @@ import PhotosUI
 struct PropertyDetailView: View {
     let property: AuctionProperty
     let biddingService: BiddingService
+    @EnvironmentObject private var notificationManager: NotificationManager
     @Environment(\.dismiss) private var dismiss
     @State private var selectedImageIndex = 0
     @State private var showingBidSheet = false
@@ -396,6 +397,20 @@ struct PropertyDetailView: View {
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color.accentBlues)
+                        .cornerRadius(12)
+                }
+                
+                // Test button for bid winner notification
+                Button(action: { 
+                    notificationManager.simulateWinningBid(property: property)
+                }) {
+                    Text("🎉 Test Win Notification")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.green)
                         .cornerRadius(12)
                 }
             }

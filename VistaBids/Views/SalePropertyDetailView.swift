@@ -25,6 +25,7 @@ struct SalePropertyDetailView: View {
     @State private var showingVideoPlayer = false
     @State private var isInWishlist = false
     @State private var showingShareSheet = false
+    @StateObject private var nearbyPlacesService = NearbyPlacesService.shared
     
     var body: some View {
         NavigationView {
@@ -44,6 +45,9 @@ struct SalePropertyDetailView: View {
                     
                     // Location
                     locationSection
+                    
+                    // Nearby Places
+                    nearbyPlacesSection
                     
                     // Description
                     descriptionSection
@@ -107,6 +111,7 @@ struct SalePropertyDetailView: View {
             }
             .onAppear {
                 loadWishlistStatus()
+                loadNearbyPlaces()
             }
         }
     }
@@ -421,6 +426,81 @@ struct SalePropertyDetailView: View {
         }
     }
     
+    private var nearbyPlacesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Essential Nearby Services")
+                .font(.headline)
+                .foregroundColor(.textPrimary)
+            
+            if nearbyPlacesService.isLoading {
+                HStack {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                    Text("Finding essential services...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, 20)
+            } else if nearbyPlacesService.nearbyPlaces.isEmpty {
+                Text("No essential services found within 3km")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 20)
+            } else {
+                essentialPlacesGrid
+            }
+        }
+    }
+    
+    private var essentialPlacesGrid: some View {
+        VStack(spacing: 12) {
+            ForEach(getEssentialPlaces(), id: \.type) { placeGroup in
+                HStack {
+                    Image(systemName: placeGroup.type.icon)
+                                                        .foregroundColor(placeGroup.type.color)
+                        .frame(width: 24, height: 24)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(placeGroup.type.name)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.textPrimary)
+                        
+                        if let nearest = placeGroup.nearestPlace {
+                            Text("\(nearest.name) • \(nearest.formattedDistance)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("Not found within 3km")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .italic()
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    if let nearest = placeGroup.nearestPlace {
+                        Text(nearest.formattedDistance)
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.accentBlues)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.accentBlues.opacity(0.1))
+                            .cornerRadius(8)
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color.cardBackground)
+                .cornerRadius(8)
+            }
+        }
+    }
+    
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Description")
@@ -601,6 +681,49 @@ struct SalePropertyDetailView: View {
         let wishlistKey = "wishlist_\(property.id)"
         isInWishlist = UserDefaults.standard.bool(forKey: wishlistKey)
     }
+    
+    private func loadNearbyPlaces() {
+        let coordinate = CLLocationCoordinate2D(
+            latitude: property.coordinates.latitude,
+            longitude: property.coordinates.longitude
+        )
+        
+        // Load only essential place types that matter most to property buyers
+        let essentialPlaceTypes: [PlaceType] = [.school, .hospital, .shopping, .restaurant, .bank]
+        
+        Task {
+            await nearbyPlacesService.fetchNearbyPlaces(
+                coordinate: coordinate,
+                types: essentialPlaceTypes,
+                radius: 3000 // 3km radius for essential services
+            )
+        }
+    }
+    
+    // MARK: - Essential Places Helper
+    private func getEssentialPlaces() -> [EssentialPlaceGroup] {
+        // Order by importance for property buyers
+        let essentialTypes: [PlaceType] = [.school, .hospital, .shopping, .bank, .restaurant]
+        
+        return essentialTypes.compactMap { type in
+            let placesOfType = nearbyPlacesService.nearbyPlaces.filter { $0.type == type }
+            let nearest = placesOfType.min(by: { $0.distance < $1.distance })
+            
+            // Only include if within reasonable distance (3km)
+            if let nearest = nearest, nearest.distance <= 3000 {
+                return EssentialPlaceGroup(type: type, nearestPlace: nearest)
+            } else {
+                // Still show the category even if nothing found
+                return EssentialPlaceGroup(type: type, nearestPlace: nil)
+            }
+        }
+    }
+}
+
+// MARK: - Essential Place Group Model
+struct EssentialPlaceGroup {
+    let type: PlaceType
+    let nearestPlace: NearbyPlace?
 }
 
 // MARK: - Feature Item for Sale Properties

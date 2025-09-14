@@ -330,8 +330,8 @@ struct PurchaseCard: View {
                         .font(.caption)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 2)
-                        .background(purchase.paymentStatus.color.opacity(0.2))
-                        .foregroundColor(purchase.paymentStatus.color)
+                        .background(Color(purchase.paymentStatus.color).opacity(0.2))
+                        .foregroundColor(Color(purchase.paymentStatus.color))
                         .cornerRadius(4)
                 }
             }
@@ -439,7 +439,7 @@ struct TransactionCard: View {
     var body: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(transaction.transactionType.rawValue.capitalized)
+                                        Text(transaction.type.rawValue.capitalized)
                     .font(.headline)
                 
                 Text(transaction.propertyTitle)
@@ -447,7 +447,7 @@ struct TransactionCard: View {
                     .foregroundColor(.secondary)
                     .lineLimit(1)
                 
-                Text(transaction.transactionDate.formatted(date: .abbreviated, time: .shortened))
+                Text(transaction.date.formatted(date: .abbreviated, time: .shortened))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -455,22 +455,35 @@ struct TransactionCard: View {
             Spacer()
             
             VStack(alignment: .trailing, spacing: 4) {
-                Text("$\(transaction.finalPrice, specifier: "%.2f")")
+                Text("$\(transaction.amount, specifier: "%.2f")")
                     .font(.subheadline)
                     .fontWeight(.semibold)
                 
-                Text(transaction.paymentStatus.displayText)
+                Text(transaction.status.displayName)
                     .font(.caption)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 2)
-                    .background(transaction.paymentStatus.color.opacity(0.2))
-                    .foregroundColor(transaction.paymentStatus.color)
+                    .background(getStatusColor(transaction.status).opacity(0.2))
+                    .foregroundColor(getStatusColor(transaction.status))
                     .cornerRadius(4)
             }
         }
         .padding()
         .background(Color(.systemGray6))
         .cornerRadius(12)
+    }
+    
+    private func getStatusColor(_ status: TransactionStatus) -> Color {
+        switch status {
+        case .pending:
+            return .orange
+        case .completed:
+            return .green
+        case .failed:
+            return .red
+        case .refunded:
+            return .blue
+        }
     }
 }
 

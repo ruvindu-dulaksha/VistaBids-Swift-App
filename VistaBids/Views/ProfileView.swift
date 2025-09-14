@@ -3,8 +3,13 @@ import Firebase
 import FirebaseAuth
 
 struct ProfileView: View {
-    @EnvironmentObject private var authService: FirebaseAuthService
+    @EnvironmentObject private var authService: APIService
     @State private var showingSettings = false
+    @StateObject private var biddingService = BiddingService()
+    @StateObject private var paymentService = PaymentService()
+    @StateObject private var notificationManager = NotificationManager.shared
+    @State private var pendingPayments: [PaymentReminder] = []
+    @State private var showingPaymentHistory = false
     
     var body: some View {
         NavigationView {
@@ -41,6 +46,57 @@ struct ProfileView: View {
                     }
                 }
                 
+                // Payment Alerts Section
+                if !pendingPayments.isEmpty {
+                    Section("Payment Required") {
+                        ForEach(pendingPayments, id: \.auctionId) { payment in
+                            PaymentAlertCard(payment: payment) {
+                                loadPendingPayments()
+                            }
+                        }
+                    }
+                    .headerProminence(.increased)
+                }
+                
+                Section("Activity") {
+                    NavigationLink(destination: EnhancedUserActivityView()) {
+                        HStack {
+                            Image(systemName: "chart.bar.fill")
+                                .foregroundColor(.accentBlues)
+                            Text("Your Activity")
+                        }
+                    }
+                    
+                    NavigationLink(destination: PaymentHistoryView(paymentService: paymentService)) {
+                        HStack {
+                            Image(systemName: "creditcard.fill")
+                                .foregroundColor(.blue)
+                            VStack(alignment: .leading) {
+                                Text("Payment History")
+                                Text("View all transactions")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    
+                    NavigationLink(destination: Text("Your Properties")) {
+                        HStack {
+                            Image(systemName: "house.fill")
+                                .foregroundColor(.green)
+                            Text("Your Properties")
+                        }
+                    }
+                    
+                    NavigationLink(destination: Text("Favorites")) {
+                        HStack {
+                            Image(systemName: "heart.fill")
+                                .foregroundColor(.red)
+                            Text("Favorites")
+                        }
+                    }
+                }
+                
                 Section("Account") {
                     NavigationLink("Settings") {
                         SettingsView()
@@ -54,11 +110,36 @@ struct ProfileView: View {
                 }
             }
             .navigationTitle("Profile")
+            .onAppear {
+                loadPendingPayments()
+                schedulePaymentReminders()
+            }
+            .refreshable {
+                await refreshData()
+            }
         }
+    }
+    
+    private func loadPendingPayments() {
+        Task {
+            pendingPayments = await paymentService.getPendingPaymentReminders()
+        }
+    }
+    
+    private func schedulePaymentReminders() {
+        Task {
+            await notificationManager.schedulePaymentReminders()
+        }
+    }
+    
+    @MainActor
+    private func refreshData() async {
+        pendingPayments = await paymentService.getPendingPaymentReminders()
+        await notificationManager.schedulePaymentReminders()
     }
 }
 
 #Preview {
     ProfileView()
-        .environmentObject(FirebaseAuthService())
+        .environmentObject(APIService())
 }

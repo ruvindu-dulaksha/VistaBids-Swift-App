@@ -7,6 +7,7 @@
 
 import Foundation
 import MapKit
+import SwiftUI
 
 // MARK: - Nearby Place Model
 struct NearbyPlace: Identifiable {
@@ -68,18 +69,18 @@ enum PlaceType: String, CaseIterable {
         }
     }
     
-    var color: String {
+    var color: Color {
         switch self {
-        case .restaurant: return "orange"
-        case .school: return "blue"
-        case .hospital: return "red"
-        case .park: return "green"
-        case .shopping: return "purple"
-        case .bank: return "yellow"
-        case .gym: return "pink"
-        case .pharmacy: return "teal"
-        case .gasStation: return "gray"
-        case .busStop: return "indigo"
+        case .restaurant: return .orange
+        case .school: return .blue
+        case .hospital: return .red
+        case .park: return .green
+        case .shopping: return .purple
+        case .bank: return .yellow
+        case .gym: return .pink
+        case .pharmacy: return .teal
+        case .gasStation: return .gray
+        case .busStop: return .indigo
         }
     }
 }

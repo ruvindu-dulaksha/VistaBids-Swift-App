@@ -24,7 +24,8 @@ class CommunityService: ObservableObject {
     @Published var error: String?
     
     init() {
-        loadSampleData()
+        // Start with empty posts - will load from Firestore or use sample data on first loadPosts() call
+        // loadSampleData() // Removed to prevent immediate sample data loading
     }
     
     // MARK: - Posts
@@ -54,19 +55,27 @@ class CommunityService: ObservableObject {
                 }
             }
             
-            if fetchedPosts.isEmpty {
-                print("🧩 CommunityService: No posts fetched from Firestore, falling back to sample data")
-                // If no posts are fetched, use sample data
+            if fetchedPosts.isEmpty && posts.isEmpty {
+                print("🧩 CommunityService: No posts fetched from Firestore and no existing posts, using sample data")
+                // Only use sample data if there are no existing posts and no posts from Firestore
                 posts = createSamplePosts()
-            } else {
+            } else if !fetchedPosts.isEmpty {
                 posts = fetchedPosts
-                print("🧩 CommunityService: Successfully loaded \(posts.count) posts")
+                print("🧩 CommunityService: Successfully loaded \(posts.count) posts from Firestore")
+            } else {
+                print("🧩 CommunityService: No new posts from Firestore, keeping existing \(posts.count) posts")
+                // Keep existing posts if Firestore query returns empty but we have existing posts
             }
         } catch {
             print("🧩 CommunityService: Error loading posts: \(error.localizedDescription)")
             self.error = error.localizedDescription
-            // Fall back to sample data
-            posts = createSamplePosts()
+            // Don't fall back to sample data - preserve existing posts on error
+            if posts.isEmpty {
+                print("🧩 CommunityService: No existing posts, falling back to sample data due to error")
+                posts = createSamplePosts()
+            } else {
+                print("🧩 CommunityService: Preserving existing \(posts.count) posts due to Firestore error")
+            }
         }
         isLoading = false
     }

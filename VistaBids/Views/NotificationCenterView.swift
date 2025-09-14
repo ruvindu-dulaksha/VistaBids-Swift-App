@@ -107,7 +107,7 @@ struct NotificationCenterView: View {
                 if let winner = selectedWinnerNotification {
                     PaymentView(
                         property: createAuctionPropertyFromWinner(winner),
-                        winningAmount: winner.winningBid
+                        showPaymentView: $showPaymentView
                     )
                 }
             }

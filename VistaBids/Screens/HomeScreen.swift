@@ -12,6 +12,7 @@ import FirebaseFirestore
 
 struct HomeScreen: View {
     @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var notificationManager: NotificationManager
     @StateObject private var salePropertyService = SalePropertyService.shared
     @StateObject private var mapService = MapService.shared
     @StateObject private var nearbyPlacesService = NearbyPlacesService.shared
@@ -189,21 +190,28 @@ struct HomeScreen: View {
                                 }
                             } else {
                                 mapService.requestLocationPermission()
-                                // TODO: Fix location access - userLocation should come from LocationManager
-                                // if let userLocation = mapService.userLocation {
-                                //     withAnimation {
-                                //         region.center = userLocation.coordinate
-                                //         region.span = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                                //     }
-                                // }
+                                mapService.startLocationUpdates()
+                                
+                                // Use currentLocation if available, otherwise request updates
+                                if let currentLocation = mapService.currentLocation {
+                                    withAnimation {
+                                        region.center = currentLocation.coordinate
+                                        region.span = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                                    }
+                                }
                             }
                         }) {
-                            Image(systemName: mapService.currentLocation != nil ? "location.fill" : "location")
-                                .foregroundColor(mapService.currentLocation != nil ? .accentBlues : .buttonText)
-                                .frame(width: 44, height: 44)
-                                .background(Color.buttonBackground)
-                                .cornerRadius(12)
-                                .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                            ZStack {
+                                Rectangle()
+                                    .fill(Color.buttonBackground)
+                                    .frame(width: 44, height: 44)
+                                    .cornerRadius(12)
+                                
+                                Image(systemName: mapService.currentLocation != nil ? "location.fill" : "location")
+                                    .font(.system(size: 18))
+                                    .foregroundColor(.white)
+                            }
+                            .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
                         }
                     }
                     .padding(.horizontal, 16)
@@ -308,6 +316,8 @@ struct HomeScreen: View {
                 )
                 .hidden()
             }
+            
+
         }
         .background(Color.backgrounds)
         .sheet(isPresented: $showingFilters) {
@@ -333,6 +343,7 @@ struct HomeScreen: View {
     
     private func setupLocationServices() {
         mapService.requestLocationPermission()
+        mapService.startLocationUpdates()
     }
     
     private func showSearchInsights() {

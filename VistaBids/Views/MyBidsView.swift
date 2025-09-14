@@ -3,7 +3,7 @@ import Firebase
 import FirebaseAuth
 
 struct MyBidsView: View {
-    @EnvironmentObject private var authService: FirebaseAuthService
+    @EnvironmentObject private var authService: APIService
     @State private var bids: [Bid] = []
     @State private var isLoading = false
     
@@ -41,5 +41,5 @@ struct MyBidsView: View {
 
 #Preview {
     MyBidsView()
-        .environmentObject(FirebaseAuthService())
+        .environmentObject(APIService())
 }

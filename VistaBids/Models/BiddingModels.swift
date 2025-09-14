@@ -187,38 +187,6 @@ enum AuctionDuration: String, CaseIterable, Codable {
     }
 }
 
-// MARK: - Payment Status
-enum PaymentStatus: String, Codable {
-    case pending = "pending"
-    case processing = "processing"
-    case completed = "completed"
-    case failed = "failed"
-    case refunded = "refunded"
-    case disputed = "disputed"
-    
-    var displayText: String {
-        switch self {
-        case .pending: return "Payment Pending"
-        case .processing: return "Processing Payment"
-        case .completed: return "Payment Completed"
-        case .failed: return "Payment Failed"
-        case .refunded: return "Refunded"
-        case .disputed: return "Disputed"
-        }
-    }
-    
-    var color: SwiftUI.Color {
-        switch self {
-        case .pending: return .orange
-        case .processing: return .blue
-        case .completed: return .green
-        case .failed: return .red
-        case .refunded: return .purple
-        case .disputed: return .red
-        }
-    }
-}
-
 // MARK: - Mock Data Extensions
 extension AuctionProperty {
     static func mockProperty() -> AuctionProperty {

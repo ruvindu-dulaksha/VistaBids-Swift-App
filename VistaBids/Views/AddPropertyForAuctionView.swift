@@ -18,7 +18,7 @@ import FirebaseFirestore
 struct AddPropertyForAuctionView: View {
     let biddingService: BiddingService
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var authService: FirebaseAuthService
+    @EnvironmentObject private var authService: APIService
     @StateObject private var ownershipService = PropertyOwnershipService()
     
     // Basic Info

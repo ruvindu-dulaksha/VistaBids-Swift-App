@@ -5,6 +5,7 @@ final class CommentFunctionalityTests: XCTestCase {
     
     var communityService: CommunityService!
     
+    @MainActor
     override func setUp() {
         super.setUp()
         communityService = CommunityService()
