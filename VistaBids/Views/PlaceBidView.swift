@@ -12,6 +12,7 @@ import FirebaseAuth
 struct PlaceBidView: View {
     let property: AuctionProperty
     let biddingService: BiddingService
+    let onBidPlaced: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
     @State private var bidAmount: String = ""
     @State private var isAutoBidEnabled = false
@@ -395,6 +396,9 @@ struct PlaceBidView: View {
                     showingAlert = true
                 }
                 
+                // Call completion handler to refresh property
+                onBidPlaced?()
+                
                 // Dismiss after a delay
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                     dismiss()
@@ -459,6 +463,7 @@ struct PlaceBidView: View {
             panoramicImages: [],
             walkthroughVideoURL: nil
         ),
-        biddingService: BiddingService()
+        biddingService: BiddingService(),
+        onBidPlaced: nil
     )
 }

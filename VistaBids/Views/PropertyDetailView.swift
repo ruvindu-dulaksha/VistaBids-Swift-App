@@ -14,7 +14,7 @@ import FirebaseAuth
 import PhotosUI
 
 struct PropertyDetailView: View {
-    let property: AuctionProperty
+    @State private var property: AuctionProperty
     let biddingService: BiddingService
     @EnvironmentObject private var notificationManager: NotificationManager
     @Environment(\.dismiss) private var dismiss
@@ -33,7 +33,14 @@ struct PropertyDetailView: View {
     @State private var showingVideoUploadSheet = false
     @State private var uploadProgress = 0.0
     @State private var showingUploadAlert = false
+    @State private var propertyListener: ListenerRegistration?
+    private let db = Firestore.firestore()
     @State private var uploadAlertMessage = ""
+    
+    init(property: AuctionProperty, biddingService: BiddingService) {
+        self._property = State(initialValue: property)
+        self.biddingService = biddingService
+    }
     
     var body: some View {
         NavigationView {
@@ -109,7 +116,15 @@ struct PropertyDetailView: View {
                 }
             }
             .sheet(isPresented: $showingBidSheet) {
-                PlaceBidView(property: property, biddingService: biddingService)
+                PlaceBidView(
+                    property: property, 
+                    biddingService: biddingService,
+                    onBidPlaced: {
+                        Task {
+                            try await refreshProperty()
+                        }
+                    }
+                )
             }
             .sheet(isPresented: $showingChatSheet) {
                 AuctionChatView(property: property, biddingService: biddingService)
@@ -132,9 +147,48 @@ struct PropertyDetailView: View {
             }
             .onAppear {
                 startTimer()
+                startPropertyListener()
             }
             .onDisappear {
                 timer?.invalidate()
+            }
+        }
+    }
+    
+    private func startPropertyListener() {
+        if propertyListener != nil {
+            propertyListener?.remove()
+        }
+        
+        guard let propertyId = property.id else { return }
+        
+        propertyListener = db.collection("auction_properties").document(propertyId)
+            .addSnapshotListener { snapshot, error in
+                if let error = error {
+                    print("Error listening to property updates: \(error)")
+                    return
+                }
+                
+                guard let document = snapshot,
+                      document.exists,
+                      let updatedProperty = try? document.data(as: AuctionProperty.self) else {
+                    return
+                }
+                
+                DispatchQueue.main.async {
+                    self.property = updatedProperty
+                }
+            }
+    }
+    
+    private func refreshProperty() async throws {
+        guard let propertyId = property.id else { return }
+        try await biddingService.refreshProperty(propertyId: propertyId)
+        
+        // Update local property with the refreshed data
+        if let updatedProperty = biddingService.auctionProperties.first(where: { $0.id == propertyId }) {
+            await MainActor.run {
+                self.property = updatedProperty
             }
         }
     }
@@ -397,20 +451,6 @@ struct PropertyDetailView: View {
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color.accentBlues)
-                        .cornerRadius(12)
-                }
-                
-                // Test button for bid winner notification
-                Button(action: { 
-                    notificationManager.simulateWinningBid(property: property)
-                }) {
-                    Text("🎉 Test Win Notification")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.green)
                         .cornerRadius(12)
                 }
             }

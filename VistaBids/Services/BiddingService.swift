@@ -86,21 +86,39 @@ class BiddingService: ObservableObject {
         let currentUser = Auth.auth().currentUser
         let userName = currentUser?.displayName ?? "Anonymous Bidder"
         
+        // First, verify the property exists and is active
+        let propertyRef = db.collection("auction_properties").document(propertyId)
+        let propertySnapshot = try await propertyRef.getDocument()
+        
+        guard propertySnapshot.exists,
+              let propertyData = propertySnapshot.data(),
+              let currentBid = propertyData["currentBid"] as? Double,
+              let status = propertyData["status"] as? String,
+              status == "active" else {
+            throw BiddingError.auctionNotActive
+        }
+        
+        // Verify bid amount is higher than current bid
+        guard amount > currentBid else {
+            throw BiddingError.invalidBidAmount
+        }
+        
         // Create user bid record
         let bid = [
             "id": UUID().uuidString,
             "userId": currentUserId,
+            "userName": userName,
             "propertyId": propertyId,
             "bidAmount": amount,
             "timestamp": Timestamp(date: Date()),
             "status": "active",
-            "isWinning": false
+            "isWinning": true,  // This will be the new highest bid
+            "maxAutoBid": maxAutoBid ?? 0
         ] as [String : Any]
         
         try await db.collection("user_bids").addDocument(data: bid)
         
         // Update the auction property with new highest bid
-        let propertyRef = db.collection("auction_properties").document(propertyId)
         try await propertyRef.updateData([
             "currentBid": amount,
             "highestBidderId": currentUserId,
@@ -120,7 +138,7 @@ class BiddingService: ObservableObject {
             "bidHistory": FieldValue.arrayUnion([bidHistoryItem])
         ])
         
-        print("Bid placed: $\(amount) on property \(propertyId) by \(userName)")
+        print("✅ Bid placed successfully: $\(amount) on property \(propertyId) by \(userName)")
         
         // Send notifications to other bidders about being outbid
         await sendOutbidNotifications(propertyId: propertyId, newBidAmount: amount, newBidderName: userName)
@@ -1167,7 +1185,7 @@ enum BiddingError: LocalizedError {
         case .userNotAuthenticated:
             return "User must be authenticated to place bids"
         case .invalidBidAmount:
-            return "Invalid bid amount"
+            return "Bid amount must be higher than the current bid"
         case .auctionNotActive:
             return "Auction is not currently active"
         case .dataDecodingFailed:
