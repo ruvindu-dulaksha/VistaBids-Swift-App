@@ -28,6 +28,12 @@
 
 VistaBids is a comprehensive real estate auction platform for iOS that enables users to bid on properties, explore neighborhoods, and manage real estate transactions. Built with SwiftUI and Firebase, it offers a modern, intuitive interface for property auctions with real-time bidding capabilities.- 📍 **Location**: Property mapping and location services
 
+## 📸 Screenshots
+
+| Property Details | Property Sales | Map View |
+|:---------------:|:--------------:|:--------:|
+| ![Property Details](screenshots/property-details.png) | ![Property Sales](screenshots/property-sales.png) | ![Map View](screenshots/map-view.png) |
+
 
 
 ## ✨ Key Features## Tech Stack
