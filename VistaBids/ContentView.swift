@@ -42,6 +42,12 @@ struct ContentView: View {
                         .environmentObject(authService)
                         .environmentObject(themeManager)
                         .environmentObject(notificationManager)
+                        .onContinueUserActivity("com.vistabids.placebid") { userActivity in
+                            handleSiriBidActivity(userActivity)
+                        }
+                        .onContinueUserActivity("com.vistabids.bidding") { userActivity in
+                            handleSiriBiddingActivity(userActivity)
+                        }
                 } else {
                     LoginScreen()
                 }
@@ -113,6 +119,34 @@ struct ContentView: View {
         print("🚫 Face ID privacy permission denied - app lock disabled")
         // Just disable the app lock, don't force logout
         appLockService.disableFaceIDAppLock()
+    }
+    
+    // MARK: - SiriKit User Activity Handlers
+    
+    @available(iOS 13.0, *)
+    private func handleSiriBidActivity(_ userActivity: NSUserActivity) {
+        print("🎤 SiriKit: Handling place bid activity")
+        
+        if let bidAmount = SiriKitManager.shared.handleUserActivity(userActivity) {
+            print("🎤 SiriKit: Extracted bid amount: \(bidAmount)")
+            
+            // TODO: Navigate to bidding screen and place bid
+            // For now, just show a notification
+            notificationManager.showSiriBidNotification(amount: bidAmount)
+        } else {
+            print("🎤 SiriKit: No bid amount found, showing general bidding screen")
+            // TODO: Navigate to general bidding screen
+        }
+    }
+    
+    @available(iOS 13.0, *)
+    private func handleSiriBiddingActivity(_ userActivity: NSUserActivity) {
+        print("🎤 SiriKit: Handling bidding activity")
+        
+        if let propertyId = userActivity.userInfo?["propertyId"] as? String {
+            print("🎤 SiriKit: Navigating to property: \(propertyId)")
+            // TODO: Navigate to specific property detail view
+        }
     }
 }
 

@@ -2,7 +2,7 @@
 //  PanoramicImage.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2023-10-15.
+//  
 //
 
 import Foundation

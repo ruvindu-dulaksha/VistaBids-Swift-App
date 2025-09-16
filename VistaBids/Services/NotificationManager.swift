@@ -61,6 +61,39 @@ class NotificationManager: ObservableObject {
         winningProperty = nil
     }
     
+    // MARK: - SiriKit Integration
+    
+    func showSiriBidNotification(amount: String) {
+        print("🎤 SiriKit: Showing bid notification for amount: \(amount)")
+        
+        let content = UNMutableNotificationContent()
+        content.title = "🎤 Siri Bid Request"
+        content.body = "You asked Siri to place a bid of \(amount). Tap to complete the bid."
+        content.sound = .default
+        content.badge = 1
+        
+        // Add custom data
+        content.userInfo = [
+            "bidAmount": amount,
+            "source": "siri",
+            "type": "bid_request"
+        ]
+        
+        let request = UNNotificationRequest(
+            identifier: "siri_bid_\(amount)_\(Date().timeIntervalSince1970)",
+            content: content,
+            trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+        )
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("❌ SiriKit: Error showing notification: \(error)")
+            } else {
+                print("✅ SiriKit: Bid notification scheduled successfully")
+            }
+        }
+    }
+    
     // Simulate winning a bid for testing
     func simulateWinningBid(property: AuctionProperty) {
         var winningProperty = property

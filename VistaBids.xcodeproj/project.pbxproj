@@ -433,6 +433,11 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "VistaBids uses the camera to capture and display AR panoramic views of properties for immersive property viewing experiences.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "VistaBids uses Face ID to provide secure and convenient authentication for quick sign-in to your account.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "VistaBids uses your location to provide relevant property information and enhance your bidding experience.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "VistaBids uses the microphone for voice commands and Siri integration to place bids hands-free.";
+				INFOPLIST_KEY_NSSiriUsageDescription = "VistaBids uses Siri to place bids and view auction information through voice commands.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "VistaBids uses speech recognition to process voice commands for placing bids through Siri.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
+				INFOPLIST_KEY_NSUserActivityTypes = "com.vistabids.place-bid,com.vistabids.quick-bid,com.vistabids.view-auction";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -464,6 +469,11 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "VistaBids uses the camera to capture and display AR panoramic views of properties for immersive property viewing experiences.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "VistaBids uses Face ID to provide secure and convenient authentication for quick sign-in to your account.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "VistaBids uses your location to provide relevant property information and enhance your bidding experience.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "VistaBids uses the microphone for voice commands and Siri integration to place bids hands-free.";
+				INFOPLIST_KEY_NSSiriUsageDescription = "VistaBids uses Siri to place bids and view auction information through voice commands.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "VistaBids uses speech recognition to process voice commands for placing bids through Siri.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
+				INFOPLIST_KEY_NSUserActivityTypes = "com.vistabids.place-bid,com.vistabids.quick-bid,com.vistabids.view-auction";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

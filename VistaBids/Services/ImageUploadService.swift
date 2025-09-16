@@ -2,7 +2,7 @@
 //  ImageUploadService.swift
 //  VistaBids
 //
-//  Created by AI Assistant on 2025-08-19.
+//  Created by Ruvindu Dulaksha on 2025-08-19.
 //  Local storage implementation for image handling
 //
 

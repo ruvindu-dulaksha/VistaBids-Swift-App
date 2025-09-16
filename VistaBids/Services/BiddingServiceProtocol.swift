@@ -2,7 +2,7 @@
 //  BiddingServiceProtocol.swift
 //  VistaBids
 //
-//  Created by Assistant on 2025-08-21.
+//  Created by Ruvindu Dulaksha on 2025-08-21.
 //
 
 import Foundation

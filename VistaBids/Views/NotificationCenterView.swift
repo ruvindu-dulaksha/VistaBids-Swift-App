@@ -88,10 +88,22 @@ struct NotificationCenterView: View {
             .navigationTitle("Notifications")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Clear All") {
-                        clearAllNotifications()
+                    HStack {
+                        Button("Test Win") {
+                            createTestWinNotification()
+                        }
+                        .font(.caption)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.blue.opacity(0.1))
+                        .foregroundColor(.blue)
+                        .cornerRadius(6)
+                        
+                        Button("Clear All") {
+                            clearAllNotifications()
+                        }
+                        .disabled(notifications.isEmpty)
                     }
-                    .disabled(notifications.isEmpty)
                 }
             }
             .onAppear {
@@ -109,6 +121,20 @@ struct NotificationCenterView: View {
                         property: createAuctionPropertyFromWinner(winner),
                         showPaymentView: $showPaymentView
                     )
+                } else if !selectedPropertyId.isEmpty {
+                    // Find property from bidding service or create a placeholder
+                    if let property = biddingService.auctionProperties.first(where: { $0.id == selectedPropertyId }) {
+                        PaymentView(
+                            property: property,
+                            showPaymentView: $showPaymentView
+                        )
+                    } else {
+                        // Create a placeholder property for payment
+                        PaymentView(
+                            property: createPlaceholderProperty(propertyId: selectedPropertyId),
+                            showPaymentView: $showPaymentView
+                        )
+                    }
                 }
             }
         }
@@ -238,19 +264,35 @@ struct NotificationCenterView: View {
     }
     
     private func handleNotificationTap(_ notification: AuctionNotification) {
+        print("🔔 Notification tapped: \(notification.type.rawValue)")
+        
         // Handle navigation based on notification type
         switch notification.type {
-        case .auctionWin, .newBid, .outbid:
+        case .auctionWin:
+            // For auction win notifications, show payment view
+            if let propertyId = notification.data["propertyId"] {
+                print("🔔 Opening payment for property: \(propertyId)")
+                selectedPropertyId = propertyId
+                showPaymentView = true
+            }
+        case .newBid, .outbid:
             // Navigate to property details
-            break
+            if let propertyId = notification.data["propertyId"] {
+                print("🔔 Opening property details for: \(propertyId)")
+                // TODO: Navigate to property details view
+            }
         case .auctionStart, .auctionEnd:
             // Navigate to auction
-            break
+            if let propertyId = notification.data["propertyId"] {
+                print("🔔 Opening auction for: \(propertyId)")
+                // TODO: Navigate to auction view
+            }
         case .paymentSuccess, .paymentFailed:
             // Navigate to transaction history
-            break
+            print("🔔 Opening payment history")
+            // TODO: Navigate to payment history
         default:
-            break
+            print("🔔 Unhandled notification type: \(notification.type.rawValue)")
         }
         
         // Mark as read
@@ -282,6 +324,29 @@ struct NotificationCenterView: View {
                 print("Notification permission error: \(error)")
             }
         }
+    }
+    
+    private func createTestWinNotification() {
+        print("🧪 Creating test auction win notification")
+        let testNotification = AuctionNotification(
+            id: UUID().uuidString,
+            userId: biddingService.currentUserId,
+            title: "🎉 Test Auction Won!",
+            body: "Congratulations! You won the test auction with a bid of $1,500,000. Tap to proceed with payment.",
+            type: .auctionWin,
+            data: [
+                "propertyId": "test-property-123",
+                "winningBid": "1500000",
+                "propertyTitle": "Test Luxury Villa"
+            ],
+            isRead: false,
+            createdAt: Date()
+        )
+        
+        // Add to local notifications for immediate testing
+        notifications.insert(testNotification, at: 0)
+        
+        print("🧪 Test notification added. Total notifications: \(notifications.count)")
     }
 }
 
@@ -610,6 +675,58 @@ extension NotificationCenterView {
             winnerId: "current-user",
             winnerName: "Current User",
             finalPrice: winner.winningBid,
+            paymentStatus: .pending,
+            transactionId: nil,
+            panoramicImages: [],
+            walkthroughVideoURL: nil
+        )
+    }
+    
+    private func createPlaceholderProperty(propertyId: String) -> AuctionProperty {
+        // Try to find the property in notifications data first
+        let winAmount = notifications.first { $0.data["propertyId"] == propertyId }?.data["winningBid"]
+        let bidAmount = Double(winAmount ?? "0") ?? 0
+        
+        return AuctionProperty(
+            id: propertyId,
+            sellerId: "",
+            sellerName: "",
+            title: "Auction Property",
+            description: "Property won at auction - proceed with payment",
+            startingPrice: bidAmount,
+            currentBid: bidAmount,
+            highestBidderId: "current-user",
+            highestBidderName: "Current User", 
+            images: [],
+            videos: [],
+            arModelURL: nil,
+            address: PropertyAddress(street: "", city: "", state: "", postalCode: "", country: ""),
+            location: GeoPoint(latitude: 0, longitude: 0),
+            features: PropertyFeatures(
+                bedrooms: 0,
+                bathrooms: 0,
+                area: 0.0,
+                yearBuilt: 2024,
+                parkingSpaces: 0,
+                hasGarden: false,
+                hasPool: false,
+                hasGym: false,
+                floorNumber: 0,
+                totalFloors: 0,
+                propertyType: "Apartment"
+            ),
+            auctionStartTime: Date(),
+            auctionEndTime: Date(),
+            auctionDuration: .thirtyMinutes,
+            status: .ended,
+            category: .residential,
+            bidHistory: [],
+            watchlistUsers: [],
+            createdAt: Date(),
+            updatedAt: Date(),
+            winnerId: "current-user",
+            winnerName: "Current User",
+            finalPrice: bidAmount,
             paymentStatus: .pending,
             transactionId: nil,
             panoramicImages: [],

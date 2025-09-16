@@ -2,7 +2,7 @@
 //  Property.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2025-09-04.
+// Created by Ruvindu Dulaksha on 2025-09-04.
 //
 
 import Foundation

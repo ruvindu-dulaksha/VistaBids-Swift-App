@@ -12,6 +12,8 @@ import AVKit
 import FirebaseFirestore
 import FirebaseAuth
 import PhotosUI
+import Intents
+import IntentsUI
 
 struct PropertyDetailView: View {
     @State private var property: AuctionProperty
@@ -36,6 +38,7 @@ struct PropertyDetailView: View {
     @State private var propertyListener: ListenerRegistration?
     private let db = Firestore.firestore()
     @State private var uploadAlertMessage = ""
+    @State private var siriKitManager = SiriKitManager.shared
     
     init(property: AuctionProperty, biddingService: BiddingService) {
         self._property = State(initialValue: property)
@@ -191,6 +194,34 @@ struct PropertyDetailView: View {
                 self.property = updatedProperty
             }
         }
+    }
+    
+    // MARK: - SiriKit Integration
+    
+    @available(iOS 13.0, *)
+    private func addBidShortcutToSiri() {
+        print("🎤 SiriKit: Adding bid shortcut to Siri for property: \(property.title)")
+        
+        // Create and donate user activity for this property
+        let userActivity = siriKitManager.createBiddingUserActivity(property: property)
+        userActivity.becomeCurrent()
+        
+        // Create quick bid shortcuts for common amounts
+        let commonBids = [
+            "\(Int(property.currentBid + 10000))",
+            "\(Int(property.currentBid + 25000))",
+            "\(Int(property.currentBid + 50000))"
+        ]
+        
+        for bidAmount in commonBids {
+            siriKitManager.createQuickBidShortcut(amount: bidAmount, propertyTitle: property.title)
+        }
+        
+        // Show success feedback
+        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+        impactFeedback.impactOccurred()
+        
+        print("✅ SiriKit: Bid shortcuts created successfully")
     }
     
     private var imageGallery: some View {

@@ -2,7 +2,7 @@
 //  BiddingService.swift
 //  VistaBids
 //
-//  Created by Assistant on 2025-08-08.
+//  Created by Ruvindu Dulaksha on 2025-08-08.
 //
 
 import Foundation
@@ -42,7 +42,9 @@ class BiddingService: ObservableObject {
     }
     
     init() {
+        // Try to setup listeners, but also add auth state change observer
         setupBasicListeners()
+        setupAuthStateListener()
     }
     
     deinit {
@@ -50,26 +52,75 @@ class BiddingService: ObservableObject {
         listeners.removeAll()
     }
     
+    // MARK: - Auth State Management
+    private func setupAuthStateListener() {
+        Auth.auth().addStateDidChangeListener { [weak self] _, user in
+            guard let self = self else { return }
+            
+            if user != nil {
+                print("🔐 BiddingService: User authenticated, setting up listeners")
+                self.restartListeners()
+            } else {
+                print("🔐 BiddingService: User signed out, removing listeners")
+                self.stopListeners()
+            }
+        }
+    }
+    
+    // MARK: - Public Methods for Listener Management
+    public func restartListeners() {
+        stopListeners()
+        setupBasicListeners()
+    }
+    
+    private func stopListeners() {
+        listeners.forEach { $0.remove() }
+        listeners.removeAll()
+    }
+    
     // MARK: - Basic Real-time Listeners
     private func setupBasicListeners() {
-        guard let userId = Auth.auth().currentUser?.uid else { return }
+        guard let userId = Auth.auth().currentUser?.uid else { 
+            print("⚠️ BiddingService: No authenticated user, skipping listener setup")
+            return 
+        }
         
-        // Listen to auction properties
+        print("🔄 BiddingService: Setting up listeners for user: \(userId)")
+        
+        // Listen to auction properties - ALL STATUSES for real-time updates
         let auctionListener = db.collection("auction_properties")
-            .whereField("status", in: ["upcoming", "active"])
+            .order(by: "auctionStartTime", descending: false)
             .addSnapshotListener { [weak self] snapshot, error in
                 guard let self = self else { return }
                 
                 if let error = error {
+                    print("❌ BiddingService: Error listening to auctions: \(error)")
                     self.error = error.localizedDescription
                     return
                 }
                 
-                guard let documents = snapshot?.documents else { return }
+                guard let documents = snapshot?.documents else { 
+                    print("⚠️ BiddingService: No auction documents found")
+                    return 
+                }
                 
-                self.auctionProperties = documents.compactMap { document in
-                    try? document.data(as: AuctionProperty.self)
-                }.sorted(by: { $0.auctionStartTime < $1.auctionStartTime })
+                print("🔄 BiddingService: Received \(documents.count) auction updates")
+                
+                let allProperties = documents.compactMap { document -> AuctionProperty? in
+                    do {
+                        let property = try document.data(as: AuctionProperty.self)
+                        print("📄 Property: \(property.title) - Status: \(property.status.rawValue)")
+                        return property
+                    } catch {
+                        print("❌ Error decoding property \(document.documentID): \(error)")
+                        return nil
+                    }
+                }
+                
+                DispatchQueue.main.async {
+                    self.auctionProperties = allProperties.sorted(by: { $0.auctionStartTime < $1.auctionStartTime })
+                    print("✅ BiddingService: Updated \(self.auctionProperties.count) auction properties")
+                }
             }
         
         listeners = [auctionListener]
@@ -143,8 +194,33 @@ class BiddingService: ObservableObject {
         // Send notifications to other bidders about being outbid
         await sendOutbidNotifications(propertyId: propertyId, newBidAmount: amount, newBidderName: userName)
         
-        // Trigger real-time update by refreshing local data
-        await loadAuctionProperties()
+        // Force immediate refresh to ensure UI updates quickly
+        DispatchQueue.main.async {
+            // Update the local property immediately for instant UI feedback
+            if let index = self.auctionProperties.firstIndex(where: { $0.id == propertyId }) {
+                self.auctionProperties[index].currentBid = amount
+                self.auctionProperties[index].highestBidderId = self.currentUserId
+                self.auctionProperties[index].highestBidderName = userName
+                
+                // Add to bid history locally
+                let newBid = BidEntry(
+                    id: UUID().uuidString,
+                    bidderId: self.currentUserId,
+                    bidderName: userName,
+                    amount: amount,
+                    timestamp: Date(),
+                    bidType: .regular
+                )
+                self.auctionProperties[index].bidHistory.append(newBid)
+                
+                print("🔄 Updated local property data immediately")
+            }
+        }
+        
+        // Also trigger a refresh from server (listeners should handle this, but backup)
+        Task {
+            await loadAuctionProperties()
+        }
     }
     
     func addToWatchlist(propertyId: String) async throws {

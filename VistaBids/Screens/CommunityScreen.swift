@@ -80,6 +80,25 @@ struct CommunityScreen: View {
                 ChatListView(communityService: communityService)
             }
         }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                HStack {
+                    Button("Clear & Upload") {
+                        Task {
+                            await communityService.clearAndUploadFreshData()
+                        }
+                    }
+                    .font(.caption)
+                    
+                    Button("Load Posts") {
+                        Task {
+                            await communityService.loadPosts()
+                        }
+                    }
+                    .font(.caption)
+                }
+            }
+        }
         .preferredColorScheme(themeManager.currentTheme == .system ? nil : 
                              (themeManager.isDarkMode ? .dark : .light))
     }
@@ -142,6 +161,12 @@ struct FeedView: View {
                 .padding(.top)
             }
             .refreshable {
+                await communityService.loadPosts()
+            }
+        }
+        .onAppear {
+            print("🧩 FeedView: onAppear - current posts count: \(communityService.posts.count)")
+            Task {
                 await communityService.loadPosts()
             }
         }
@@ -329,17 +354,27 @@ struct PostCardOriginal: View {
             
             // Header
             HStack {
-                AsyncImage(url: URL(string: post.authorAvatar ?? "")) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Circle()
-                        .fill(Color.gray.opacity(0.3))
-                        .overlay(
-                            Image(systemName: "person.fill")
-                                .foregroundColor(.gray)
-                        )
+                AsyncImage(url: URL(string: post.authorAvatar ?? "")) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    case .failure(_), .empty:
+                        Circle()
+                            .fill(Color.gray.opacity(0.3))
+                            .overlay(
+                                Image(systemName: "person.fill")
+                                    .foregroundColor(.gray)
+                            )
+                    @unknown default:
+                        Circle()
+                            .fill(Color.gray.opacity(0.3))
+                            .overlay(
+                                Image(systemName: "person.fill")
+                                    .foregroundColor(.gray)
+                            )
+                    }
                 }
                 .frame(width: 40, height: 40)
                 .clipShape(Circle())
@@ -403,44 +438,89 @@ struct PostCardOriginal: View {
             if !post.imageURLs.isEmpty {
                 if post.imageURLs.count == 1 {
                     // Single image - full width with proper aspect ratio
-                    AsyncImage(url: URL(string: post.imageURLs[0])) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(maxHeight: 300)
-                            .cornerRadius(12)
-                            .clipped()
-                    } placeholder: {
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.2))
-                            .frame(height: 200)
-                            .cornerRadius(12)
-                            .overlay(
-                                ProgressView()
-                                    .tint(.gray)
-                            )
+                    AsyncImage(url: URL(string: post.imageURLs[0])) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(maxHeight: 300)
+                                .cornerRadius(12)
+                                .clipped()
+                        case .failure(_):
+                            // Error state with fallback
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.1))
+                                .frame(height: 200)
+                                .cornerRadius(12)
+                                .overlay(
+                                    VStack(spacing: 8) {
+                                        Image(systemName: "photo.badge.exclamationmark")
+                                            .font(.largeTitle)
+                                            .foregroundColor(.gray)
+                                        Text("Image unavailable")
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                    }
+                                )
+                        case .empty:
+                            // Loading state
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.2))
+                                .frame(height: 200)
+                                .cornerRadius(12)
+                                .overlay(
+                                    ProgressView()
+                                        .tint(.gray)
+                                )
+                        @unknown default:
+                            EmptyView()
+                        }
                     }
                 } else {
                     // Multiple images - horizontal scroll with improved sizing
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
                             ForEach(post.imageURLs, id: \.self) { url in
-                                AsyncImage(url: URL(string: url)) { image in
-                                    image
-                                        .resizable()
-                                        .aspectRatio(1.2, contentMode: .fill)
-                                        .frame(width: 240, height: 200)
-                                        .clipped()
-                                        .cornerRadius(12)
-                                } placeholder: {
-                                    Rectangle()
-                                        .fill(Color.gray.opacity(0.2))
-                                        .frame(width: 240, height: 200)
-                                        .cornerRadius(12)
-                                        .overlay(
-                                            ProgressView()
-                                                .tint(.gray)
-                                        )
+                                AsyncImage(url: URL(string: url)) { phase in
+                                    switch phase {
+                                    case .success(let image):
+                                        image
+                                            .resizable()
+                                            .aspectRatio(1.2, contentMode: .fill)
+                                            .frame(width: 240, height: 200)
+                                            .clipped()
+                                            .cornerRadius(12)
+                                    case .failure(_):
+                                        // Error state with fallback
+                                        Rectangle()
+                                            .fill(Color.gray.opacity(0.1))
+                                            .frame(width: 240, height: 200)
+                                            .cornerRadius(12)
+                                            .overlay(
+                                                VStack(spacing: 6) {
+                                                    Image(systemName: "photo.badge.exclamationmark")
+                                                        .font(.title2)
+                                                        .foregroundColor(.gray)
+                                                    Text("Image\nunavailable")
+                                                        .font(.caption2)
+                                                        .foregroundColor(.gray)
+                                                        .multilineTextAlignment(.center)
+                                                }
+                                            )
+                                    case .empty:
+                                        // Loading state
+                                        Rectangle()
+                                            .fill(Color.gray.opacity(0.2))
+                                            .frame(width: 240, height: 200)
+                                            .cornerRadius(12)
+                                            .overlay(
+                                                ProgressView()
+                                                    .tint(.gray)
+                                            )
+                                    @unknown default:
+                                        EmptyView()
+                                    }
                                 }
                             }
                         }
@@ -633,17 +713,27 @@ struct GroupCardOriginal: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                AsyncImage(url: URL(string: group.imageURL ?? "")) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.3))
-                        .overlay(
-                            Image(systemName: "person.3.fill")
-                                .foregroundColor(.gray)
-                        )
+                AsyncImage(url: URL(string: group.imageURL ?? "")) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    case .failure(_), .empty:
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .overlay(
+                                Image(systemName: "person.3.fill")
+                                    .foregroundColor(.gray)
+                            )
+                    @unknown default:
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .overlay(
+                                Image(systemName: "person.3.fill")
+                                    .foregroundColor(.gray)
+                            )
+                    }
                 }
                 .frame(width: 60, height: 60)
                 .clipShape(RoundedRectangle(cornerRadius: 8))

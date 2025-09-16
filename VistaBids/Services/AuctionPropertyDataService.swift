@@ -2,7 +2,7 @@
 //  AuctionPropertyDataService.swift
 //  VistaBids
 //
-//  Created by AI Assistant on 2025-08-19.
+//  Created by Ruvindu Dulaksha on 2025-08-19.
 //  Service for creating and managing auction property data with Firebase integration
 //
 

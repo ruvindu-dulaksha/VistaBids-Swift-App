@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct BiddingScreen: View {
-    @ObservedObject private var biddingService = BiddingService()
+    @StateObject private var biddingService = BiddingService()
     @State private var selectedFilter = "All"
     @State private var showingAR = false
     @State private var selectedProperty: AuctionProperty?
@@ -151,6 +151,8 @@ struct BiddingScreen: View {
             .background(Color.backgrounds)
             .onAppear {
                 Task {
+                    // Ensure listeners are active
+                    biddingService.restartListeners()
                     await biddingService.loadAuctionProperties()
                     
                     // Setup auto-refresh timer (every 30 seconds)

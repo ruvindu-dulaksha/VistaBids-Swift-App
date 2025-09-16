@@ -24,8 +24,14 @@ class CommunityService: ObservableObject {
     @Published var error: String?
     
     init() {
-        // Start with empty posts - will load from Firestore or use sample data on first loadPosts() call
-        // loadSampleData() // Removed to prevent immediate sample data loading
+        print("🧩 CommunityService: Initializing...")
+        // Load sample data first, then try to load from Firebase
+        loadSampleData()
+        print("🧩 CommunityService: Sample data loaded, posts count: \(posts.count)")
+        Task {
+            print("🧩 CommunityService: Starting async loadPosts task...")
+            await loadPosts()
+        }
     }
     
     // MARK: - Posts
@@ -56,12 +62,18 @@ class CommunityService: ObservableObject {
             }
             
             if fetchedPosts.isEmpty && posts.isEmpty {
-                print("🧩 CommunityService: No posts fetched from Firestore and no existing posts, using sample data")
-                // Only use sample data if there are no existing posts and no posts from Firestore
-                posts = createSamplePosts()
+                print("🧩 CommunityService: No posts in Firestore and no existing posts, uploading sample data")
+                await uploadSamplePostsToFirebase()
+                return // uploadSamplePostsToFirebase will call loadPosts again
+            } else if fetchedPosts.isEmpty && !posts.isEmpty {
+                print("🧩 CommunityService: No posts in Firestore but we have \(posts.count) existing posts, keeping them")
+                // Keep existing sample posts
             } else if !fetchedPosts.isEmpty {
-                posts = fetchedPosts
-                print("🧩 CommunityService: Successfully loaded \(posts.count) posts from Firestore")
+                print("🧩 CommunityService: Successfully loaded \(fetchedPosts.count) posts from Firestore, replacing local posts")
+                DispatchQueue.main.async {
+                    self.posts = fetchedPosts
+                }
+                print("🧩 CommunityService: Posts updated on main thread, new count: \(posts.count)")
             } else {
                 print("🧩 CommunityService: No new posts from Firestore, keeping existing \(posts.count) posts")
                 // Keep existing posts if Firestore query returns empty but we have existing posts
@@ -69,10 +81,11 @@ class CommunityService: ObservableObject {
         } catch {
             print("🧩 CommunityService: Error loading posts: \(error.localizedDescription)")
             self.error = error.localizedDescription
-            // Don't fall back to sample data - preserve existing posts on error
+            // If no existing posts and there's an error, try to upload sample data
             if posts.isEmpty {
-                print("🧩 CommunityService: No existing posts, falling back to sample data due to error")
-                posts = createSamplePosts()
+                print("🧩 CommunityService: No existing posts, trying to upload sample data due to error")
+                await uploadSamplePostsToFirebase()
+                return // uploadSamplePostsToFirebase will call loadPosts again
             } else {
                 print("🧩 CommunityService: Preserving existing \(posts.count) posts due to Firestore error")
             }
@@ -522,8 +535,10 @@ class CommunityService: ObservableObject {
     
     // MARK: - Chat
     func loadChatRooms() async {
+        // If no authenticated user, just use the sample data that was loaded in init()
         guard let user = Auth.auth().currentUser else { 
             print("🧩 CommunityService: No authenticated user, using sample chat rooms")
+            isLoading = false
             return 
         }
         
@@ -552,7 +567,7 @@ class CommunityService: ObservableObject {
             }
             
             if fetchedChatRooms.isEmpty {
-                print("🧩 CommunityService: No chat rooms fetched from Firestore, using sample data")
+                print("🧩 CommunityService: No chat rooms fetched from Firestore, keeping sample data")
                 // Keep using sample chat rooms that were loaded in init()
             } else {
                 chatRooms = fetchedChatRooms
@@ -985,13 +1000,13 @@ class CommunityService: ObservableObject {
                 id: "1",
                 userId: "user1",
                 author: "John Smith",
-                authorAvatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800",
+                authorAvatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
                 content: "Just sold my first property through VistaBids! The auction process was seamless and I got a great price. Highly recommend! 🏡✨",
                 originalLanguage: "en",
                 timestamp: Date().addingTimeInterval(-3600),
                 likes: 24,
                 comments: 8,
-                imageURLs: ["https://images.unsplash.com/photo-1513584684374-8bab748fbf90?w=800"],
+                imageURLs: ["https://images.unsplash.com/photo-1513584684374-8bab748fbf90?w=800&h=600&fit=crop"],
                 location: nil,
                 groupId: nil,
                 likedBy: ["user3", "user5"]
@@ -1000,13 +1015,17 @@ class CommunityService: ObservableObject {
                 id: "2",
                 userId: "user2",
                 author: "Sarah Johnson",
-                authorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800",
-                content: "Looking for advice on property staging for auctions. What are the key things that attract bidders?",
+                authorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face",
+                content: "Beautiful modern apartment just listed for auction! Located in the heart of the city with amazing skyline views. Perfect for young professionals. What do you think? 🏙️",
                 originalLanguage: "en",
                 timestamp: Date().addingTimeInterval(-7200),
                 likes: 15,
                 comments: 12,
-                imageURLs: [],
+                imageURLs: [
+                    "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop",
+                    "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=600&fit=crop",
+                    "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&h=600&fit=crop"
+                ],
                 location: nil,
                 groupId: nil,
                 likedBy: [currentUserId, "user4"]
@@ -1015,121 +1034,140 @@ class CommunityService: ObservableObject {
                 id: "3",
                 userId: "user3",
                 author: "Mike Chen",
-                authorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800",
-                content: "Market update: Properties in downtown area are seeing 20% higher bidding activity this month! 📈",
+                authorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+                content: "Market update: Properties in downtown area are seeing 20% higher bidding activity this month! Great time to sell. 📈",
                 originalLanguage: "en",
                 timestamp: Date().addingTimeInterval(-14400),
                 likes: 31,
                 comments: 6,
-                imageURLs: ["https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800"],
+                imageURLs: ["https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&h=600&fit=crop"],
                 location: nil,
                 groupId: nil,
-                likedBy: ["user2", "user5", currentUserId]
+                likedBy: ["user1", "user4", "user7"]
             ),
             CommunityPost(
                 id: "4",
                 userId: "user4",
-                author: "Emily Davis",
-                authorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800",
-                content: "Just finished renovating my investment property! Before and after photos attached. What do you think? #HomeRenovation",
+                author: "Lisa Wong",
+                authorAvatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
+                content: "Amazing luxury villa with pool and garden! Check out these stunning photos from today's viewing. The auction starts tomorrow! 🏊‍♂️🌺",
                 originalLanguage: "en",
-                timestamp: Date().addingTimeInterval(-86400),
-                likes: 47,
-                comments: 23,
+                timestamp: Date().addingTimeInterval(-21600),
+                likes: 45,
+                comments: 18,
                 imageURLs: [
-                    "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800",
-                    "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800"
+                    "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&h=600&fit=crop",
+                    "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&h=600&fit=crop",
+                    "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&h=600&fit=crop",
+                    "https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=800&h=600&fit=crop"
                 ],
-                location: PostLocation(
-                    name: "Colombo, Sri Lanka",
-                    latitude: 6.9271,
-                    longitude: 79.8612,
-                    address: "Colombo, Western Province"
-                ),
+                location: PostLocation(name: "Beverly Hills", latitude: 34.0736, longitude: -118.4004, address: "Beverly Hills, CA"),
                 groupId: nil,
-                likedBy: ["user1", "user2", "user5", "currentUser"]
+                likedBy: ["user1", "user2", "user5", "user6"]
             ),
             CommunityPost(
                 id: "5",
                 userId: "user5",
-                author: "David Wilson",
-                authorAvatar: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=800",
-                content: "Any recommendations for property lawyers in the Kandy area? Need help with some paperwork for my upcoming auction.",
+                author: "David Kim",
+                authorAvatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+                content: "Tips for first-time property auction bidders: Set your budget and stick to it! Don't get caught up in the excitement. Research is key! 💡",
                 originalLanguage: "en",
-                timestamp: Date().addingTimeInterval(-172800),
-                likes: 8,
-                comments: 15,
+                timestamp: Date().addingTimeInterval(-28800),
+                likes: 67,
+                comments: 23,
                 imageURLs: [],
-                location: PostLocation(
-                    name: "Kandy, Sri Lanka",
-                    latitude: 7.2906,
-                    longitude: 80.6337,
-                    address: "Kandy, Central Province"
-                ),
-                groupId: nil,
-                likedBy: [currentUserId, "user3"]
+                location: nil,
+                groupId: "2", // First Time Buyers
+                likedBy: ["user1", "user2", "user3", currentUserId, "user6", "user7"]
             ),
-            // Multi-language sample posts for testing translation
             CommunityPost(
                 id: "6",
                 userId: "user6",
-                author: "María García",
-                authorAvatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=800",
-                content: "¡Hola a todos! Estoy buscando propiedades de inversión en Colombo. ¿Alguien tiene experiencia en el mercado inmobiliario de Sri Lanka?",
-                originalLanguage: "es",
-                timestamp: Date().addingTimeInterval(-25200),
-                likes: 12,
-                comments: 5,
-                imageURLs: [],
-                location: nil,
+                author: "Emma Rodriguez",
+                authorAvatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
+                content: "Coastal property with breathtaking ocean views! Perfect for vacation rental investment. The sound of waves every morning... 🌊🏖️",
+                originalLanguage: "en",
+                timestamp: Date().addingTimeInterval(-36000),
+                likes: 52,
+                comments: 14,
+                imageURLs: [
+                    "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&h=600&fit=crop",
+                    "https://images.unsplash.com/photo-1540541338287-41700207dee6?w=800&h=600&fit=crop"
+                ],
+                location: PostLocation(name: "Malibu Beach", latitude: 34.0259, longitude: -118.7798, address: "Malibu, CA"),
                 groupId: nil,
-                likedBy: []
-            ),
-            CommunityPost(
-                id: "7",
-                userId: "user7",
-                author: "Pierre Dubois",
-                authorAvatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=800",
-                content: "Bonjour! Je cherche à acheter une propriété au bord de mer. Quelqu'un peut-il me donner des conseils sur les enchères immobilières?",
-                originalLanguage: "fr",
-                timestamp: Date().addingTimeInterval(-43200),
-                likes: 18,
-                comments: 9,
-                imageURLs: ["https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800"],
-                location: nil,
-                groupId: nil,
-                likedBy: []
-            ),
-            CommunityPost(
-                id: "8",
-                userId: "user8",
-                author: "田中太郎",
-                authorAvatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=800",
-                content: "スリランカの不動産市場について興味があります。オークションでの物件購入について教えてください。",
-                originalLanguage: "ja",
-                timestamp: Date().addingTimeInterval(-61200),
-                likes: 9,
-                comments: 3,
-                imageURLs: [],
-                location: nil,
-                groupId: nil,
-                likedBy: []
-            ),
-            CommunityPost(
-                id: "9",
-                userId: "user9",
-                author: "王小明",
-                authorAvatar: "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=800",
-                content: "大家好！我在寻找科伦坡的投资房产。有人可以分享一下拍卖经验吗？",
-                originalLanguage: "zh",
-                timestamp: Date().addingTimeInterval(-79200),
-                likes: 14,
-                comments: 7,
-                imageURLs: ["https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800"],
-                location: nil,
-                groupId: nil,
-                likedBy: []
+                likedBy: ["user2", "user3", "user4", "user7"]
             )
         ]
+    }
+    
+    // MARK: - Upload Sample Data to Firebase
+    func uploadSamplePostsToFirebase() async {
+        print("🔥 CommunityService: Starting to upload sample posts to Firebase")
+        let samplePosts = createSamplePosts()
+        
+        var uploadedCount = 0
+        for post in samplePosts {
+            do {
+                let _ = try await db.collection("community_posts").addDocument(from: post)
+                uploadedCount += 1
+                print("🔥 CommunityService: Successfully uploaded post \(uploadedCount): \(post.content.prefix(50))...")
+            } catch {
+                print("🔥 CommunityService: Error uploading post: \(error.localizedDescription)")
+            }
+        }
+        
+        print("🔥 CommunityService: Upload complete. \(uploadedCount)/\(samplePosts.count) posts uploaded")
+        
+        // Wait a moment for Firestore to process, then reload
+        try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+        
+        // Force reload from Firestore after upload
+        print("🔥 CommunityService: Force reloading posts after upload...")
+        isLoading = true
+        do {
+            let snapshot = try await db.collection("community_posts")
+                .order(by: "timestamp", descending: true)
+                .limit(to: 50)
+                .getDocuments()
+            
+            print("🔥 CommunityService: Found \(snapshot.documents.count) posts after upload")
+            
+            var fetchedPosts: [CommunityPost] = []
+            for document in snapshot.documents {
+                if let post = try? document.data(as: CommunityPost.self) {
+                    fetchedPosts.append(post)
+                }
+            }
+            
+            DispatchQueue.main.async {
+                self.posts = fetchedPosts
+                print("🔥 CommunityService: Updated posts on main thread, new count: \(self.posts.count)")
+            }
+        } catch {
+            print("🔥 CommunityService: Error reloading after upload: \(error.localizedDescription)")
+        }
+        isLoading = false
+    }
+    
+    // MARK: - Clear and Refresh Firebase Data
+    func clearAndUploadFreshData() async {
+        print("🧹 CommunityService: Clearing existing posts and uploading fresh data")
+        
+        // First clear existing posts
+        do {
+            let snapshot = try await db.collection("community_posts").getDocuments()
+            print("🧹 CommunityService: Found \(snapshot.documents.count) existing posts to delete")
+            
+            for document in snapshot.documents {
+                try await document.reference.delete()
+            }
+            print("🧹 CommunityService: Cleared all existing posts")
+        } catch {
+            print("🧹 CommunityService: Error clearing posts: \(error.localizedDescription)")
+        }
+        
+        // Now upload fresh sample data
+        await uploadSamplePostsToFirebase()
     }
 }

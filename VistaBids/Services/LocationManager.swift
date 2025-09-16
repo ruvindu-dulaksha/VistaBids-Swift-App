@@ -2,7 +2,7 @@
 //  LocationManager.swift
 //  VistaBids
 //
-//  Created by Assistant on 2025-08-08.
+//  Created by Ruvindu Dulaksha on 2025-08-08.
 //
 
 import Foundation

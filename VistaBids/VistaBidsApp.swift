@@ -10,6 +10,7 @@ import FirebaseCore
 import FirebaseFirestore
 import GoogleSignIn
 import UserNotifications
+import Intents
 
 @main
 struct VistaBidsApp: App {
@@ -29,6 +30,12 @@ struct VistaBidsApp: App {
             print("✅ Google Sign-In configured with client ID")
         } else {
             print("⚠️ Warning: No Google client ID found in Firebase configuration")
+        }
+        
+        // Initialize SiriKit shortcuts
+        if #available(iOS 13.0, *) {
+            _ = SiriKitManager.shared
+            print("✅ SiriKit Manager initialized")
         }
     }
     
