@@ -452,7 +452,6 @@ struct ImprovedNotificationView: View {
     
     private func createAuctionPropertyFromWinner(_ winner: AuctionWinnerNotification) -> AuctionProperty {
         return AuctionProperty(
-            id: winner.propertyID,
             sellerId: "",
             sellerName: "",
             title: winner.propertyTitle,

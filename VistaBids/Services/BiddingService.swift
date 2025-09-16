@@ -108,8 +108,9 @@ class BiddingService: ObservableObject {
                 
                 let allProperties = documents.compactMap { document -> AuctionProperty? in
                     do {
-                        let property = try document.data(as: AuctionProperty.self)
-                        print("📄 Property: \(property.title) - Status: \(property.status.rawValue)")
+                        var property = try document.data(as: AuctionProperty.self)
+                        // Manually set the document ID
+                        property.id = document.documentID
                         return property
                     } catch {
                         print("❌ Error decoding property \(document.documentID): \(error)")
@@ -119,7 +120,9 @@ class BiddingService: ObservableObject {
                 
                 DispatchQueue.main.async {
                     self.auctionProperties = allProperties.sorted(by: { $0.auctionStartTime < $1.auctionStartTime })
+                    self.objectWillChange.send() // Force UI refresh
                     print("✅ BiddingService: Updated \(self.auctionProperties.count) auction properties")
+                    print("🔄 BiddingService: Forced UI refresh")
                 }
             }
         
@@ -223,6 +226,40 @@ class BiddingService: ObservableObject {
         }
     }
     
+    // MARK: - Payment Processing
+    
+    func completePayment(for propertyId: String) async throws {
+        guard !currentUserId.isEmpty else {
+            throw BiddingError.userNotAuthenticated
+        }
+        
+        print("🎯 Starting payment completion for property: \(propertyId)")
+        
+        // Update property payment status in Firebase
+        let propertyRef = db.collection("auction_properties").document(propertyId)
+        
+        try await propertyRef.updateData([
+            "paymentStatus": "completed",
+            "paymentDate": Timestamp(date: Date()),
+            "updatedAt": Timestamp(date: Date())
+        ])
+        
+        print("✅ Payment completed successfully for property \(propertyId)")
+        
+        // Update local data immediately for instant UI feedback
+        DispatchQueue.main.async {
+            if let index = self.auctionProperties.firstIndex(where: { $0.id == propertyId }) {
+                self.auctionProperties[index].paymentStatus = .completed
+                print("🔄 Updated local property payment status to completed")
+            }
+        }
+        
+        // Trigger a refresh to ensure data consistency
+        Task {
+            await loadAuctionProperties()
+        }
+    }
+    
     func addToWatchlist(propertyId: String) async throws {
         guard !currentUserId.isEmpty else {
             throw BiddingError.userNotAuthenticated
@@ -268,8 +305,16 @@ class BiddingService: ObservableObject {
         do {
             // First try to load from Firestore
             let snapshot = try await db.collection("auction_properties").getDocuments()
-            let firestoreProperties = snapshot.documents.compactMap { document in
-                try? document.data(as: AuctionProperty.self)
+            let firestoreProperties = snapshot.documents.compactMap { document -> AuctionProperty? in
+                do {
+                    var property = try document.data(as: AuctionProperty.self)
+                    // Manually set the document ID
+                    property.id = document.documentID
+                    return property
+                } catch {
+                    print("❌ Error decoding property from Firestore: \(error)")
+                    return nil
+                }
             }
             
             // If no properties in Firestore, use sample data as fallback
@@ -279,7 +324,7 @@ class BiddingService: ObservableObject {
                 
                 // Start timers for sample data
                 for property in auctionProperties {
-                    if property.status == .active || property.status == .upcoming {
+                    if property.status == AuctionStatus.active || property.status == AuctionStatus.upcoming {
                         auctionTimerService.startAuctionTimer(for: property)
                     }
                 }
@@ -298,16 +343,23 @@ class BiddingService: ObservableObject {
                 
                 // Process properties to ensure we have proper statuses based on current time
                 let currentTime = Date()
+                print("🕐 Processing \(firestoreProperties.count) properties at time: \(currentTime)")
                 let processedProperties = firestoreProperties.map { property -> AuctionProperty in
                     var updatedProperty = property
                     
+                    let oldStatus = property.status
                     // Update status based on current time
                     if property.auctionStartTime > currentTime {
-                        updatedProperty.status = .upcoming
+                        updatedProperty.status = AuctionStatus.upcoming
                     } else if property.auctionEndTime < currentTime {
-                        updatedProperty.status = .ended
+                        updatedProperty.status = AuctionStatus.ended
                     } else {
-                        updatedProperty.status = .active
+                        updatedProperty.status = AuctionStatus.active
+                    }
+                    
+                    if oldStatus != updatedProperty.status {
+                        print("🔄 Property \(property.id ?? "unknown"): \(oldStatus.rawValue) -> \(updatedProperty.status.rawValue)")
+                        print("   Start: \(property.auctionStartTime), End: \(property.auctionEndTime), Now: \(currentTime)")
                     }
                     
                     return updatedProperty
@@ -318,12 +370,12 @@ class BiddingService: ObservableObject {
                 let finalProperties = processedProperties.map { property -> AuctionProperty in
                     var updatedProperty = property
                     
-                    if property.status == .active {
-                        propertyCount[.active, default: 0] += 1
+                    if property.status == AuctionStatus.active {
+                        propertyCount[AuctionStatus.active, default: 0] += 1
                         
                         // If we already have 2 active auctions, make others upcoming
-                        if propertyCount[.active, default: 0] > 2 {
-                            updatedProperty.status = .upcoming
+                        if propertyCount[AuctionStatus.active, default: 0] > 2 {
+                            updatedProperty.status = AuctionStatus.upcoming
                             // Adjust auction times to be in the future
                             let newStartTime = currentTime.addingTimeInterval(Double.random(in: 3600...86400))
                             updatedProperty.auctionStartTime = newStartTime
@@ -338,7 +390,7 @@ class BiddingService: ObservableObject {
                 
                 // Start auction timers for active and upcoming auctions
                 for property in finalProperties {
-                    if property.status == .active || property.status == .upcoming {
+                    if property.status == AuctionStatus.active || property.status == AuctionStatus.upcoming {
                         auctionTimerService.startAuctionTimer(for: property)
                     }
                 }
@@ -377,7 +429,27 @@ class BiddingService: ObservableObject {
         } catch {
             self.error = error.localizedDescription
             // Fallback to sample data on error
-            auctionProperties = createSampleAuctionProperties()
+            auctionProperties = updateSampleDataStatuses(createSampleAuctionProperties())
+            print("⚠️ Using sample data due to Firestore error: \(error.localizedDescription)")
+        }
+    }
+    
+    // Update sample data statuses based on current time
+    private func updateSampleDataStatuses(_ properties: [AuctionProperty]) -> [AuctionProperty] {
+        let currentTime = Date()
+        return properties.map { property in
+            var updatedProperty = property
+            
+            // Update status based on current time
+            if property.auctionStartTime > currentTime {
+                updatedProperty.status = AuctionStatus.upcoming
+            } else if property.auctionEndTime < currentTime {
+                updatedProperty.status = AuctionStatus.ended
+            } else {
+                updatedProperty.status = AuctionStatus.active
+            }
+            
+            return updatedProperty
         }
     }
     
@@ -485,7 +557,7 @@ class BiddingService: ObservableObject {
                 auctionStartTime: currentTime.addingTimeInterval(-1800), // Started 30 min ago
                 auctionEndTime: currentTime.addingTimeInterval(5400), // Ends in 1.5 hours
                 auctionDuration: .twoHours,
-                status: .active,
+                status: AuctionStatus.active,
                 category: .luxury,
                 bidHistory: [
                     BidEntry(bidderId: "bidder-001", bidderName: "John Smith", amount: 4650000, timestamp: currentTime.addingTimeInterval(-900)),
@@ -581,7 +653,7 @@ class BiddingService: ObservableObject {
                 auctionStartTime: currentTime.addingTimeInterval(3600), // Starts in 1 hour
                 auctionEndTime: currentTime.addingTimeInterval(7200), // Ends in 2 hours
                 auctionDuration: .oneHour,
-                status: .upcoming,
+                status: AuctionStatus.upcoming,
                 category: .residential,
                 bidHistory: [],
                 watchlistUsers: ["user-003", "user-009"],
@@ -664,7 +736,7 @@ class BiddingService: ObservableObject {
                 auctionStartTime: currentTime.addingTimeInterval(-7200), // Started 2 hours ago
                 auctionEndTime: currentTime.addingTimeInterval(-3600), // Ended 1 hour ago
                 auctionDuration: .oneDay,
-                status: .ended,
+                status: AuctionStatus.ended,
                 category: .residential,
                 bidHistory: [
                     BidEntry(bidderId: "bidder-003", bidderName: "Michael Chen", amount: 1420000, timestamp: currentTime.addingTimeInterval(-3900)),
@@ -760,7 +832,7 @@ class BiddingService: ObservableObject {
                 auctionStartTime: currentTime.addingTimeInterval(86400), // Starts tomorrow
                 auctionEndTime: currentTime.addingTimeInterval(90000), // Ends tomorrow + 1 hour
                 auctionDuration: .oneHour,
-                status: .upcoming,
+                status: AuctionStatus.upcoming,
                 category: .investment,
                 bidHistory: [],
                 watchlistUsers: ["user-006", "user-007", "user-012"],
@@ -843,7 +915,7 @@ class BiddingService: ObservableObject {
                 auctionStartTime: currentTime.addingTimeInterval(-3600), // Started 1 hour ago
                 auctionEndTime: currentTime.addingTimeInterval(1800), // Ends in 30 minutes
                 auctionDuration: .twoHours,
-                status: .active,
+                status: AuctionStatus.active,
                 category: .luxury,
                 bidHistory: [
                     BidEntry(bidderId: "bidder-005", bidderName: "David Wilson", amount: 10200000, timestamp: currentTime.addingTimeInterval(-1800)),
@@ -948,7 +1020,7 @@ class BiddingService: ObservableObject {
                 auctionStartTime: currentTime.addingTimeInterval(-10800), // Started 3 hours ago
                 auctionEndTime: currentTime.addingTimeInterval(-1800), // Ended 30 minutes ago
                 auctionDuration: .threeHours,
-                status: .ended,
+                status: AuctionStatus.ended,
                 category: .commercial,
                 bidHistory: [
                     BidEntry(bidderId: "bidder-011", bidderName: "James Kumar", amount: 3400000, timestamp: currentTime.addingTimeInterval(-3600)),
@@ -1035,7 +1107,7 @@ class BiddingService: ObservableObject {
                 auctionStartTime: currentTime.addingTimeInterval(172800), // Starts in 2 days
                 auctionEndTime: currentTime.addingTimeInterval(259200), // Ends in 3 days
                 auctionDuration: .oneDay,
-                status: .upcoming,
+                status: AuctionStatus.upcoming,
                 category: .residential,
                 bidHistory: [],
                 watchlistUsers: ["user-005", "user-017"],
@@ -1134,7 +1206,7 @@ class BiddingService: ObservableObject {
             auctionStartTime: auctionStartTime,
             auctionEndTime: auctionEndTime,
             auctionDuration: auctionDuration,
-            status: .upcoming,
+            status: AuctionStatus.upcoming,
             category: category,
             bidHistory: [],
             watchlistUsers: [],
@@ -1245,6 +1317,32 @@ class BiddingService: ObservableObject {
                 print("📲 Sent outbid notification to user \(userId) for \(propertyTitle)")
             }
         }
+    }
+    
+    // MARK: - Cart Management
+    func addPropertyToCart(propertyId: String) async throws {
+        guard !currentUserId.isEmpty else {
+            throw BiddingError.userNotAuthenticated
+        }
+        
+        print("🛒 Adding property \(propertyId) to cart for user \(currentUserId)")
+        
+        try await db.collection("auction_properties").document(propertyId).updateData([
+            "status": "ended",
+            "winnerId": currentUserId,
+            "paymentStatus": "pending",
+            "auctionEndTime": Timestamp()
+        ])
+        
+        // Update local state
+        if let index = auctionProperties.firstIndex(where: { $0.id == propertyId }) {
+            auctionProperties[index].status = .ended
+            auctionProperties[index].winnerId = currentUserId
+            auctionProperties[index].paymentStatus = .pending
+            auctionProperties[index].auctionEndTime = Date()
+        }
+        
+        print("✅ Property \(propertyId) added to cart successfully")
     }
 }
 

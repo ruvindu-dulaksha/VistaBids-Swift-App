@@ -7,9 +7,24 @@ struct BiddingScreen: View {
     @State private var selectedProperty: AuctionProperty?
     @State private var showingPropertyDetail = false
     @State private var showingAddProperty = false
+    @State private var showingPaymentCart = false
     @State private var refreshTimer: Timer? = nil
     
     private let filters = ["All", "Live", "Upcoming", "Ended"]
+    
+    // Properties that require payment (won auctions with pending payment by current user)
+    private var propertiesNeedingPayment: [AuctionProperty] {
+        let currentUserId = biddingService.currentUserId
+        return biddingService.auctionProperties.filter { property in
+            // Only show properties where:
+            // 1. Current user is the winner
+            // 2. Payment status is pending
+            // 3. Auction has ended
+            property.winnerId == currentUserId && 
+            property.paymentStatus == .pending && 
+            property.status == .ended
+        }
+    }
     
     var body: some View {
         NavigationStack {
@@ -23,24 +38,21 @@ struct BiddingScreen: View {
                     
                     Spacer()
                     
-                    // Debug button to populate sample data
-                    if biddingService.auctionProperties.isEmpty {
-                        Button(action: {
-                            Task {
-                                do {
-                                    try await biddingService.createEnhancedAuctionData()
-                                    // After creating sample data, reload from Firestore
-                                    await biddingService.loadAuctionProperties()
-                                } catch {
-                                    print("Failed to create sample data: \(error)")
+                    HStack(spacing: 12) {
+                        // Cart icon - always visible
+                        Button(action: { showingPaymentCart = true }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "cart.fill")
+                                if propertiesNeedingPayment.count > 0 {
+                                    Text("\(propertiesNeedingPayment.count)")
+                                        .font(.caption2)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Color.red)
+                                        .clipShape(Capsule())
                                 }
-                            }
-                        }) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "plus.circle.fill")
-                                Text("Add Sample Data")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
                             }
                             .foregroundColor(.white)
                             .padding(.horizontal, 12)
@@ -48,20 +60,47 @@ struct BiddingScreen: View {
                             .background(Color.orange)
                             .cornerRadius(15)
                         }
-                    }
-                    
-                    Button(action: { showingAddProperty = true }) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "plus.circle.fill")
-                            Text("Add Property")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
+                        
+                        // Debug button to populate sample data
+                        if biddingService.auctionProperties.isEmpty {
+                            Button(action: {
+                                Task {
+                                    do {
+                                        try await biddingService.createEnhancedAuctionData()
+                                        // After creating sample data, reload from Firestore
+                                        await biddingService.loadAuctionProperties()
+                                    } catch {
+                                        print("Failed to create sample data: \(error)")
+                                    }
+                                }
+                            }) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "plus.circle.fill")
+                                    Text("Add Sample Data")
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color.orange)
+                                .cornerRadius(15)
+                            }
                         }
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(Color.accentBlues)
-                        .cornerRadius(20)
+                        
+                        Button(action: { showingAddProperty = true }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "plus.circle.fill")
+                                Text("Add Property")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Color.accentBlues)
+                            .cornerRadius(20)
+                        }
                     }
                 }
                 .padding(.horizontal)
@@ -103,7 +142,7 @@ struct BiddingScreen: View {
                 } else if biddingService.isLoading {
                     ProgressView("Loading auctions...")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if biddingService.auctionProperties.isEmpty {
+                } else if biddingService.auctionProperties.count == 0 {
                     VStack(spacing: 20) {
                         Image(systemName: "house.circle")
                             .font(.system(size: 60))
@@ -119,32 +158,76 @@ struct BiddingScreen: View {
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 40)
+                        
+                        Text("Debug: \(biddingService.auctionProperties.count) properties loaded")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                        
+                        Text("Filtered: \(filteredProperties().count) properties")
+                            .font(.caption)
+                            .foregroundColor(.gray)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding()
-                } else {
-                    ScrollView {
-                        LazyVStack(spacing: 16) {
-                            ForEach(filteredProperties(), id: \.id) { property in
-                                LiveAuctionCard(
-                                    property: property,
-                                    onARTap: {
-                                        selectedProperty = property
-                                        showingAR = true
-                                    },
-                                    onDetailTap: {
-                                        selectedProperty = property
-                                        showingPropertyDetail = true
-                                    },
-                                    biddingService: biddingService
-                                )
-                                .padding(.horizontal)
-                            }
+                    .onAppear {
+                        print("🐛 BiddingScreen: Showing empty state, properties count: \(biddingService.auctionProperties.count)")
+                        print("🐛 BiddingScreen: Loading state: \(biddingService.isLoading)")
+                        print("🐛 BiddingScreen: Creating data state: \(biddingService.isCreatingData)")
+                        print("🐛 BiddingScreen: Filtered properties count: \(filteredProperties().count)")
+                        for (index, property) in biddingService.auctionProperties.enumerated() {
+                            print("🐛 Property \(index): \(property.title) - Status: \(property.status.rawValue) - ID: \(property.id ?? "nil")")
                         }
-                        .padding(.vertical)
                     }
-                    .refreshable {
-                        await biddingService.loadAuctionProperties()
+                } else {
+                    VStack {
+                        Text("Properties: \(biddingService.auctionProperties.count), Filtered: \(filteredProperties().count)")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                            .padding(.top, 8)
+                        
+                        ScrollView {
+                            LazyVStack(spacing: 16) {
+                                // Use proper filtering based on selected filter
+                                ForEach(filteredProperties(), id: \.id) { property in
+                                    LiveAuctionCard(
+                                        property: property,
+                                        onARTap: {
+                                            selectedProperty = property
+                                            showingAR = true
+                                        },
+                                        onDetailTap: {
+                                            selectedProperty = property
+                                            showingPropertyDetail = true
+                                        },
+                                        biddingService: biddingService
+                                    )
+                                    .padding(.horizontal)
+                                }
+                            }
+                            .padding(.vertical)
+                        }
+                        .refreshable {
+                            await biddingService.loadAuctionProperties()
+                        }
+                    }
+                    .onAppear {
+                        print("🐛 BiddingScreen: Showing properties list")
+                        print("🐛 BiddingScreen: Total properties: \(biddingService.auctionProperties.count)")
+                        print("🐛 BiddingScreen: Filtered properties: \(filteredProperties().count)")
+                        print("🐛 BiddingScreen: Filter: \(selectedFilter)")
+                        
+                        let statusCounts = biddingService.auctionProperties.reduce(into: [String: Int]()) { counts, property in
+                            counts[property.status.rawValue, default: 0] += 1
+                        }
+                        print("🐛 BiddingScreen: Status breakdown: \(statusCounts)")
+                        
+                        let filteredItems = filteredProperties().compactMap { property in
+                            property.id != nil ? property : nil
+                        }
+                        print("🐛 BiddingScreen: Final filtered items with IDs: \(filteredItems.count)")
+                        for (index, property) in filteredItems.enumerated() {
+                            print("🐛 Filtered Property \(index): \(property.title) - Status: \(property.status.rawValue) - ID: \(property.id ?? "nil")")
+                        }
                     }
                 }
             }
@@ -196,20 +279,51 @@ struct BiddingScreen: View {
             .sheet(isPresented: $showingAddProperty) {
                 AddPropertyForAuctionView(biddingService: biddingService)
             }
+            .sheet(isPresented: $showingPaymentCart) {
+                PaymentCartView(properties: propertiesNeedingPayment)
+            }
         }
     }
     
     private func filteredProperties() -> [AuctionProperty] {
+        NSLog("🔍 filteredProperties() called with filter: \(selectedFilter)")
+        NSLog("🔍 Total properties before filtering: \(biddingService.auctionProperties.count)")
+        
+        // Debug: Print current time and property statuses
+        let currentTime = Date()
+        NSLog("🕐 Current time: \(currentTime)")
+        
+        let statusCounts = biddingService.auctionProperties.reduce(into: [String: Int]()) { counts, property in
+            counts[property.status.rawValue, default: 0] += 1
+        }
+        NSLog("🔍 Status breakdown before filtering: \(statusCounts)")
+        
+        // Print each property's status and timing details
+        for (index, property) in biddingService.auctionProperties.enumerated() {
+            let timeToStart = property.auctionStartTime.timeIntervalSince(currentTime)
+            let timeToEnd = property.auctionEndTime.timeIntervalSince(currentTime)
+            NSLog("   Property \(index): \(property.title)")
+            NSLog("     Status: \(property.status.rawValue)")
+            NSLog("     Start: \(property.auctionStartTime) (in \(Int(timeToStart))s)")
+            NSLog("     End: \(property.auctionEndTime) (in \(Int(timeToEnd))s)")
+            NSLog("     Should be: \(timeToStart > 0 ? "upcoming" : (timeToEnd < 0 ? "ended" : "active"))")
+        }
+        
+        let filtered: [AuctionProperty]
+        
         switch selectedFilter {
         case "Live":
-            return biddingService.auctionProperties.filter { $0.status == AuctionStatus.active }
+            filtered = biddingService.auctionProperties.filter { $0.status == AuctionStatus.active }
                 .sorted(by: { $0.auctionEndTime < $1.auctionEndTime }) // Sort by end time (soonest ending first)
+            NSLog("🔍 Live filter: found \(filtered.count) active properties out of \(biddingService.auctionProperties.count) total")
         case "Upcoming":
-            return biddingService.auctionProperties.filter { $0.status == AuctionStatus.upcoming }
+            filtered = biddingService.auctionProperties.filter { $0.status == AuctionStatus.upcoming }
                 .sorted(by: { $0.auctionStartTime < $1.auctionStartTime }) // Sort by start time (soonest starting first)
+            NSLog("🔍 Upcoming filter: found \(filtered.count) upcoming properties")
         case "Ended":
-            return biddingService.auctionProperties.filter { $0.status == AuctionStatus.ended }
+            filtered = biddingService.auctionProperties.filter { $0.status == AuctionStatus.ended }
                 .sorted(by: { $0.auctionEndTime > $1.auctionEndTime }) // Sort by end time (most recently ended first)
+            NSLog("🔍 Ended filter: found \(filtered.count) ended properties")
         default:
             // For "All", prioritize live auctions, then upcoming, then ended
             let live = biddingService.auctionProperties.filter { $0.status == AuctionStatus.active }
@@ -221,8 +335,25 @@ struct BiddingScreen: View {
             let ended = biddingService.auctionProperties.filter { $0.status == AuctionStatus.ended }
                 .sorted(by: { $0.auctionEndTime > $1.auctionEndTime })
             
-            return live + upcoming + ended
+            filtered = live + upcoming + ended
+            NSLog("🔍 All filter: \(live.count) live + \(upcoming.count) upcoming + \(ended.count) ended = \(filtered.count) total")
         }
+        
+        // Check each property for valid IDs
+        var validProperties = 0
+        var invalidProperties = 0
+        for property in filtered {
+            if property.id != nil {
+                validProperties += 1
+            } else {
+                invalidProperties += 1
+                NSLog("🔍 Property '\(property.title)' has nil ID!")
+            }
+        }
+        NSLog("🔍 Valid properties with IDs: \(validProperties), Invalid (nil ID): \(invalidProperties)")
+        
+        NSLog("🐛 filteredProperties(): Total=\(biddingService.auctionProperties.count), Filter=\(selectedFilter), Filtered=\(filtered.count)")
+        return filtered
     }
     
     private func getCountForFilter(_ filter: String) -> Int {

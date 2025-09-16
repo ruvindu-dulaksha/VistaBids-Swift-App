@@ -12,25 +12,30 @@ struct PaymentSuccessView: View {
     @Binding var showPaymentSuccess: Bool
     @Binding var showPaymentView: Bool
     @Binding var showOTPView: Bool
+    let onDismiss: (() -> Void)?
     @State private var showConfetti = false
     @State private var animateSuccess = false
+    @State private var showTranslationView = false
     @Environment(\.colorScheme) var colorScheme
+    @EnvironmentObject var translationManager: TranslationManager
+    @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        ZStack {
-            // Modern background gradient using app theme
-            LinearGradient(
-                colors: [
-                    Color.backgrounds,
-                    Color.accentBlues.opacity(0.1),
-                    Color.green.opacity(0.05)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-            
-            ScrollView {
+        NavigationView {
+            ZStack {
+                // Modern background gradient using app theme
+                LinearGradient(
+                    colors: [
+                        Color.backgrounds,
+                        Color.accentBlues.opacity(0.1),
+                        Color.green.opacity(0.05)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
+                
+                ScrollView {
                 VStack(spacing: 32) {
                     Spacer(minLength: 40)
                     
@@ -323,6 +328,12 @@ struct PaymentSuccessView: View {
                             showPaymentSuccess = false
                             showOTPView = false
                             showPaymentView = false
+                            
+                            // Call the dismiss callback to navigate back to BiddingScreen
+                            onDismiss?()
+                            
+                            // Also dismiss this view
+                            dismiss()
                         }) {
                             HStack(spacing: 12) {
                                 Image(systemName: "house.fill")
@@ -371,11 +382,27 @@ struct PaymentSuccessView: View {
                 .padding(.bottom, 30)
             }
         }
+        .navigationTitle("Payment Successful")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                TranslationButton(
+                    sourceLanguage: "en",
+                    contentId: "payment-success-\(property.id)",
+                    isCompact: true
+                )
+            }
+        }
+        .sheet(isPresented: $showTranslationView) {
+            TranslationView()
+                .environmentObject(translationManager)
+        }
         .onAppear {
             withAnimation(.easeInOut(duration: 0.8)) {
                 animateSuccess = true
             }
         }
+    }
     }
     
     private func generateTransactionID() -> String {
@@ -456,6 +483,8 @@ struct NextStepItem: View {
         property: AuctionProperty.mockProperty(),
         showPaymentSuccess: .constant(true),
         showPaymentView: .constant(true),
-        showOTPView: .constant(true)
+        showOTPView: .constant(true),
+        onDismiss: nil
     )
+    .environmentObject(TranslationManager.shared)
 }

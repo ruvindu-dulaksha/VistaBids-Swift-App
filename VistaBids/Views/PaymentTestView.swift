@@ -17,7 +17,6 @@ struct PaymentTestView: View {
     
     // Test property data
     let testProperty = AuctionProperty(
-        id: "test-123",
         sellerId: "seller-123",
         sellerName: "Test Seller",
         title: "Cozy Test House",

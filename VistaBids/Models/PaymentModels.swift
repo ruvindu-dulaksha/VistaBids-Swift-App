@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 import UIKit
 import FirebaseFirestore
 
@@ -15,6 +16,8 @@ enum PaymentMethod: String, Codable, CaseIterable {
     case debitCard = "debit_card"
     case bankTransfer = "bank_transfer"
     case digitalWallet = "digital_wallet"
+    case paypal = "paypal"
+    case applePay = "apple_pay"
     
     var displayName: String {
         switch self {
@@ -26,6 +29,10 @@ enum PaymentMethod: String, Codable, CaseIterable {
             return "Bank Transfer"
         case .digitalWallet:
             return "Digital Wallet"
+        case .paypal:
+            return "PayPal"
+        case .applePay:
+            return "Apple Pay"
         }
     }
     
@@ -33,16 +40,54 @@ enum PaymentMethod: String, Codable, CaseIterable {
         return displayName
     }
     
+    var description: String {
+        switch self {
+        case .creditCard:
+            return "Visa, MasterCard, American Express"
+        case .debitCard:
+            return "Direct debit from your account"
+        case .bankTransfer:
+            return "Wire transfer (2-3 business days)"
+        case .digitalWallet:
+            return "Secure digital payment"
+        case .paypal:
+            return "Secure payment via PayPal"
+        case .applePay:
+            return "Touch ID or Face ID"
+        }
+    }
+    
     var icon: String {
         switch self {
         case .creditCard:
-            return "creditcard"
+            return "creditcard.fill"
         case .debitCard:
-            return "creditcard.circle"
+            return "creditcard"
         case .bankTransfer:
-            return "building.columns"
+            return "building.columns.fill"
         case .digitalWallet:
-            return "wallet.pass"
+            return "wallet.pass.fill"
+        case .paypal:
+            return "p.circle.fill"
+        case .applePay:
+            return "applelogo"
+        }
+    }
+    
+    var color: Color {
+        switch self {
+        case .creditCard:
+            return .blue
+        case .debitCard:
+            return .green
+        case .bankTransfer:
+            return .purple
+        case .digitalWallet:
+            return .orange
+        case .paypal:
+            return .blue
+        case .applePay:
+            return .black
         }
     }
 }

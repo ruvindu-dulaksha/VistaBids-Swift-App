@@ -13,7 +13,6 @@ struct PaymentDemoView: View {
     
     // Demo property data
     let demoProperty = AuctionProperty(
-        id: "demo-property-1",
         sellerId: "seller1",
         sellerName: "John Doe",
         title: "Luxury Oceanfront Villa",

@@ -238,6 +238,10 @@ struct PaymentMethodIcon: View {
             return "building.columns.fill"
         case .digitalWallet:
             return "wallet.pass.fill"
+        case .paypal:
+            return "p.circle.fill"
+        case .applePay:
+            return "applelogo"
         }
     }
 }

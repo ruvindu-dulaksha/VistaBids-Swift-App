@@ -157,7 +157,12 @@ struct OTPVerificationView: View {
                 property: property,
                 showPaymentSuccess: $showPaymentSuccess,
                 showPaymentView: $showPaymentView,
-                showOTPView: $showOTPView
+                showOTPView: $showOTPView,
+                onDismiss: {
+                    // Dismiss all payment views and return to BiddingScreen
+                    showPaymentView = false
+                    showOTPView = false
+                }
             )
         }
     }

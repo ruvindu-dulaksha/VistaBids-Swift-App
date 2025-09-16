@@ -39,15 +39,17 @@ struct PropertyDetailView: View {
     private let db = Firestore.firestore()
     @State private var uploadAlertMessage = ""
     @State private var siriKitManager = SiriKitManager.shared
+    @State private var showPaymentView = false
     
     init(property: AuctionProperty, biddingService: BiddingService) {
         self._property = State(initialValue: property)
         self.biddingService = biddingService
+        print("🏠 PropertyDetailView: Initialized with property ID: \(property.id ?? "nil"), title: \(property.title)")
     }
     
     var body: some View {
         NavigationView {
-            ScrollView {
+            ScrollView(.vertical, showsIndicators: true) {
                 VStack(alignment: .leading, spacing: 16) {
                     // Image Gallery
                     imageGallery
@@ -86,13 +88,13 @@ struct PropertyDetailView: View {
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden()
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .topBarLeading) {
                     Button("Close") {
                         dismiss()
                     }
                 }
                 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .topBarTrailing) {
                     HStack {
                         // Watchlist Button
                         Button(action: {
@@ -148,9 +150,25 @@ struct PropertyDetailView: View {
             .sheet(isPresented: $showingMap) {
                 PropertyMapView(properties: [property])
             }
+            .sheet(isPresented: $showPaymentView) {
+                PaymentView(property: property, showPaymentView: $showPaymentView)
+            }
             .onAppear {
+                print("🏠 PropertyDetailView: onAppear - property ID: \(property.id ?? "nil"), title: \(property.title)")
                 startTimer()
                 startPropertyListener()
+                
+                // Add specific property to cart
+                if property.id == "3aFK1PFKylVTHaAQlc0D" {
+                    Task {
+                        do {
+                            try await biddingService.addPropertyToCart(propertyId: "3aFK1PFKylVTHaAQlc0D")
+                            print("✅ Added luxury villa property to cart")
+                        } catch {
+                            print("❌ Failed to add property to cart: \(error)")
+                        }
+                    }
+                }
             }
             .onDisappear {
                 timer?.invalidate()
@@ -473,16 +491,43 @@ struct PropertyDetailView: View {
             .background(Color.cardBackground)
             .cornerRadius(12)
             
-            if property.status == .active {
-                Button(action: { showingBidSheet = true }) {
-                    Text("Place Bid")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.accentBlues)
-                        .cornerRadius(12)
+            // Auction Action Buttons
+            VStack(spacing: 12) {
+                if property.status == .active {
+                    Button(action: { showingBidSheet = true }) {
+                        Text("Place Bid")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.accentBlues)
+                            .cornerRadius(12)
+                    }
+                } else if property.status == .ended {
+                    auctionEndedButtons
+                } else if property.status == .sold {
+                    auctionSoldButton
+                } else if property.status == .upcoming {
+                    Button(action: { 
+                        // Add to watchlist functionality
+                        Task {
+                            try await biddingService.addToWatchlist(propertyId: property.id ?? "")
+                        }
+                    }) {
+                        Text("Add to Watchlist")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.accentBlues)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.accentBlues.opacity(0.1))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.accentBlues, lineWidth: 2)
+                            )
+                            .cornerRadius(12)
+                    }
                 }
             }
         }
@@ -749,24 +794,55 @@ struct PropertyDetailView: View {
     
     private var bidHistorySection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Recent Bids")
-                .font(.headline)
-                .foregroundColor(.textPrimary)
+            HStack {
+                Text("Recent Bids")
+                    .font(.headline)
+                    .foregroundColor(.textPrimary)
+                
+                Spacer()
+                
+                if !property.bidHistory.isEmpty && property.bidHistory.count > 5 {
+                    Button("View All (\(property.bidHistory.count))") {
+                        // TODO: Show full bid history sheet
+                        print("Show all \(property.bidHistory.count) bids")
+                    }
+                    .font(.caption)
+                    .foregroundColor(.accentBlues)
+                }
+            }
             
             if property.bidHistory.isEmpty {
-                Text("No bids yet")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding()
+                VStack(spacing: 8) {
+                    Image(systemName: "hammer.circle")
+                        .font(.title2)
+                        .foregroundColor(.secondary)
+                    
+                    Text("No bids yet")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    Text("Be the first to place a bid!")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 20)
             } else {
                 ForEach(property.bidHistory.suffix(5).reversed(), id: \.id) { bid in
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(bid.bidderName)
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                                .foregroundColor(.textPrimary)
+                            HStack {
+                                Text(bid.bidderName)
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.textPrimary)
+                                
+                                if bid.id == property.bidHistory.last?.id {
+                                    Image(systemName: "crown.fill")
+                                        .foregroundColor(.orange)
+                                        .font(.caption)
+                                }
+                            }
                             
                             Text(bid.timestamp, style: .relative)
                                 .font(.caption)
@@ -807,6 +883,13 @@ struct PropertyDetailView: View {
         if timeInterval <= 0 {
             timeRemaining = "Auction Ended"
             timer?.invalidate()
+            
+            // If auction just ended and status is still active, update it
+            if property.status == .active {
+                Task {
+                    await handleAuctionEnd()
+                }
+            }
         } else {
             let days = Int(timeInterval) / 86400
             let hours = Int(timeInterval.truncatingRemainder(dividingBy: 86400)) / 3600
@@ -820,6 +903,170 @@ struct PropertyDetailView: View {
             } else {
                 timeRemaining = "\(minutes)m \(seconds)s"
             }
+        }
+    }
+    
+    // MARK: - Auction End State Views
+    
+    private var auctionEndedButtons: some View {
+        VStack(spacing: 12) {
+            if isUserWinningBid {
+                // User won the auction - show pay button
+                Button(action: { 
+                    // Navigate to payment flow
+                    print("🏆 User won! Navigate to payment")
+                    showPaymentView = true
+                }) {
+                    HStack {
+                        Image(systemName: "crown.fill")
+                        Text("Pay Now - You Won!")
+                    }
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.green)
+                    .cornerRadius(12)
+                }
+            } else {
+                // User didn't win - show disabled button
+                Button(action: { }) {
+                    Text("Auction Ended")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.gray.opacity(0.3))
+                        .cornerRadius(12)
+                }
+                .disabled(true)
+            }
+            
+            // Show winner information
+            if let winnerName = property.highestBidderName {
+                let winningBid = property.currentBid
+                VStack(spacing: 4) {
+                    Text("Winner: \(winnerName)")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.textPrimary)
+                    
+                    Text("Winning Bid: $\(winningBid, specifier: "%.0f")")
+                        .font(.subheadline)
+                        .fontWeight(.bold)
+                        .foregroundColor(.accentBlues)
+                }
+                .padding()
+                .background(Color.cardBackground)
+                .cornerRadius(8)
+            }
+        }
+    }
+    
+    private var auctionSoldButton: some View {
+        VStack(spacing: 12) {
+            Button(action: { }) {
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                    Text("Property Sold")
+                }
+                .font(.headline)
+                .fontWeight(.semibold)
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.blue)
+                .cornerRadius(12)
+            }
+            .disabled(true)
+            
+            // Show sold information
+            if let buyerName = property.highestBidderName {
+                let salePrice = property.currentBid
+                VStack(spacing: 4) {
+                    Text("Sold to: \(buyerName)")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.textPrimary)
+                    
+                    Text("Sale Price: $\(salePrice, specifier: "%.0f")")
+                        .font(.subheadline)
+                        .fontWeight(.bold)
+                        .foregroundColor(.accentBlues)
+                }
+                .padding()
+                .background(Color.cardBackground)
+                .cornerRadius(8)
+            }
+        }
+    }
+    
+    // MARK: - Helper Properties
+    
+    private var isUserWinningBid: Bool {
+        guard let currentUserId = Auth.auth().currentUser?.uid,
+              let highestBidderId = property.highestBidderId else {
+            return false
+        }
+        return currentUserId == highestBidderId
+    }
+    
+    // MARK: - Auction End Handling
+    
+    private func handleAuctionEnd() async {
+        guard let propertyId = property.id else { return }
+        
+        print("🏁 Auction ended for property: \(property.title)")
+        
+        do {
+            // Update property status to ended in Firebase
+            try await db.collection("auction_properties").document(propertyId).updateData([
+                "status": "ended",
+                "auctionEndTime": Timestamp(date: Date()),
+                "updatedAt": Timestamp(date: Date())
+            ])
+            
+            // Send winner notification if there's a highest bidder
+            if let winnerId = property.highestBidderId,
+               let winnerName = property.highestBidderName {
+                let winningBid = property.currentBid
+                
+                await sendWinnerNotification(
+                    winnerId: winnerId,
+                    winnerName: winnerName,
+                    propertyTitle: property.title,
+                    winningBid: winningBid
+                )
+            }
+            
+            print("✅ Auction end handling completed")
+            
+        } catch {
+            print("❌ Error handling auction end: \(error)")
+        }
+    }
+    
+    private func sendWinnerNotification(winnerId: String, winnerName: String, propertyTitle: String, winningBid: Double) async {
+        let notification = [
+            "id": UUID().uuidString,
+            "userId": winnerId,
+            "type": "auction_won",
+            "title": "Congratulations! You won the auction",
+            "message": "You won the auction for \(propertyTitle) with a bid of $\(Int(winningBid))",
+            "propertyId": property.id ?? "",
+            "propertyTitle": propertyTitle,
+            "winningBid": winningBid,
+            "timestamp": Timestamp(date: Date()),
+            "isRead": false
+        ] as [String : Any]
+        
+        do {
+            try await db.collection("notifications").addDocument(data: notification)
+            print("✅ Winner notification sent to \(winnerName)")
+        } catch {
+            print("❌ Error sending winner notification: \(error)")
         }
     }
     

@@ -369,13 +369,26 @@ struct PlaceBidView: View {
     private func placeBid() {
         guard isValidBid && isValidMaxAutoBid else { return }
         
+        // Validate that we have a valid property ID
+        guard let propertyId = property.id, !propertyId.isEmpty else {
+            print("❌ PlaceBidView: Property ID is nil or empty - cannot place bid")
+            alertTitle = "Bid Failed"
+            alertMessage = "Property ID is missing. Please try again."
+            showingAlert = true
+            return
+        }
+        
+        print("🔍 PlaceBidView: Placing bid on property ID: \(propertyId)")
+        print("🔍 PlaceBidView: Property title: \(property.title)")
+        print("🔍 PlaceBidView: Bid amount: \(bidAmountValue)")
+        
         isPlacingBid = true
         
         Task {
             do {
-                let bid = UserBid(
+                let _ = UserBid(
                     id: UUID().uuidString,
-                    propertyId: property.id ?? "",
+                    propertyId: propertyId,
                     propertyTitle: property.title,
                     bidAmount: bidAmountValue,
                     bidTime: Date(),
@@ -384,7 +397,7 @@ struct PlaceBidView: View {
                 )
                 
                 try await biddingService.placeBid(
-                    on: property.id ?? "",
+                    on: propertyId,
                     amount: bidAmountValue,
                     maxAutoBid: isAutoBidEnabled ? maxAutoBidValue : nil
                 )

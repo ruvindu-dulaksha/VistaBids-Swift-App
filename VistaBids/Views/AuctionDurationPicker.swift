@@ -227,7 +227,7 @@ struct DurationCard: View {
             return "clock"
         case .oneHour, .twoHours, .threeHours:
             return "clock.badge"
-        case .oneDay, .custom:
+        case .oneDay, .twoDays, .custom:
             return "calendar"
         }
     }
@@ -249,7 +249,9 @@ struct DurationCard: View {
         case .threeHours:
             return "Long Extended"
         case .oneDay:
-            return "Maximum"
+            return "Full Day"
+        case .twoDays:
+            return "Extended Sale"
         case .custom:
             return "Custom"
         }

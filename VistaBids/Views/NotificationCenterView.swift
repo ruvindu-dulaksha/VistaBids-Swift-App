@@ -636,7 +636,6 @@ struct WinnerNotificationCard: View {
 extension NotificationCenterView {
     private func createAuctionPropertyFromWinner(_ winner: AuctionWinnerNotification) -> AuctionProperty {
         return AuctionProperty(
-            id: winner.propertyID,
             sellerId: "",
             sellerName: "",
             title: winner.propertyTitle,
@@ -688,7 +687,6 @@ extension NotificationCenterView {
         let bidAmount = Double(winAmount ?? "0") ?? 0
         
         return AuctionProperty(
-            id: propertyId,
             sellerId: "",
             sellerName: "",
             title: "Auction Property",

@@ -18,6 +18,7 @@ struct VistaBidsApp: App {
     @StateObject private var themeManager = ThemeManager()
     @StateObject private var userStatsService = UserStatsService.shared
     @StateObject private var translationManager = TranslationManager.shared
+    @StateObject private var biddingService = BiddingService()
     
     init() {
         print("🚀 Initializing VistaBids App...")
@@ -45,6 +46,7 @@ struct VistaBidsApp: App {
                 .environmentObject(themeManager)
                 .environmentObject(userStatsService)
                 .environmentObject(translationManager)
+                .environmentObject(biddingService)
                 .preferredColorScheme(themeManager.currentTheme == .system ? nil : 
                                      (themeManager.isDarkMode ? .dark : .light))
                 .task {
@@ -131,7 +133,6 @@ struct VistaBidsApp: App {
                 print("✅ Created varied auction properties with different locations, images, and panoramic views")
                 
                 // Also create one immediate auto-start auction property
-                let biddingService = BiddingService()
                 let property = createAutoStartAuctionProperty()
                 
                 try await biddingService.createAuctionProperty(
