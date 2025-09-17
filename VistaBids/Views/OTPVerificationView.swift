@@ -173,7 +173,7 @@ struct OTPVerificationView: View {
     
     private func sendInitialOTP() {
         Task {
-            let result = await otpService.generateAndSendOTP(
+            let result = await otpService.sendOTP(
                 email: userEmail,
                 amount: property.finalPrice ?? property.currentBid,
                 propertyTitle: property.title

@@ -21,22 +21,22 @@ struct VistaBidsApp: App {
     @StateObject private var biddingService = BiddingService()
     
     init() {
-        print("🚀 Initializing VistaBids App...")
+        print(" Initializing VistaBids App...")
         FirebaseApp.configure()
-        print("✅ Firebase configured successfully")
+        print("Firebase configured successfully")
         
         // Configure Google Sign-In
         if let clientID = FirebaseApp.app()?.options.clientID {
             GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientID)
-            print("✅ Google Sign-In configured with client ID")
+            print(" Google Sign-In configured with client ID")
         } else {
-            print("⚠️ Warning: No Google client ID found in Firebase configuration")
+            print("Warning: No Google client ID found in Firebase configuration")
         }
         
         // Initialize SiriKit shortcuts
         if #available(iOS 13.0, *) {
             _ = SiriKitManager.shared
-            print("✅ SiriKit Manager initialized")
+            print("SiriKit Manager initialized")
         }
     }
     
@@ -52,7 +52,7 @@ struct VistaBidsApp: App {
                 .task {
                     // Load sample property data first
                     await PropertyService.shared.loadSampleData()
-                    print("✅ Sample property data loaded")
+                    print(" Sample property data loaded")
                     
                     // Auto-import sale properties if needed
                     await autoImportSalePropertiesIfNeeded()
@@ -69,7 +69,7 @@ struct VistaBidsApp: App {
                     await autoStartAuctionOnLaunch()
                 }
                 .onOpenURL { url in
-                    print("📱 Handling URL: \(url)")
+                    print(" Handling URL: \(url)")
                     GIDSignIn.sharedInstance.handle(url)
                 }
         }
@@ -80,7 +80,7 @@ struct VistaBidsApp: App {
         
         do {
             // For debugging, let's always re-import fresh data
-            print("🗑️ Clearing existing sale_properties collection for fresh import...")
+            print(" Clearing existing sale_properties collection for fresh import...")
             let snapshot = try await db.collection("sale_properties").getDocuments()
             
             // Delete existing documents
@@ -90,23 +90,23 @@ struct VistaBidsApp: App {
             }
             if !snapshot.documents.isEmpty {
                 try await batch.commit()
-                print("✅ Deleted \(snapshot.documents.count) existing documents")
+                print(" Deleted \(snapshot.documents.count) existing documents")
             }
             
             // Import fresh sample data
-            print("🏠 Importing fresh sale properties sample data...")
+            print("Importing fresh sale properties sample data...")
             let importer = DataImporter()
             importer.importSampleProperties()
-            print("✅ Sample sale properties imported automatically")
+            print(" Sample sale properties imported automatically")
             
         } catch {
-            print("⚠️ Error in auto-import process: \(error)")
+            print("Error in auto-import process: \(error)")
         }
     }
     
     // Auto Start Auction
     private func autoStartAuctionOnLaunch() async {
-        print("🚀 Starting automatic auction on app launch...")
+        print("Starting automatic auction on app launch...")
         
         do {
             // First, check if we need to clear auction properties
@@ -115,7 +115,7 @@ struct VistaBidsApp: App {
             
            
             if auctionSnapshot.documents.count < 3 {
-                print("🏠 Creating varied auction properties using AuctionPropertyDataService...")
+                print(" Creating varied auction properties using AuctionPropertyDataService...")
                 
                 // Clear existing auction properties
                 let batch = db.batch()
@@ -124,13 +124,13 @@ struct VistaBidsApp: App {
                 }
                 if !auctionSnapshot.documents.isEmpty {
                     try await batch.commit()
-                    print("✅ Deleted \(auctionSnapshot.documents.count) existing auction documents")
+                    print("Deleted \(auctionSnapshot.documents.count) existing auction documents")
                 }
                 
                 
                 let auctionPropertyDataService = AuctionPropertyDataService()
                 try await auctionPropertyDataService.createEnhancedAuctionProperties()
-                print("✅ Created varied auction properties with different locations, images, and panoramic views")
+                print("Created varied auction properties with different locations, images, and panoramic views")
                 
                
                 let property = createAutoStartAuctionProperty()
@@ -153,7 +153,7 @@ struct VistaBidsApp: App {
                     walkthroughVideoURL: property.walkthroughVideoURL
                 )
                 
-                print("✅ Auto-start auction created successfully!")
+                print("Auto-start auction created successfully!")
                 
                 // Schedule push notification for auction start
                 await scheduleAuctionStartNotification(for: property)
@@ -161,11 +161,11 @@ struct VistaBidsApp: App {
                 // Show immediate "Let's Bid Now!" notification
                 await showLetsBidNowNotification(for: property)
             } else {
-                print("✅ Found \(auctionSnapshot.documents.count) existing auction properties, skipping recreation")
+                print(" Found \(auctionSnapshot.documents.count) existing auction properties, skipping recreation")
             }
             
         } catch {
-            print("❌ Error in auction property setup: \(error)")
+            print(" Error in auction property setup: \(error)")
         }
     }
     
@@ -384,9 +384,9 @@ struct VistaBidsApp: App {
         
         do {
             try await UNUserNotificationCenter.current().add(request)
-            print("✅ 'Let's Bid Now!' notification scheduled")
+            print("'Let's Bid Now!' notification scheduled")
         } catch {
-            print("❌ Error scheduling notification: \(error)")
+            print("Error scheduling notification: \(error)")
         }
     }
     

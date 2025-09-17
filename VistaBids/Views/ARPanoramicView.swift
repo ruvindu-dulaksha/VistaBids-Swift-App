@@ -355,7 +355,7 @@ struct LocalPanoramicImageView: View {
             let documentFile = documentsPath.appendingPathComponent(cleanPath)
             
             if let image = UIImage(contentsOfFile: documentFile.path) {
-                print("✅ Card - Found image at: \(documentFile.path)")
+                print("Card - Found image at: \(documentFile.path)")
                 DispatchQueue.main.async {
                     self.uiImage = image
                 }
@@ -488,7 +488,7 @@ struct ARPanoramaViewerRepresentable: UIViewRepresentable {
                 // Add the sphere to the scene
                 arView.scene.addAnchor(anchor)
                 
-                print("✅ Panoramic sphere created and added to AR scene")
+                print("Panoramic sphere created and added to AR scene")
             }
         }
     }
@@ -500,7 +500,7 @@ struct ARPanoramaViewerRepresentable: UIViewRepresentable {
             return
         }
         
-        print("🖼️ Loading panoramic image from: \(panoramicImage.imageURL)")
+        print(" Loading panoramic image from: \(panoramicImage.imageURL)")
         
         // Handle local storage URLs (our new local image system)
         if panoramicImage.imageURL.hasPrefix("local://") {
@@ -529,14 +529,14 @@ struct ARPanoramaViewerRepresentable: UIViewRepresentable {
                 return
             }
             
-            print("✅ Successfully loaded remote panoramic image: \(uiImage.size)")
+            print("Successfully loaded remote panoramic image: \(uiImage.size)")
             self.createTextureFromImage(uiImage, completion: completion)
         }.resume()
     }
     
     private func loadLocalPanoramicImage(completion: @escaping (TextureResource?) -> Void) {
         let urlString = panoramicImage.imageURL
-        print("🔍 Processing local panoramic URL: \(urlString)")
+        print("Processing local panoramic URL: \(urlString)")
         
         // Handle different local URL formats
         var finalImagePath: String?
@@ -550,19 +550,19 @@ struct ARPanoramaViewerRepresentable: UIViewRepresentable {
             
             // If it's a path like "images/filename.jpg"
             let documentFile = documentsPath.appendingPathComponent(cleanPath)
-            print("📸 Checking for file at: \(documentFile.path)")
+            print(" Checking for file at: \(documentFile.path)")
             
             if FileManager.default.fileExists(atPath: documentFile.path) {
-                print("📸 File exists at path: \(documentFile.path)")
+                print(" File exists at path: \(documentFile.path)")
                 finalImagePath = documentFile.path
             } else {
                 // Try just the filename part
                 let filename = URL(fileURLWithPath: cleanPath).lastPathComponent
                 let fileOnlyPath = documentsPath.appendingPathComponent(filename)
-                print("📸 Checking alternate path: \(fileOnlyPath.path)")
+                print("Checking alternate path: \(fileOnlyPath.path)")
                 
                 if FileManager.default.fileExists(atPath: fileOnlyPath.path) {
-                    print("📸 File exists at alternate path: \(fileOnlyPath.path)")
+                    print("File exists at alternate path: \(fileOnlyPath.path)")
                     finalImagePath = fileOnlyPath.path
                 }
             }
@@ -589,10 +589,10 @@ struct ARPanoramaViewerRepresentable: UIViewRepresentable {
         
         // List all files in the documents directory for debugging
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        print("📁 Looking for images in documents directory: \(documentsPath.path)")
+        print("Looking for images in documents directory: \(documentsPath.path)")
         do {
             let fileURLs = try FileManager.default.contentsOfDirectory(at: documentsPath, includingPropertiesForKeys: nil)
-            print("📁 Files in documents directory:")
+            print(" Files in documents directory:")
             for fileURL in fileURLs {
                 print("   - \(fileURL.lastPathComponent)")
                 
@@ -600,7 +600,7 @@ struct ARPanoramaViewerRepresentable: UIViewRepresentable {
                 if fileURL.lastPathComponent == "images" {
                     do {
                         let imageFiles = try FileManager.default.contentsOfDirectory(at: fileURL, includingPropertiesForKeys: nil)
-                        print("📁 Files in images subdirectory:")
+                        print("Files in images subdirectory:")
                         for imageFile in imageFiles {
                             print("   - \(imageFile.lastPathComponent)")
                             
@@ -907,7 +907,7 @@ struct ImmersiveSceneKitARView: UIViewRepresentable {
     }
     
     private func scanAllDirectoriesForImage(urlString: String, documentsPath: URL, completion: @escaping (UIImage?) -> Void) {
-        print("📁 SceneKit - Deep scanning directories for matching image...")
+        print("SceneKit - Deep scanning directories for matching image...")
         
         let filename = URL(fileURLWithPath: urlString).lastPathComponent
         
@@ -935,7 +935,7 @@ struct ImmersiveSceneKitARView: UIViewRepresentable {
                                 // If this file matches our filename
                                 if contentURL.lastPathComponent.contains(filename) || urlString.contains(contentURL.lastPathComponent) {
                                     if let image = UIImage(contentsOfFile: contentURL.path) {
-                                        print("✅ SceneKit - Found image through deep scan: \(contentURL.path)")
+                                        print(" SceneKit - Found image through deep scan: \(contentURL.path)")
                                         foundImage = true
                                         completion(image)
                                         return

@@ -15,7 +15,7 @@ class TransactionReceiptGenerator {
     private init() {}
     
     //  PDF Generation
-    func generateReceiptPDF(transaction: TransactionHistory) -> Data? {
+    func receiptPDF(transaction: TransactionHistory) -> Data? {
         let pdfMetaData = [
             kCGPDFContextCreator: "VistaBids",
             kCGPDFContextAuthor: "VistaBids Payment System",
@@ -166,7 +166,7 @@ class TransactionReceiptGenerator {
         var errorDescription: String? {
             switch self {
             case .pdfGenerationFailed:
-                return "Failed to generate receipt PDF"
+                return "Failed to load receipt PDF"
             }
         }
     }

@@ -39,9 +39,9 @@ class ImageUtils {
         if !FileManager.default.fileExists(atPath: imagesDirectory.path) {
             do {
                 try FileManager.default.createDirectory(at: imagesDirectory, withIntermediateDirectories: true)
-                print("📁 Created images directory: \(imagesDirectory.path)")
+                print("Created images directory: \(imagesDirectory.path)")
             } catch {
-                print("❌ Failed to create images directory: \(error)")
+                print("Failed to create images directory: \(error)")
             }
         }
     }
@@ -72,7 +72,7 @@ class ImageUtils {
         }
         
         let localURL = "local://images/\(filename)"
-        print("✅ Saved image locally: \(filename) -> \(localURL)")
+        print("Saved image locally: \(filename) -> \(localURL)")
         
         return localURL
     }
@@ -118,12 +118,12 @@ class ImageUtils {
         for path in candidatePaths {
             if FileManager.default.fileExists(atPath: path),
                let image = UIImage(contentsOfFile: path) {
-                print("✅ Loaded local image from: \(path)")
+                print(" Loaded local image from: \(path)")
                 return image
             }
         }
         
-        print("❌ Failed to load local image: \(urlString)")
+        print(" Failed to load local image: \(urlString)")
         return nil
     }
     
@@ -134,14 +134,14 @@ class ImageUtils {
             let image = UIImage(data: data)
             
             if image != nil {
-                print("✅ Loaded remote image from: \(url)")
+                print("Loaded remote image from: \(url)")
             } else {
-                print("❌ Failed to create image from remote data: \(url)")
+                print(" Failed to create image from remote data: \(url)")
             }
             
             return image
         } catch {
-            print("❌ Failed to download remote image: \(error.localizedDescription)")
+            print("Failed to download remote image: \(error.localizedDescription)")
             return nil
         }
     }
@@ -155,10 +155,10 @@ class ImageUtils {
         
         do {
             try FileManager.default.removeItem(at: filePath)
-            print("✅ Deleted local image: \(cleanPath)")
+            print(" Deleted local image: \(cleanPath)")
             return true
         } catch {
-            print("❌ Failed to delete local image: \(error)")
+            print(" Failed to delete local image: \(error)")
             return false
         }
     }
@@ -188,9 +188,9 @@ class ImageUtils {
         do {
             try FileManager.default.removeItem(at: imagesDirectory)
             ensureImagesDirectoryExists()
-            print("✅ Cleared all local images")
+            print("Cleared all local images")
         } catch {
-            print("❌ Failed to clear images: \(error)")
+            print("Failed to clear images: \(error)")
         }
     }
 }

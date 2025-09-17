@@ -87,9 +87,9 @@ class NotificationManager: ObservableObject {
         
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
-                print("❌ SiriKit: Error showing notification: \(error)")
+                print("SiriKit: Error showing notification: \(error)")
             } else {
-                print("✅ SiriKit: Bid notification scheduled successfully")
+                print("SiriKit: Bid notification scheduled successfully")
             }
         }
     }

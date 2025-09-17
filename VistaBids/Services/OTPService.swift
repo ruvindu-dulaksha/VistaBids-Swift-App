@@ -17,17 +17,17 @@ class OTPService: ObservableObject {
     
     private let db = Firestore.firestore()
     
-    func generateAndSendOTP(email: String, amount: Double, propertyTitle: String) async -> (String?, String?) {
+    func sendOTP(email: String, amount: Double, propertyTitle: String) async -> (String?, String?) {
         isLoading = true
         errorMessage = nil
         
-        print("📧 OTP SERVICE: Sending OTP to email: \(email)")
-        print("💰 Amount: \(amount)")
-        print("🏡 Property: \(propertyTitle)")
+        print(" OTP SERVICE: Sending OTP to email: \(email)")
+        print(" Amount: \(amount)")
+        print("Property: \(propertyTitle)")
         
-        // Generate random 6-digit OTP
+        // random 6-digit OTP
         let otp = String(format: "%06d", Int.random(in: 100000...999999))
-        print("🔢 Generated OTP: \(otp)")
+        print("  OTP: \(otp)")
         
         do {
             // Store OTP in Firestore with expiration
@@ -50,7 +50,7 @@ class OTPService: ObservableObject {
             return (docRef.documentID, otp) // Return both document ID and OTP for testing
             
         } catch {
-            errorMessage = "Failed to generate OTP: \(error.localizedDescription)"
+            errorMessage = "Failed to load OTP: \(error.localizedDescription)"
             isLoading = false
             return (nil, nil)
         }
@@ -98,15 +98,13 @@ class OTPService: ObservableObject {
     }
     
     private func sendOTPEmail(email: String, otp: String, amount: Double, propertyTitle: String) async {
-        print("📧 === EMAIL SERVICE DEBUG ===")
-        print("📧 TO: \(email)")
-        print("📧 OTP: \(otp)")
-        print("📧 AMOUNT: $\(Int(amount))")
-        print("📧 PROPERTY: \(propertyTitle)")
-        print("📧 === EMAIL WOULD BE SENT HERE ===")
+        print("=== EMAIL SERVICE DEBUG ===")
+        print("TO: \(email)")
+        print("OTP: \(otp)")
+        print("AMOUNT: $\(Int(amount))")
+        print("PROPERTY: \(propertyTitle)")
+        print("=== EMAIL WOULD BE SENT HERE ===")
         
-        // For now, just log the email details instead of actually sending
-        // This helps us verify the correct email is being used
         
         // Store email data in Firestore for verification
         let emailData: [String: Any] = [
@@ -121,13 +119,13 @@ class OTPService: ObservableObject {
         
         do {
             try await db.collection("email_logs").addDocument(data: emailData)
-            print("✅ Email mock logged successfully")
+           // print("Email mock logged successfully")
         } catch {
-            print("❌ Failed to log email mock: \(error.localizedDescription)")
+           // print("Failed to log email mock: \(error.localizedDescription)")
         }
     }
     
     func resendOTP(email: String, amount: Double, propertyTitle: String) async -> (String?, String?) {
-        return await generateAndSendOTP(email: email, amount: amount, propertyTitle: propertyTitle)
+        return await sendOTP(email: email, amount: amount, propertyTitle: propertyTitle)
     }
 }

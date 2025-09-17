@@ -44,9 +44,9 @@ struct ProfileScreen: View {
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                                 .onAppear {
-                                    print("🔍 PROFILE DEBUG - Current User Email: \(authService.currentUser?.email ?? "no email")")
-                                    print("🔍 PROFILE DEBUG - User ID: \(authService.currentUser?.uid ?? "no uid")")
-                                    print("🔍 PROFILE DEBUG - Display Name: \(authService.currentUser?.displayName ?? "no name")")
+                                    print(" PROFILE DEBUG - Current User Email: \(authService.currentUser?.email ?? "no email")")
+                                    print("PROFILE DEBUG - User ID: \(authService.currentUser?.uid ?? "no uid")")
+                                    print(" PROFILE DEBUG - Display Name: \(authService.currentUser?.displayName ?? "no name")")
                                 }
                         }
                         
@@ -681,7 +681,7 @@ struct ProfileEditView: View {
             if let url = URL(string: currentPhotoURL) {
                 let filename = url.lastPathComponent
                 photoURL = "local://images/\(filename)"
-                print("🔄 Migrated profile image URL from file:// to local:// format")
+                print("Migrated profile image URL from file:// to local:// format")
             } else {
                 photoURL = currentPhotoURL
             }
@@ -766,10 +766,10 @@ struct ProfileEditView: View {
         
         do {
             let localURL = try ImageUtils.shared.saveImageLocally(image, filename: filename)
-            print("✅ Profile image saved successfully: \(localURL)")
+            print("Profile image saved successfully: \(localURL)")
             return localURL
         } catch {
-            print("❌ Failed to save profile image: \(error)")
+            print(" Failed to save profile image: \(error)")
             throw ProfileError.uploadFailed
         }
     }

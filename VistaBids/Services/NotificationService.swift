@@ -115,9 +115,9 @@ class NotificationService: NSObject, ObservableObject {
             DispatchQueue.main.async {
                 if granted {
                     UIApplication.shared.registerForRemoteNotifications()
-                    print("✅ Push notifications authorized")
+                    print(" Push notifications authorized")
                 } else {
-                    print("❌ Push notifications denied")
+                    print("Push notifications denied")
                 }
             }
         }
@@ -127,12 +127,12 @@ class NotificationService: NSObject, ObservableObject {
         Messaging.messaging().token { [weak self] token, error in
             if let token = token {
                 self?.fcmToken = token
-                print("📱 FCM token: \(token)")
+                print("FCM token: \(token)")
                 Task {
                     await self?.updateUserFCMToken(token)
                 }
             } else if let error = error {
-                print("❌ Error fetching FCM token: \(error)")
+                print(" Error fetching FCM token: \(error)")
             }
         }
     }
@@ -145,9 +145,9 @@ class NotificationService: NSObject, ObservableObject {
                 "fcmToken": token,
                 "lastTokenUpdate": FieldValue.serverTimestamp()
             ])
-            print("✅ FCM token updated for user: \(userId)")
+            print("FCM token updated for user: \(userId)")
         } catch {
-            print("❌ Error updating FCM token: \(error)")
+            print("Error updating FCM token: \(error)")
         }
     }
     
@@ -162,7 +162,7 @@ class NotificationService: NSObject, ObservableObject {
             .addSnapshotListener { [weak self] snapshot, error in
                 guard let self = self, let documents = snapshot?.documents else {
                     if let error = error {
-                        print("❌ Error listening to notifications: \(error)")
+                        print("Error listening to notifications: \(error)")
                     }
                     return
                 }
@@ -183,7 +183,7 @@ class NotificationService: NSObject, ObservableObject {
                     }
                 }
                 
-                print("📱 Loaded \(newNotifications.count) notifications, \(self.unreadCount) unread")
+                print(" Loaded \(newNotifications.count) notifications, \(self.unreadCount) unread")
             }
     }
     
@@ -210,7 +210,7 @@ class NotificationService: NSObject, ObservableObject {
                 unreadCount = notifications.filter { !$0.isRead }.count
             }
         } catch {
-            print("❌ Error marking notification as read: \(error)")
+            print("Error marking notification as read: \(error)")
         }
     }
     
@@ -233,9 +233,9 @@ class NotificationService: NSObject, ObservableObject {
         
         do {
             try await UNUserNotificationCenter.current().add(request)
-            print("✅ Local notification sent: \(notification.title)")
+            print("Local notification sent: \(notification.title)")
         } catch {
-            print("❌ Error sending local notification: \(error)")
+            print("Error sending local notification: \(error)")
         }
     }
     
@@ -259,9 +259,9 @@ class NotificationService: NSObject, ObservableObject {
             // Clear badge
             UIApplication.shared.applicationIconBadgeNumber = 0
             
-            print("✅ Cleared all notifications")
+            print("Cleared all notifications")
         } catch {
-            print("❌ Error clearing all notifications: \(error)")
+            print(" Error clearing all notifications: \(error)")
         }
     }
     
@@ -286,9 +286,9 @@ class NotificationService: NSObject, ObservableObject {
             try await db.collection("users").document(userId).updateData([
                 "notificationPreferences": preferences
             ])
-            print("✅ Updated notification preferences")
+            print(" Updated notification preferences")
         } catch {
-            print("❌ Error updating notification preferences: \(error)")
+            print(" Error updating notification preferences: \(error)")
         }
     }
     
@@ -322,9 +322,9 @@ class NotificationService: NSObject, ObservableObject {
             }
             unreadCount = 0
             
-            print("✅ Marked all notifications as read")
+            print(" Marked all notifications as read")
         } catch {
-            print("❌ Error marking all notifications as read: \(error)")
+            print("Error marking all notifications as read: \(error)")
         }
     }
     
@@ -333,9 +333,9 @@ class NotificationService: NSObject, ObservableObject {
             try await db.collection("notifications").document(notificationId).delete()
             notifications.removeAll { $0.id == notificationId }
             unreadCount = notifications.filter { !$0.isRead }.count
-            print("✅ Deleted notification: \(notificationId)")
+            print("Deleted notification: \(notificationId)")
         } catch {
-            print("❌ Error deleting notification: \(error)")
+            print("Error deleting notification: \(error)")
         }
     }
     
@@ -387,9 +387,9 @@ class NotificationService: NSObject, ObservableObject {
                 excludeUserId: excludeUserId
             )
             
-            print("✅ Sent notification to all users: \(title)")
+            print("Sent notification to all users: \(title)")
         } catch {
-            print("❌ Error sending notification to all users: \(error)")
+            print("Error sending notification to all users: \(error)")
         }
     }
     
@@ -419,9 +419,9 @@ class NotificationService: NSObject, ObservableObject {
             // Send push notification
             await sendPushNotificationToUser(userId: userId, title: title, body: body, data: data)
             
-            print("✅ Sent notification to user \(userId): \(title)")
+            print("Sent notification to user \(userId): \(title)")
         } catch {
-            print("❌ Error sending notification to user: \(error)")
+            print("Error sending notification to user: \(error)")
         }
     }
     
@@ -434,7 +434,7 @@ class NotificationService: NSObject, ObservableObject {
     ) async {
         // This would typically be implemented on the server side using FCM Admin SDK
         // For now, we'll just log it
-        print("📤 Would send push notification to all users: \(title)")
+        print("Would send push notification to all users: \(title)")
     }
     
     private func sendPushNotificationToUser(
@@ -447,15 +447,15 @@ class NotificationService: NSObject, ObservableObject {
             // Get user's FCM token
             let userDoc = try await db.collection("users").document(userId).getDocument()
             guard let fcmToken = userDoc.data()?["fcmToken"] as? String else {
-                print("⚠️ No FCM token found for user: \(userId)")
+                print(" No FCM token found for user: \(userId)")
                 return
             }
             
             // This would typically be implemented on the server side using FCM Admin SDK
-            print("📤 Would send push notification to \(userId): \(title)")
+            print("Would send push notification to \(userId): \(title)")
             
         } catch {
-            print("❌ Error sending push notification: \(error)")
+            print("Error sending push notification: \(error)")
         }
     }
     
@@ -655,7 +655,7 @@ extension NotificationService {
             try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
         }
         
-        print("✅ Created \(sampleNotifications.count) sample notifications")
+        print("Created \(sampleNotifications.count) sample notifications")
     }
 }
 
@@ -667,7 +667,7 @@ extension NotificationService: @preconcurrency UNUserNotificationCenterDelegate 
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         let userInfo = response.notification.request.content.userInfo
-        print("📱 Notification tapped: \(userInfo)")
+        print("Notification tapped: \(userInfo)")
         
         
         completionHandler()
@@ -689,7 +689,7 @@ extension NotificationService: @preconcurrency MessagingDelegate {
         guard let fcmToken = fcmToken else { return }
         
         self.fcmToken = fcmToken
-        print("📱 FCM token refreshed: \(fcmToken)")
+        print("FCM token refreshed: \(fcmToken)")
         
         Task {
             await updateUserFCMToken(fcmToken)

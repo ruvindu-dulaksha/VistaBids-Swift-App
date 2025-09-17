@@ -25,7 +25,7 @@ class BiometricAuthService: ObservableObject {
         var error: NSError?
         
         guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
-            print("❌ Biometric authentication not available: \(error?.localizedDescription ?? "Unknown error")")
+            print("Biometric authentication not available: \(error?.localizedDescription ?? "Unknown error")")
             DispatchQueue.main.async {
                 self.isBiometricAvailable = false
                 self.biometricType = .none
@@ -39,13 +39,13 @@ class BiometricAuthService: ObservableObject {
             
             switch self.biometricType {
             case .faceID:
-                print("✅ Face ID is available")
+                print("Face ID is available")
             case .touchID:
-                print("✅ Touch ID is available")
+                print("Touch ID is available")
             case .opticID:
-                print("✅ Optic ID is available")
+                print("Optic ID is available")
             default:
-                print("✅ Biometric authentication available but type unknown")
+                print("Biometric authentication available but type unknown")
             }
         }
     }
@@ -74,10 +74,10 @@ class BiometricAuthService: ObservableObject {
             }
             
             if result {
-                print("✅ Biometric authentication successful")
+                print(" Biometric authentication successful")
                 return true
             } else {
-                print("❌ Biometric authentication failed")
+                print("Biometric authentication failed")
                 throw BiometricError.authenticationFailed
             }
         } catch {
@@ -85,7 +85,7 @@ class BiometricAuthService: ObservableObject {
                 isAuthenticating = false
             }
             
-            print("❌ Biometric authentication error: \(error.localizedDescription)")
+            print("Biometric authentication error: \(error.localizedDescription)")
             throw mapLAError(error)
         }
     }

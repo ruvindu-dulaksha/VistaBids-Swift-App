@@ -161,12 +161,12 @@ struct LoginScreen: View {
             }
             .onChange(of: authService.isLoggedIn) { isLoggedIn in
                 if isLoggedIn {
-                    print("🎉 LOGIN STATUS CHANGED: User is now logged in!")
+                    print(" LOGIN STATUS CHANGED: User is now logged in!")
                     if let user = authService.currentUser {
-                        print("📧 Logged in user email: \(user.email ?? "No email")")
-                        print("👤 User display name: \(user.displayName ?? "No display name")")
-                        print("🆔 User ID: \(user.uid)")
-                        print("✅ Email verified: \(user.isEmailVerified)")
+                        print(" Logged in user email: \(user.email ?? "No email")")
+                        print("User display name: \(user.displayName ?? "No display name")")
+                        print("User ID: \(user.uid)")
+                        print(" Email verified: \(user.isEmailVerified)")
                         
                         // Show biometric setup option if not already enabled
                         if biometricService.isBiometricAvailable && !credentialsService.isBiometricLoginEnabled {
@@ -176,7 +176,7 @@ struct LoginScreen: View {
                     // Navigate to main app or dashboard
                     
                 } else {
-                    print("👋 LOGIN STATUS CHANGED: User is logged out")
+                    print(" LOGIN STATUS CHANGED: User is logged out")
                 }
             }
             .alert("Enable Biometric Login", isPresented: $showBiometricOption) {
@@ -193,18 +193,18 @@ struct LoginScreen: View {
     
     //Authentication Methods
     private func handleLogin() {
-        print("🔐 Starting email/password login process...")
+        print("Starting email/password login process...")
         // Clear previous errors
         clearValidationError()
         
         // Validate input
         if let error = ValidationService.validateLoginInput(email: email, password: password) {
-            print("❌ Validation failed: \(error)")
+            print(" Validation failed: \(error)")
             validationError = error
             return
         }
         
-        print("✅ Input validation passed")
+        print("Input validation passed")
         isLoading = true
         
         Task {
@@ -212,7 +212,7 @@ struct LoginScreen: View {
                 try await authService.signIn(email: email, password: password)
                 await MainActor.run {
                     isLoading = false
-                    print("🎉 EMAIL LOGIN SUCCESSFUL!")
+                    print("EMAIL LOGIN SUCCESSFUL!")
                     
                     // Show biometric setup option if not already enabled
                     if biometricService.isBiometricAvailable && !credentialsService.isBiometricLoginEnabled {
@@ -223,7 +223,7 @@ struct LoginScreen: View {
             } catch {
                 await MainActor.run {
                     isLoading = false
-                    print("❌ EMAIL LOGIN FAILED: \(error.localizedDescription)")
+                    print("EMAIL LOGIN FAILED: \(error.localizedDescription)")
                     handleAuthError(error)
                 }
             }
@@ -231,7 +231,7 @@ struct LoginScreen: View {
     }
     
     private func handleBiometricAuthentication() {
-        print("🔐 Starting biometric authentication...")
+        print("Starting biometric authentication...")
         
         guard biometricService.isBiometricAvailable else {
             alertMessage = "Biometric authentication is not available on this device"
@@ -268,7 +268,7 @@ struct LoginScreen: View {
                     
                     await MainActor.run {
                         isLoading = false
-                        print("🎉 BIOMETRIC LOGIN SUCCESSFUL!")
+                        print("BIOMETRIC LOGIN SUCCESSFUL!")
                     }
                 }
             } catch {
@@ -277,7 +277,7 @@ struct LoginScreen: View {
                     if let biometricError = error as? BiometricError {
                         switch biometricError {
                         case .userCancelled:
-                            print("👤 User cancelled biometric authentication")
+                            print("User cancelled biometric authentication")
                             // Don't show error for user cancellation
                             return
                         default:
@@ -286,7 +286,7 @@ struct LoginScreen: View {
                     } else {
                         alertMessage = "Biometric authentication failed: \(error.localizedDescription)"
                     }
-                    print("❌ BIOMETRIC LOGIN FAILED: \(alertMessage)")
+                    print("BIOMETRIC LOGIN FAILED: \(alertMessage)")
                     showingAlert = true
                 }
             }
@@ -340,7 +340,7 @@ struct LoginScreen: View {
     }
     
     private func handleGoogleSignIn() {
-        print("🔍 Starting Google Sign-In process...")
+        print("Starting Google Sign-In process...")
         isLoading = true
         
         Task {
@@ -348,13 +348,13 @@ struct LoginScreen: View {
                 try await authService.signInWithGoogle()
                 await MainActor.run {
                     isLoading = false
-                    print("🎉 GOOGLE LOGIN SUCCESSFUL!")
+                    print("GOOGLE LOGIN SUCCESSFUL!")
                     // Success - user will be automatically navigated via the onChange handler
                 }
             } catch {
                 await MainActor.run {
                     isLoading = false
-                    print("❌ GOOGLE LOGIN FAILED: \(error.localizedDescription)")
+                    print("GOOGLE LOGIN FAILED: \(error.localizedDescription)")
                     handleAuthError(error)
                 }
             }
@@ -362,12 +362,12 @@ struct LoginScreen: View {
     }
     
     private func handleAuthError(_ error: Error) {
-        print("🚨 Authentication error occurred: \(error)")
+        print(" Authentication error occurred: \(error)")
         if let authError = error as? AuthError {
             alertMessage = authError.errorDescription ?? "An unknown error occurred"
-            print("🔍 AuthError details: \(authError)")
+            print("AuthError details: \(authError)")
         } else if let nsError = error as NSError? {
-            print("🔍 NSError code: \(nsError.code), domain: \(nsError.domain)")
+            print("NSError code: \(nsError.code), domain: \(nsError.domain)")
             switch nsError.code {
             case AuthErrorCode.invalidEmail.rawValue:
                 alertMessage = "Invalid email address"
@@ -383,7 +383,7 @@ struct LoginScreen: View {
         } else {
             alertMessage = "Login failed: \(error.localizedDescription)"
         }
-        print("💬 Alert message: \(alertMessage)")
+        print("Alert message: \(alertMessage)")
         showingAlert = true
     }
     

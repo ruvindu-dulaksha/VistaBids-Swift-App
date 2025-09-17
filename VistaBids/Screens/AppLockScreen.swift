@@ -54,10 +54,10 @@ struct AppLockScreen: View {
                     
                     // Biometric Icon Button
                     Button(action: {
-                        if appLockService.shouldShowBiometricPrompt {
+                        if appLockService.shouldShowBiometric {
                             appLockService.authenticateWithBiometrics()
                         } else {
-                            appLockService.shouldShowBiometricPrompt = true
+                            appLockService.shouldShowBiometric = true
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                                 appLockService.authenticateWithBiometrics()
                             }
@@ -92,9 +92,9 @@ struct AppLockScreen: View {
                                 .font(.caption)
                                 .foregroundColor(.secondaryTextColor)
                         }
-                    } else if !appLockService.shouldShowBiometricPrompt {
+                    } else if !appLockService.shouldShowBiometric{
                         Button(action: {
-                            appLockService.shouldShowBiometricPrompt = true
+                            appLockService.shouldShowBiometric = true
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                                 appLockService.authenticateWithBiometrics()
                             }
@@ -136,7 +136,7 @@ struct AppLockScreen: View {
         }
         .onAppear {
             animateIcon = true
-            if appLockService.shouldShowBiometricPrompt {
+            if appLockService.shouldShowBiometric {
                 // Automatically trigger authentication when screen appears
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     appLockService.authenticateWithBiometrics()

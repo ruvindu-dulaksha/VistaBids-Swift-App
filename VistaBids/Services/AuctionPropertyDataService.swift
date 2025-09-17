@@ -3,8 +3,11 @@
 //  VistaBids
 //
 //  Created by Ruvindu Dulaksha on 2025-08-19.
-//  Service for creating and managing auction property data with Firebase integration
 //
+
+
+//  Service for creating and managing auction property data with Firebase integration
+
 
 import Foundation
 import SwiftUI
@@ -319,7 +322,7 @@ class AuctionPropertyDataService: ObservableObject {
         
         for (index, template) in propertyTemplates.enumerated() {
             do {
-                print("🏠 Creating property \(index + 1)/\(totalProperties): \(template.title)")
+                print("Creating property \(index + 1)/\(totalProperties): \(template.title)")
                 
                 
                 await MainActor.run {
@@ -338,13 +341,13 @@ class AuctionPropertyDataService: ObservableObject {
                     createdPropertiesCount += 1
                 }
                 
-                print("✅ Successfully created property: \(template.title)")
+                print("Successfully created property: \(template.title)")
                 
                 // Small delay to prevent overwhelming Firebase
                 try await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
                 
             } catch {
-                print("❌ Failed to create property \(template.title): \(error)")
+                print(" Failed to create property \(template.title): \(error)")
                 lastError = error
                 // Continue with other properties instead of failing completely
             }
@@ -354,7 +357,7 @@ class AuctionPropertyDataService: ObservableObject {
             creationProgress = 1.0
         }
         
-        print("🎉 Completed creating \(createdPropertiesCount)/\(totalProperties) auction properties")
+        print(" Completed creating \(createdPropertiesCount)/\(totalProperties) auction properties")
     }
     
     /// Create a custom auction property with Firebase storage
@@ -381,7 +384,7 @@ class AuctionPropertyDataService: ObservableObject {
             isCreatingProperties = false
         }
         
-        // Generate unique property ID
+        // unique property ID
         let propertyId = UUID().uuidString
         
         // Upload property images
@@ -452,7 +455,7 @@ class AuctionPropertyDataService: ObservableObject {
         
         await MainActor.run { creationProgress = 1.0 }
         
-        print("✅ Custom auction property created with ID: \(documentRef.documentID)")
+        print("Custom auction property created with ID: \(documentRef.documentID)")
         return documentRef.documentID
     }
     
@@ -569,7 +572,7 @@ class AuctionPropertyDataService: ObservableObject {
         try await db.collection("auction_properties").addDocument(from: property)
         
         // Log success
-        print("📝 Stored in Firestore: \(property.title)")
+        print("Stored in Firestore: \(property.title)")
     }
 }
 

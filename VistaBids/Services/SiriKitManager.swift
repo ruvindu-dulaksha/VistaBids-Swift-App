@@ -22,19 +22,19 @@ class SiriKitManager: NSObject, ObservableObject {
    
     
     func setupSiriShortcuts() {
-        print("🎤 SiriKit: Setting up Siri shortcuts using NSUserActivity")
+        print("SiriKit: Setting up Siri shortcuts using NSUserActivity")
         createPlaceBidShortcut()
     }
     
    
     
     func createPlaceBidShortcut() {
-        print("🎤 SiriKit: Creating place bid shortcut")
+        print(" SiriKit: Creating place bid shortcut")
         
         let activity = VistaBidsSiriManager.shared.createPlaceBidActivity()
         activity.becomeCurrent()
         
-        print("✅ SiriKit: Place bid shortcut created successfully")
+        print("SiriKit: Place bid shortcut created successfully")
     }
     
     // MARK: - Quick Bid Methods
@@ -45,7 +45,7 @@ class SiriKitManager: NSObject, ObservableObject {
         let activity = VistaBidsSiriManager.shared.createPlaceBidActivity(bidAmount: amount)
         activity.becomeCurrent()
         
-        print("✅ SiriKit: Quick bid shortcut created for \(amount)")
+        print(" SiriKit: Quick bid shortcut created for \(amount)")
     }
     
     

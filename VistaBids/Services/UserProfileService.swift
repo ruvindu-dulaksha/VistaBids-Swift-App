@@ -20,7 +20,8 @@ class UserProfileService: ObservableObject {
     @Published var errorMessage: String?
     
     private let db = Firestore.firestore()
-    private let currentUserId = "current_user_id" // In real app, get from Auth.auth().currentUser?.uid
+    private let currentUserId = "current_user_id"
+    // In real app, get from Auth.auth().currentUser?.uid
     
     private init() {}
     

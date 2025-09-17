@@ -226,15 +226,15 @@ struct NewPostView: View {
                         }
                     }
                     
-                    // Generate unique post ID for organizing images
+                    // post ID for organizing images
                     let postId = UUID().uuidString
                     
                     // Upload images using the ImageUploadService
                     imageURLs = try await imageUploadService.uploadPropertyImages(imagesToUpload, propertyId: "community_post_\(postId)")
                     
-                    print("✅ Successfully uploaded \(imageURLs.count) images for community post")
+                    print("Successfully uploaded \(imageURLs.count) images for community post")
                 } catch {
-                    print("❌ Failed to upload images: \(error.localizedDescription)")
+                    print(" Failed to upload images: \(error.localizedDescription)")
                     // Continue with post creation even if image upload fails
                 }
             }

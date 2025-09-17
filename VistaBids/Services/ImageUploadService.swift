@@ -3,8 +3,11 @@
 //  VistaBids
 //
 //  Created by Ruvindu Dulaksha on 2025-08-19.
-//  Local storage implementation for image handling
 //
+//
+
+
+
 
 import Foundation
 import UIKit
@@ -66,13 +69,13 @@ class ImageUploadService: ObservableObject {
                 try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
                 
             } catch {
-                print("❌ Failed to save image \(index + 1): \(error)")
+                print("Failed to save image \(index + 1): \(error)")
                 lastError = error
                 throw error
             }
         }
         
-        print("✅ Successfully saved \(imageUrls.count) property images locally")
+        print("Successfully saved \(imageUrls.count) property images locally")
         return imageUrls
     }
     
@@ -86,7 +89,7 @@ class ImageUploadService: ObservableObject {
         }
         
         do {
-            // Generate unique filename with timestamp for panoramic images
+            //  unique filename with timestamp for panoramic images
             let timestamp = Int(Date().timeIntervalSince1970)
             let fileName = "\(propertyId)_panoramic_\(roomType.rawValue)_\(timestamp).jpg"
             
@@ -121,13 +124,13 @@ class ImageUploadService: ObservableObject {
             }
             
             let localURL = "local://images/\(fileName)"
-            print("✅ Successfully saved panoramic image: \(fileName) -> \(localURL)")
-            print("📁 Full path: \(fileURL.path)")
+            print("Successfully saved panoramic image: \(fileName) -> \(localURL)")
+            print("Full path: \(fileURL.path)")
             
             return localURL
             
         } catch {
-            print("❌ Failed to save panoramic image: \(error)")
+            print("Failed to save panoramic image: \(error)")
             lastError = error
             throw error
         }
@@ -178,7 +181,7 @@ class ImageUploadService: ObservableObject {
                     
                     // Return proper file URL for AsyncImage compatibility
                     let localUrl = fileUrl.absoluteString
-                    print("✅ Saved image: \(fileName) -> \(localUrl)")
+                    print("Saved image: \(fileName) -> \(localUrl)")
                     continuation.resume(returning: localUrl)
                     
                 } catch {
@@ -196,9 +199,9 @@ class ImageUploadService: ObservableObject {
                 withIntermediateDirectories: true,
                 attributes: nil
             )
-            print("📁 Images directory ready at: \(imagesDirectory.path)")
+            print("Images directory ready at: \(imagesDirectory.path)")
         } catch {
-            print("❌ Failed to create images directory: \(error)")
+            print("Failed to create images directory: \(error)")
         }
     }
 }

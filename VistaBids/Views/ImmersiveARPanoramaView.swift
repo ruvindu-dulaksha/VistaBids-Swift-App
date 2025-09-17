@@ -530,7 +530,7 @@ struct ImmersiveImagePicker: UIViewControllerRepresentable {
     }
 }
 
-//  AR Overlay Controls
+//  control ar overlay
 struct AROverlayControls: View {
     let onClose: () -> Void
     let onReset: () -> Void
@@ -539,7 +539,7 @@ struct AROverlayControls: View {
     var body: some View {
         VStack {
             // Top controls
-            HStack {
+           /* HStack {
                 Button(action: onClose) {
                     HStack(spacing: 8) {
                         Image(systemName: "xmark")
@@ -564,7 +564,7 @@ struct AROverlayControls: View {
             }
             .padding()
             
-            Spacer()
+            Spacer()*/
             
             // Bottom instructions
             if showingInstructions {

@@ -11,7 +11,7 @@ import Combine
 
 class AppLockService: ObservableObject {
     @Published var isAppLocked: Bool = false
-    @Published var shouldShowBiometricPrompt: Bool = false
+    @Published var shouldShowBiometric: Bool = false
     @Published var isAuthenticating: Bool = false
     
     private let biometricService = BiometricAuthService()
@@ -61,7 +61,7 @@ class AppLockService: ObservableObject {
     
     @objc private func appWillEnterForeground() {
         print("🔓 App entering foreground - checking lock state...")
-        checkAndPromptBiometricUnlock()
+        checkAndBiometricUnlock()
     }
     
     @objc private func appWillResignActive() {
@@ -85,7 +85,7 @@ class AppLockService: ObservableObject {
         if isFaceIDEnabled && biometricService.isBiometricAvailable {
             print("🔒 App should be locked on startup (will check login state)")
             isAppLocked = true
-            shouldShowBiometricPrompt = true 
+            shouldShowBiometric = true
         } else {
             print("🔓 App unlocked on startup")
             isAppLocked = false
@@ -100,49 +100,46 @@ class AppLockService: ObservableObject {
         let isFaceIDEnabled = credentialsService.isBiometricLoginEnabled
         
         guard isFaceIDEnabled && biometricService.isBiometricAvailable else {
-            print("📱 Face ID not enabled or available - not locking app")
             return
         }
         
-        print("🔒 Locking app - Face ID authentication required")
-        DispatchQueue.main.async {
+       DispatchQueue.main.async {
             self.isAppLocked = true
-            self.shouldShowBiometricPrompt = false 
+            self.shouldShowBiometric = false
         }
     }
     
-    private func checkAndPromptBiometricUnlock() {
+    private func checkAndBiometricUnlock() {
         guard isAppLocked else {
-            print("📱 App not locked - no authentication needed")
             return
         }
         
         let isFaceIDAppLockEnabled = UserDefaults.standard.bool(forKey: "face_id_app_lock_enabled")
         
         guard isFaceIDAppLockEnabled && biometricService.isBiometricAvailable else {
-            print("📱 Face ID app lock not available - unlocking app")
+            
             DispatchQueue.main.async {
                 self.unlockApp()
             }
             return
         }
         
-        print("🔓 Prompting for biometric authentication...")
+       
         DispatchQueue.main.async {
-            self.shouldShowBiometricPrompt = true
+            self.shouldShowBiometric = true
         }
     }
     
-    // Authentication Methods
+    // Authentication function
     func authenticateWithBiometrics() {
         guard !isAuthenticating else { return }
         guard canUseBiometric else {
-            print("❌ Biometric authentication not available")
+           
             unlockApp()
             return
         }
         
-        print("🔐 Starting biometric authentication for app unlock...")
+        
         isAuthenticating = true
         
         Task {
@@ -153,31 +150,26 @@ class AppLockService: ObservableObject {
                     self.isAuthenticating = false
                     
                     if success {
-                        print("✅ Biometric authentication successful - unlocking app")
-                        self.unlockApp()
+                       self.unlockApp()
                     } else {
-                        print("❌ Biometric authentication failed")
-                        self.handleAuthenticationFailure()
+                       self.handleAuthenticationFailure()
                     }
                 }
             } catch {
                 await MainActor.run {
                     self.isAuthenticating = false
-                    print("❌ Biometric authentication error: \(error.localizedDescription)")
                     
                     if let biometricError = error as? BiometricError {
                         switch biometricError {
                         case .userCancelled:
-                            // User cancelled - keep app locked but hide prompt
-                            self.shouldShowBiometricPrompt = false
-                            print("👤 User cancelled authentication - app remains locked")
+                            // User cancelled
+                            self.shouldShowBiometric = false
                         case .lockout:
-                            // Biometric locked - could fallback to passcode or force logout
+                            // Biometric locked
                             self.handleBiometricLockout()
                         case .missingPrivacyPermission:
-                            // Privacy permission missing - show helpful message
-                            print("🚫 Privacy permission missing for biometric authentication")
-                            self.handlePrivacyPermissionError()
+                            // Privacy permission missing
+                           self.handlePrivacyPermissionError()
                         default:
                             self.handleAuthenticationFailure()
                         }
@@ -190,35 +182,27 @@ class AppLockService: ObservableObject {
     }
     
     private func unlockApp() {
-        print("🔓 Unlocking app...")
         isAppLocked = false
-        shouldShowBiometricPrompt = false
+        shouldShowBiometric = false
         isAuthenticating = false
     }
     
     private func handleAuthenticationFailure() {
-        print("❌ Handling authentication failure...")
         // Keep app locked, allow user to try again
-        shouldShowBiometricPrompt = false
-        
-        // Show prompt again after a short delay
+        shouldShowBiometric = false
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             if self.isAppLocked {
-                self.shouldShowBiometricPrompt = true
+                self.shouldShowBiometric = true
             }
         }
     }
     
     private func handleBiometricLockout() {
-        print("🚫 Biometric authentication locked out")
-       
         unlockApp()
     }
     
     private func handlePrivacyPermissionError() {
-        print("🚫 Privacy permission error - disabling Face ID app lock")
-        
-        UserDefaults.standard.set(false, forKey: "face_id_app_lock_enabled")
+       UserDefaults.standard.set(false, forKey: "face_id_app_lock_enabled")
         unlockApp()
         
         // Notify about privacy permission issue
@@ -227,26 +211,21 @@ class AppLockService: ObservableObject {
     
     
     func enableFaceIDAppLock() {
-        print("🔐 Face ID app lock enabled (managed by BiometricCredentialsService)")
         UserDefaults.standard.set(true, forKey: "has_launched_before")
     }
     
     func disableFaceIDAppLock() {
-        print("🔓 Face ID app lock disabled (managed by BiometricCredentialsService)")
-        
-        if isAppLocked {
+       if isAppLocked {
             unlockApp()
         }
     }
     
     func forceUnlock() {
-        print("🔓 Force unlocking app...")
         unlockApp()
     }
     
     func forceLock() {
-        print("🔒 Force locking app...")
-        lockAppIfBiometricEnabled()
+       lockAppIfBiometricEnabled()
     }
     
     //  Utility Methods
@@ -267,7 +246,6 @@ class AppLockService: ObservableObject {
     }
 }
 
-// Notification Names
 extension Notification.Name {
     static let biometricLockoutOccurred = Notification.Name("biometricLockoutOccurred")
     static let biometricPrivacyPermissionDenied = Notification.Name("biometricPrivacyPermissionDenied")

@@ -54,7 +54,7 @@ class VistaBidsSiriManager: NSObject, ObservableObject {
         activity.isEligibleForPrediction = true
         activity.persistentIdentifier = "place-bid-\(bidAmount ?? "default")"
         
-        print("✅ VistaBidsSiri: Created place bid activity with amount: \(bidAmount ?? "none")")
+        print("VistaBidsSiri: Created place bid activity with amount: \(bidAmount ?? "none")")
         return activity
     }
     
@@ -69,7 +69,7 @@ class VistaBidsSiriManager: NSObject, ObservableObject {
         // Donate to Siri
         activity.becomeCurrent()
         
-        print("✅ VistaBidsSiri: Donated place bid activity for \(propertyTitle)")
+        print("VistaBidsSiri: Donated place bid activity for \(propertyTitle)")
     }
     
     // View Auctions Activity
@@ -89,7 +89,7 @@ class VistaBidsSiriManager: NSObject, ObservableObject {
         let activity = createViewAuctionsActivity()
         activity.becomeCurrent()
         
-        print("✅ VistaBidsSiri: Donated view auctions activity")
+        print(" VistaBidsSiri: Donated view auctions activity")
     }
     
     // Check Bids Activity
@@ -109,7 +109,7 @@ class VistaBidsSiriManager: NSObject, ObservableObject {
         let activity = createCheckBidsActivity()
         activity.becomeCurrent()
         
-        print("✅ VistaBidsSiri: Donated check bids activity")
+        print(" VistaBidsSiri: Donated check bids activity")
     }
     
     // Activity Handling

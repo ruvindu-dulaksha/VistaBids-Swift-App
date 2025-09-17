@@ -121,8 +121,8 @@ class BiddingService: ObservableObject {
                 DispatchQueue.main.async {
                     self.auctionProperties = allProperties.sorted(by: { $0.auctionStartTime < $1.auctionStartTime })
                     self.objectWillChange.send() 
-                    print("✅ BiddingService: Updated \(self.auctionProperties.count) auction properties")
-                    print("🔄 BiddingService: Forced UI refresh")
+                    print(" BiddingService: Updated \(self.auctionProperties.count) auction properties")
+                    print(" BiddingService: Forced UI refresh")
                 }
             }
         
@@ -192,7 +192,7 @@ class BiddingService: ObservableObject {
             "bidHistory": FieldValue.arrayUnion([bidHistoryItem])
         ])
         
-        print("✅ Bid placed successfully: $\(amount) on property \(propertyId) by \(userName)")
+        print("Bid placed successfully: $\(amount) on property \(propertyId) by \(userName)")
         
         // Send notifications to other bidders about being outbid
         await sendOutbidNotifications(propertyId: propertyId, newBidAmount: amount, newBidderName: userName)
@@ -216,7 +216,7 @@ class BiddingService: ObservableObject {
                 )
                 self.auctionProperties[index].bidHistory.append(newBid)
                 
-                print("🔄 Updated local property data immediately")
+                print(" Updated local property data immediately")
             }
         }
         
@@ -233,7 +233,7 @@ class BiddingService: ObservableObject {
             throw BiddingError.userNotAuthenticated
         }
         
-        print("🎯 Starting payment completion for property: \(propertyId)")
+        print(" Starting payment completion for property: \(propertyId)")
         
         // Update property payment status in Firebase
         let propertyRef = db.collection("auction_properties").document(propertyId)
@@ -244,13 +244,13 @@ class BiddingService: ObservableObject {
             "updatedAt": Timestamp(date: Date())
         ])
         
-        print("✅ Payment completed successfully for property \(propertyId)")
+        print(" Payment completed successfully for property \(propertyId)")
         
         // Update local data immediately for instant UI feedback
         DispatchQueue.main.async {
             if let index = self.auctionProperties.firstIndex(where: { $0.id == propertyId }) {
                 self.auctionProperties[index].paymentStatus = .completed
-                print("🔄 Updated local property payment status to completed")
+                print(" Updated local property payment status to completed")
             }
         }
         
@@ -312,14 +312,14 @@ class BiddingService: ObservableObject {
                     property.id = document.documentID
                     return property
                 } catch {
-                    print("❌ Error decoding property from Firestore: \(error)")
+                    print(" Error decoding property from Firestore: \(error)")
                     return nil
                 }
             }
             
             // If no properties in Firestore, use sample data as fallback
             if firestoreProperties.isEmpty {
-                print("📦 No auction properties found in Firestore, using sample data")
+                print("No auction properties found in Firestore, using sample data")
                 auctionProperties = createSampleAuctionProperties()
                 
                 // Start timers for sample data
@@ -330,20 +330,20 @@ class BiddingService: ObservableObject {
                 }
                 
                 // Auto-populate Firestore with enhanced sample data for future use
-                print("🔄 Auto-populating Firestore with enhanced sample data")
+                print("Auto-populating Firestore with enhanced sample data")
                 Task {
                     do {
                         try await createEnhancedAuctionData()
                     } catch {
-                        print("❌ Failed to auto-populate Firestore: \(error.localizedDescription)")
+                        print("Failed to auto-populate Firestore: \(error.localizedDescription)")
                     }
                 }
             } else {
-                print("✅ Loaded \(firestoreProperties.count) auction properties from Firestore")
+                print("Loaded \(firestoreProperties.count) auction properties from Firestore")
                 
                 // Process properties to ensure we have proper statuses based on current time
                 let currentTime = Date()
-                print("🕐 Processing \(firestoreProperties.count) properties at time: \(currentTime)")
+                print(" Processing \(firestoreProperties.count) properties at time: \(currentTime)")
                 let processedProperties = firestoreProperties.map { property -> AuctionProperty in
                     var updatedProperty = property
                     
@@ -358,7 +358,7 @@ class BiddingService: ObservableObject {
                     }
                     
                     if oldStatus != updatedProperty.status {
-                        print("🔄 Property \(property.id ?? "unknown"): \(oldStatus.rawValue) -> \(updatedProperty.status.rawValue)")
+                        print("Property \(property.id ?? "unknown"): \(oldStatus.rawValue) -> \(updatedProperty.status.rawValue)")
                         print("   Start: \(property.auctionStartTime), End: \(property.auctionEndTime), Now: \(currentTime)")
                     }
                     
@@ -409,13 +409,13 @@ class BiddingService: ObservableObject {
                                 "auctionEndTime": finalProperties[index].auctionEndTime,
                                 "updatedAt": Date()
                             ])
-                            print("🔄 Updated property status in Firestore: \(property.title)")
+                            print("Updated property status in Firestore: \(property.title)")
                         }
                     }
                 }
             }
         } catch {
-            print("❌ Error fetching from Firestore: \(error.localizedDescription)")
+            print("Error fetching from Firestore: \(error.localizedDescription)")
             // Fallback to sample data in case of Firestore error
             auctionProperties = createSampleAuctionProperties()
             throw error
@@ -430,7 +430,7 @@ class BiddingService: ObservableObject {
             self.error = error.localizedDescription
             // Fallback to sample data on error
             auctionProperties = updateSampleDataStatuses(createSampleAuctionProperties())
-            print("⚠️ Using sample data due to Firestore error: \(error.localizedDescription)")
+            print("Using sample data due to Firestore error: \(error.localizedDescription)")
         }
     }
     
@@ -493,7 +493,7 @@ class BiddingService: ObservableObject {
             dataCreationProgress = 0.0
         }
         
-        print("🚀 Creating sample auction properties...")
+        print("Creating sample auction properties...")
         
         let sampleProperties = createSampleAuctionProperties()
         let total = Double(sampleProperties.count)
@@ -502,13 +502,13 @@ class BiddingService: ObservableObject {
             do {
                 try await createAuctionProperty(property)
                 dataCreationProgress = Double(index + 1) / total
-                print("✅ Created auction property: \(property.title)")
+                print("Created auction property: \(property.title)")
             } catch {
-                print("❌ Failed to create property \(property.title): \(error)")
+                print("Failed to create property \(property.title): \(error)")
             }
         }
         
-        print("🎉 Sample auction data creation completed!")
+        print(" Sample auction data creation completed!")
     }
     
     private func createSampleAuctionProperties() -> [AuctionProperty] {
@@ -1252,7 +1252,7 @@ class BiddingService: ObservableObject {
             let propertySnapshot = try await db.collection("auction_properties").document(propertyId).getDocument()
             guard let propertyData = propertySnapshot.data(),
                   let propertyTitle = propertyData["title"] as? String else {
-                print("❌ Could not get property title for notifications")
+                print(" Could not get property title for notifications")
                 return
             }
             
@@ -1283,14 +1283,14 @@ class BiddingService: ObservableObject {
             }
             
         } catch {
-            print("❌ Error sending outbid notifications: \(error)")
+            print("Error sending outbid notifications: \(error)")
         }
     }
     
     private func sendOutbidNotification(to userId: String, propertyTitle: String, propertyId: String, newBidAmount: Double, newBidderName: String) async {
         // Create notification content
         let content = UNMutableNotificationContent()
-        content.title = "⚠️ You've been outbid!"
+        content.title = "You've been outbid!"
         content.body = "\(newBidderName) placed a higher bid of $\(String(format: "%.0f", newBidAmount)) on \(propertyTitle)"
         content.sound = .default
         content.badge = 1
@@ -1312,9 +1312,9 @@ class BiddingService: ObservableObject {
         
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
-                print("❌ Failed to send outbid notification: \(error)")
+                print(" Failed to send outbid notification: \(error)")
             } else {
-                print("📲 Sent outbid notification to user \(userId) for \(propertyTitle)")
+                print(" Sent outbid notification to user \(userId) for \(propertyTitle)")
             }
         }
     }
@@ -1342,7 +1342,7 @@ class BiddingService: ObservableObject {
             auctionProperties[index].auctionEndTime = Date()
         }
         
-        print("✅ Property \(propertyId) added to cart successfully")
+        print("Property \(propertyId) added to cart successfully")
     }
 }
 

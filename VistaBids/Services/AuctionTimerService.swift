@@ -37,9 +37,9 @@ class AuctionTimerService: ObservableObject {
     private func requestNotificationPermissions() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
             if granted {
-                print("✅ Notification permissions granted")
+                print(" Notification permissions granted")
             } else {
-                print("❌ Notification permissions denied: \(error?.localizedDescription ?? "Unknown error")")
+                print(" Notification permissions denied: \(error?.localizedDescription ?? "Unknown error")")
             }
         }
     }
@@ -100,7 +100,7 @@ class AuctionTimerService: ObservableObject {
                 auctionTimer.status = .active
                 activeAuctions[propertyId] = auctionTimer
                 statusChanged = true
-                print("🟢 Auction started: \(auctionTimer.propertyTitle)")
+                print(" Auction started: \(auctionTimer.propertyTitle)")
                 scheduleAuctionStartNotification(for: auctionTimer)
                 
                 // Recalculate time remaining for active auction
@@ -114,7 +114,7 @@ class AuctionTimerService: ObservableObject {
                 auctionTimer.status = .ended
                 activeAuctions[propertyId] = auctionTimer
                 statusChanged = true
-                print("🔴 Auction ended: \(auctionTimer.propertyTitle)")
+                print(" Auction ended: \(auctionTimer.propertyTitle)")
                 scheduleAuctionEndNotification(for: auctionTimer)
                 
                 // Announce winner asynchronously
@@ -144,7 +144,7 @@ class AuctionTimerService: ObservableObject {
         
         // Debug logging
         if statusChanged {
-            print("📊 Timer update: \(auctionTimer.propertyTitle) - Status: \(auctionTimer.status), Time: \(formatTimeRemaining(displayTimeRemaining))")
+            print("Timer update: \(auctionTimer.propertyTitle) - Status: \(auctionTimer.status), Time: \(formatTimeRemaining(displayTimeRemaining))")
         }
     }
     
@@ -199,7 +199,7 @@ class AuctionTimerService: ObservableObject {
         case .upcoming:
             return "Starts in \(formatTimeRemaining(timeRemaining))"
         case .active:
-            if timeRemaining > 300 { // More than 5 minutes
+            if timeRemaining > 300 {
                 return "Ends in \(formatTimeRemaining(timeRemaining))"
             } else {
                 return "⚡ \(formatTimeRemaining(timeRemaining)) remaining"
@@ -214,7 +214,7 @@ class AuctionTimerService: ObservableObject {
     //  Notification Scheduling
     private func scheduleAuctionStartNotification(for timer: AuctionTimer) {
         let content = UNMutableNotificationContent()
-        content.title = "🔥 Auction Started!"
+        content.title = " Auction Started!"
         content.body = "The auction for \(timer.propertyTitle) has begun. Start bidding now!"
         content.sound = .default
         content.badge = 1
@@ -228,16 +228,16 @@ class AuctionTimerService: ObservableObject {
         
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
-                print("❌ Failed to schedule auction start notification: \(error)")
+                print(" Failed to schedule auction start notification: \(error)")
             } else {
-                print("✅ Scheduled auction start notification for: \(timer.propertyTitle)")
+                print(" Scheduled auction start notification for: \(timer.propertyTitle)")
             }
         }
     }
     
     private func scheduleAuctionEndNotification(for timer: AuctionTimer) {
         let content = UNMutableNotificationContent()
-        content.title = "⏰ Auction Ended"
+        content.title = "Auction Ended"
         content.body = "The auction for \(timer.propertyTitle) has ended. Check the results!"
         content.sound = .default
         content.badge = 1
@@ -246,14 +246,14 @@ class AuctionTimerService: ObservableObject {
         let request = UNNotificationRequest(
             identifier: "auction_end_\(timer.propertyId)",
             content: content,
-            trigger: nil // Immediate
+            trigger: nil
         )
         
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
-                print("❌ Failed to schedule auction end notification: \(error)")
+                print(" Failed to schedule auction end notification: \(error)")
             } else {
-                print("✅ Scheduled auction end notification for: \(timer.propertyTitle)")
+                print(" Scheduled auction end notification for: \(timer.propertyTitle)")
             }
         }
     }
@@ -277,7 +277,7 @@ class AuctionTimerService: ObservableObject {
         content.categoryIdentifier = "AUCTION_WARNING"
         
         if timeRemaining <= 60 {
-            content.title = "⚡ Last Chance!"
+            content.title = " Last Chance!"
             content.body = "Only \(Int(timeRemaining)) seconds left for \(timer.propertyTitle)!"
             content.badge = 1
         } else {
@@ -294,9 +294,9 @@ class AuctionTimerService: ObservableObject {
         
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
-                print("❌ Failed to schedule warning notification: \(error)")
+                print("Failed to schedule warning notification: \(error)")
             } else {
-                print("⚠️ Scheduled warning notification: \(Int(timeRemaining))s remaining for \(timer.propertyTitle)")
+                print("Scheduled warning notification: \(Int(timeRemaining))s remaining for \(timer.propertyTitle)")
             }
         }
     }
@@ -319,9 +319,9 @@ class AuctionTimerService: ObservableObject {
         
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
-                print("❌ Failed to schedule pre-auction warning: \(error)")
+                print(" Failed to schedule pre-auction warning: \(error)")
             } else {
-                print("📅 Scheduled 15-minute warning for: \(timer.propertyTitle)")
+                print(" Scheduled 15-minute warning for: \(timer.propertyTitle)")
             }
         }
     }
@@ -342,9 +342,9 @@ class AuctionTimerService: ObservableObject {
         
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
-                print("❌ Failed to schedule winner notification: \(error)")
+                print(" Failed to schedule winner notification: \(error)")
             } else {
-                print("🎉 Scheduled winner notification for: \(timer.propertyTitle)")
+                print("Scheduled winner notification for: \(timer.propertyTitle)")
             }
         }
     }
@@ -365,7 +365,7 @@ class AuctionTimerService: ObservableObject {
                   let highestBidderName = propertyData["highestBidderName"] as? String,
                   let highestBidderId = propertyData["highestBidderId"] as? String,
                   let currentBid = propertyData["currentBid"] as? Double else {
-                print("❌ Could not get winner information for property \(propertyId)")
+                print(" Could not get winner information for property \(propertyId)")
                 return
             }
             
@@ -392,7 +392,7 @@ class AuctionTimerService: ObservableObject {
             await checkAndTriggerPaymentAlert(propertyId: propertyId, winnerId: highestBidderId, propertyData: propertyData)
             
         } catch {
-            print("❌ Error announcing winner for property \(propertyId): \(error)")
+            print(" Error announcing winner for property \(propertyId): \(error)")
         }
     }
     
@@ -403,7 +403,7 @@ class AuctionTimerService: ObservableObject {
         
         // Check if current user is the winner
         if currentUserId == winnerId {
-            print("🎉 Current user won the auction! Triggering payment alert...")
+            print(" Current user won the auction! Triggering payment alert...")
             
             // Create auction property object for payment view
             await MainActor.run {
@@ -425,7 +425,7 @@ class AuctionTimerService: ObservableObject {
             ]
         )
         
-        print("🎯 Payment alert triggered for property: \(propertyId)")
+        print(" Payment alert triggered for property: \(propertyId)")
     }
 }
 

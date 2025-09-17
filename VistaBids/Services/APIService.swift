@@ -39,13 +39,13 @@ class APIService: ObservableObject {
         DispatchQueue.main.async {
             self.currentUser = result.user
             self.isLoggedIn = true
-            print("✅ Email login successful for: \(result.user.email ?? "unknown")")
-            print("👤 User ID: \(result.user.uid)")
+            print("Email login successful for: \(result.user.email ?? "unknown")")
+            print("User ID: \(result.user.uid)")
         }
     }
     
     func signUp(email: String, password: String, fullName: String? = nil) async throws {
-        print("📝 Attempting email signup for: \(email)")
+        print("Attempting email signup for: \(email)")
         let result = try await Auth.auth().createUser(withEmail: email, password: password)
         
         // Update the user's display name if provided
@@ -53,24 +53,24 @@ class APIService: ObservableObject {
             let changeRequest = result.user.createProfileChangeRequest()
             changeRequest.displayName = fullName
             try await changeRequest.commitChanges()
-            print("✅ User profile updated with display name: \(fullName)")
+            print(" User profile updated with display name: \(fullName)")
         }
         
         DispatchQueue.main.async {
             self.currentUser = result.user
             self.isLoggedIn = true
-            print("✅ Email signup successful for: \(result.user.email ?? "unknown")")
-            print("👤 User ID: \(result.user.uid)")
+            print("Email signup successful for: \(result.user.email ?? "unknown")")
+            print("User ID: \(result.user.uid)")
         }
     }
     
     // Google Sign In
     @MainActor
     func signInWithGoogle() async throws {
-        print("🔍 Starting Google Sign-In process...")
+        print("Starting Google Sign-In process...")
         
         guard let clientID = FirebaseApp.app()?.options.clientID else {
-            print("❌ Google Sign-In failed: Missing client ID")
+            print("Google Sign-In failed: Missing client ID")
             throw AuthError.missingClientID
         }
         
@@ -80,31 +80,31 @@ class APIService: ObservableObject {
         
         // Get the presenting view controller for iOS 18.5
         guard let presentingViewController = await getTopViewController() else {
-            print("❌ Google Sign-In failed: No presenting view controller")
+            print("Google Sign-In failed: No presenting view controller")
             throw AuthError.noViewController
         }
         
-        print("🚀 Presenting Google Sign-In UI...")
+        print("Presenting Google Sign-In UI...")
         let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController)
         
-        print("📧 Google Sign-In UI completed, processing tokens...")
+        print(" Google Sign-In UI completed, processing tokens...")
         guard let idToken = result.user.idToken?.tokenString else {
-            print("❌ Google Sign-In failed: No ID token")
+            print("Google Sign-In failed: No ID token")
             throw AuthError.tokenError
         }
         
         let accessToken = result.user.accessToken.tokenString
         let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: accessToken)
         
-        print("🔗 Authenticating with Firebase using Google credentials...")
+        print(" Authenticating with Firebase using Google credentials...")
         let authResult = try await Auth.auth().signIn(with: credential)
         
         DispatchQueue.main.async {
             self.currentUser = authResult.user
             self.isLoggedIn = true
-            print("✅ Google Sign-In successful for: \(authResult.user.email ?? "unknown")")
-            print("👤 User ID: \(authResult.user.uid)")
-            print("📱 Display Name: \(authResult.user.displayName ?? "No display name")")
+            print(" Google Sign-In successful for: \(authResult.user.email ?? "unknown")")
+            print("User ID: \(authResult.user.uid)")
+            print("Display Name: \(authResult.user.displayName ?? "No display name")")
         }
     }
     
@@ -121,14 +121,14 @@ class APIService: ObservableObject {
     
     // Password Reset
     func resetPassword(email: String) async throws {
-        print("📧 Sending password reset email to: \(email)")
+        print("Sending password reset email to: \(email)")
         try await Auth.auth().sendPasswordReset(withEmail: email)
-        print("✅ Password reset email sent successfully")
+        print("Password reset email sent successfully")
     }
     
     //  Sign Out
     func signOut() throws {
-        print("👋 Signing out user...")
+        print("Signing out user...")
         try Auth.auth().signOut()
         
         // Also clear biometric credentials for security
@@ -138,7 +138,7 @@ class APIService: ObservableObject {
         DispatchQueue.main.async {
             self.currentUser = nil
             self.isLoggedIn = false
-            print("✅ User signed out successfully")
+            print("User signed out successfully")
         }
     }
     

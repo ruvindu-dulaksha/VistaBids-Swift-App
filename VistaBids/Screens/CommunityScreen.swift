@@ -653,17 +653,17 @@ struct PostCardOriginal: View {
                         // Reset to show original post on error
                         translatedPost = post
                     } else if result.isTranslated == true {
-                        print("✅ Translation successful to \(selectedLanguage)")
-                        print("🌐 Translated content: \(result.translatedContent ?? "None")")
+                        print(" Translation successful to \(selectedLanguage)")
+                        print(" Translated content: \(result.translatedContent ?? "None")")
                     } else {
-                        print("ℹ️ No translation needed - same language")
+                        print("No translation needed - same language")
                     }
                     
                     isTranslating = false
                 }
             } catch {
                 await MainActor.run {
-                    print("⚠️ Translation failed: \(error.localizedDescription)")
+                    print("Translation failed: \(error.localizedDescription)")
                     translatedPost = post // Show original on error
                     isTranslating = false
                 }
@@ -673,10 +673,10 @@ struct PostCardOriginal: View {
     
     private func getDisplayContent() -> String {
         // Debug logging
-        print("🔍 getDisplayContent() - translatedPost: \(translatedPost != nil)")
-        print("🔍 translatedPost?.isTranslated: \(translatedPost?.isTranslated ?? false)")
-        print("🔍 translatedPost?.translatedContent: \(translatedPost?.translatedContent ?? "nil")")
-        print("🔍 post.content: \(post.content)")
+        print("getDisplayContent() - translatedPost: \(translatedPost != nil)")
+        print("translatedPost?.isTranslated: \(translatedPost?.isTranslated ?? false)")
+        print(" translatedPost?.translatedContent: \(translatedPost?.translatedContent ?? "nil")")
+        print(" post.content: \(post.content)")
         
         // If we have a translated post and it has translated content, use it
         if let translated = translatedPost,

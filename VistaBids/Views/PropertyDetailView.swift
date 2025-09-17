@@ -154,7 +154,7 @@ struct PropertyDetailView: View {
                 PaymentView(property: property, showPaymentView: $showPaymentView)
             }
             .onAppear {
-                print("🏠 PropertyDetailView: onAppear - property ID: \(property.id ?? "nil"), title: \(property.title)")
+                print("PropertyDetailView: onAppear - property ID: \(property.id ?? "nil"), title: \(property.title)")
                 startTimer()
                 startPropertyListener()
                 
@@ -163,9 +163,9 @@ struct PropertyDetailView: View {
                     Task {
                         do {
                             try await biddingService.addPropertyToCart(propertyId: "3aFK1PFKylVTHaAQlc0D")
-                            print("✅ Added luxury villa property to cart")
+                            print("Added luxury villa property to cart")
                         } catch {
-                            print("❌ Failed to add property to cart: \(error)")
+                            print("Failed to add property to cart: \(error)")
                         }
                     }
                 }
@@ -239,7 +239,7 @@ struct PropertyDetailView: View {
         let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
         impactFeedback.impactOccurred()
         
-        print("✅ SiriKit: Bid shortcuts created successfully")
+        print("SiriKit: Bid shortcuts created successfully")
     }
     
     private var imageGallery: some View {

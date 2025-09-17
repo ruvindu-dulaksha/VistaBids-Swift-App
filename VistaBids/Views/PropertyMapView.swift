@@ -72,7 +72,7 @@ struct PropertyMapView: View {
                 if isEnabled {
                     Task {
                         print("Generating heatmap data for \(properties.count) properties")
-                        await mapService.generateHeatMapData(for: properties, type: selectedHeatMapType)
+                        await mapService.heatMapData(for: properties, type: selectedHeatMapType)
                     }
                 } else {
                     // Clear heatmap data when disabled
@@ -116,7 +116,7 @@ struct PropertyMapView: View {
             updateMapData()
         }
         .task {
-            await mapService.generateMapAnalytics(for: properties, region: region)
+            await mapService.mapAnalytics(for: properties, region: region)
         }
     }
     
@@ -166,20 +166,20 @@ struct PropertyMapView: View {
     private func updateMapData() {
         Task {
             await updateClusterData()
-            await mapService.generateMapAnalytics(for: properties, region: region)
+            await mapService.mapAnalytics(for: properties, region: region)
         }
     }
     
     private func updateHeatMapData() {
         Task {
             print("Updating heatmap data for type: \(selectedHeatMapType.displayName)")
-            await mapService.generateHeatMapData(for: filteredProperties, type: selectedHeatMapType)
+            await mapService.heatMapData(for: filteredProperties, type: selectedHeatMapType)
         }
     }
     
     private func updateClusterData() {
         Task {
-            clusters = await mapService.generatePropertyClusters(for: filteredProperties, region: region)
+            clusters = await mapService.propertyClusters(for: filteredProperties, region: region)
         }
     }
     

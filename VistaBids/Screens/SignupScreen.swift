@@ -170,11 +170,11 @@ struct SignUpScreen: View {
         do {
             try await authService.signUp(email: email, password: password, fullName: fullName)
             // Successfully signed up - navigation will be handled by the auth state change
-            print("✅ Sign up successful, user logged in automatically")
+            print("Sign up successful, user logged in automatically")
         } catch {
             errorMessage = APIService.mapError(error)
             showError = true
-            print("❌ Sign up failed: \(error.localizedDescription)")
+            print("Sign up failed: \(error.localizedDescription)")
         }
         
         isLoading = false
@@ -187,11 +187,11 @@ struct SignUpScreen: View {
         do {
             try await authService.signInWithGoogle()
             // Successfully signed up with Google - navigation will be handled by the auth state change
-            print("✅ Google sign up successful")
+            print("Google sign up successful")
         } catch {
             errorMessage = APIService.mapError(error)
             showError = true
-            print("❌ Google sign up failed: \(error.localizedDescription)")
+            print("Google sign up failed: \(error.localizedDescription)")
         }
         
         isLoading = false

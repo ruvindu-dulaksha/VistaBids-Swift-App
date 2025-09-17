@@ -297,7 +297,7 @@ struct BidEntry: Identifiable, Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        // Try to decode id, if not present generate one
+        // json format decord
         if let decodedId = try? container.decode(String.self, forKey: .id) {
             self.id = decodedId
         } else {

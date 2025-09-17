@@ -23,7 +23,7 @@ struct SellPropertyScreen: View {
         var filtered = salePropertyService.properties
         
         // Log filtering information for debugging
-        print("🔍 Starting filtering: Total properties from Firestore: \(filtered.count)")
+        print("Starting filtering: Total properties from Firestore: \(filtered.count)")
         
         // If no filters are applied and search text is empty, return all properties
         let hasNoFilters = searchText.isEmpty && 
@@ -33,7 +33,7 @@ struct SellPropertyScreen: View {
                           priceRange == (0...10_000_000)
         
         if hasNoFilters {
-            print("🔍 No filters applied - showing all \(filtered.count) properties")
+            print(" No filters applied - showing all \(filtered.count) properties")
             return filtered
         }
         
@@ -44,13 +44,13 @@ struct SellPropertyScreen: View {
                 property.address.city.localizedCaseInsensitiveContains(searchText) ||
                 property.address.state.localizedCaseInsensitiveContains(searchText)
             }
-            print("🔍 After search text filter: \(filtered.count) properties")
+            print("After search text filter: \(filtered.count) properties")
         }
         
         // Apply property type filter if selected
         if let selectedFilter = selectedFilter {
             filtered = filtered.filter { $0.propertyType == selectedFilter }
-            print("🔍 After property type filter: \(filtered.count) properties")
+            print("After property type filter: \(filtered.count) properties")
         }
         
         // Apply price range filter if changed from default
@@ -58,22 +58,22 @@ struct SellPropertyScreen: View {
             filtered = filtered.filter { property in
                 property.price >= priceRange.lowerBound && property.price <= priceRange.upperBound
             }
-            print("🔍 After price range filter: \(filtered.count) properties")
+            print("After price range filter: \(filtered.count) properties")
         }
         
         // Apply bedroom filter if selected
         if let bedrooms = bedroomFilter {
             filtered = filtered.filter { $0.bedrooms == bedrooms }
-            print("🔍 After bedroom filter (\(bedrooms)): \(filtered.count) properties")
+            print("After bedroom filter (\(bedrooms)): \(filtered.count) properties")
         }
         
         // Apply bathroom filter if selected
         if let bathrooms = bathroomFilter {
             filtered = filtered.filter { $0.bathrooms == bathrooms }
-            print("🔍 After bathroom filter (\(bathrooms)): \(filtered.count) properties")
+            print("After bathroom filter (\(bathrooms)): \(filtered.count) properties")
         }
         
-        print("🔍 Final filtered count: \(filtered.count) properties")
+        print("Final filtered count: \(filtered.count) properties")
         return filtered
     }
     
@@ -117,15 +117,15 @@ struct SellPropertyScreen: View {
                     onDismiss: { success in
                         if !success {
                             // If dismissed without applying, reset to default values
-                            print("🔄 Filter sheet dismissed without applying - keeping current filters")
+                            print("Filter sheet dismissed without applying - keeping current filters")
                         } else {
-                            print("✅ Filter sheet applied with filters - Price: \(priceRange.lowerBound) to \(priceRange.upperBound), Bedrooms: \(String(describing: bedroomFilter)), Bathrooms: \(String(describing: bathroomFilter))")
+                            print("Filter sheet applied with filters - Price: \(priceRange.lowerBound) to \(priceRange.upperBound), Bedrooms: \(String(describing: bedroomFilter)), Bathrooms: \(String(describing: bathroomFilter))")
                         }
                     }
                 )
             }
             .onAppear {
-                logger.info("🏠 SellPropertyScreen appeared, loading properties from Firestore")
+                logger.info(" SellPropertyScreen appeared, loading properties from Firestore")
                 salePropertyService.loadPropertiesFromFirestore()
             }
             .toolbar {
@@ -1037,7 +1037,7 @@ struct FilterSheetView: View {
                         bedroomFilter = nil
                         bathroomFilter = nil
                         
-                        print("🔄 Reset all filters - showing all properties")
+                        print("Reset all filters - showing all properties")
                         
                         // Close the filter sheet after reset
                         filterApplied = true
@@ -1084,7 +1084,7 @@ struct FilterSheetView: View {
         bathroomFilter = selectedBathrooms
         
         // Log filter values for debugging
-        print("📋 Applied filters - Price: \(minPrice) to \(maxPrice), Bedrooms: \(String(describing: selectedBedrooms)), Bathrooms: \(String(describing: selectedBathrooms))")
+        print(" Applied filters - Price: \(minPrice) to \(maxPrice), Bedrooms: \(String(describing: selectedBedrooms)), Bathrooms: \(String(describing: selectedBathrooms))")
     }
 }
 
@@ -1254,7 +1254,7 @@ struct SalePropertyChatView: View {
                 id: UUID().uuidString,
                 senderId: property.seller.id,
                 senderName: property.seller.name,
-                content: generateSellerResponse(),
+                content: sellerResponse(),
                 timestamp: Date(),
                 propertyId: property.id
             )
@@ -1271,7 +1271,7 @@ struct SalePropertyChatView: View {
         }
     }
     
-    private func generateSellerResponse() -> String {
+    private func sellerResponse() -> String {
         let responses = [
             "Thank you for your interest in this property! I'd be happy to answer any questions.",
             "Great choice! This property has excellent potential. Would you like to schedule a viewing?",

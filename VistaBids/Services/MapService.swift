@@ -137,8 +137,8 @@ class MapService: NSObject, ObservableObject {
         )
     }
     
-    // Heat Map Generation
-    func generateHeatMapData(for properties: [AuctionProperty], type: HeatMapPoint.HeatMapType) async {
+    // Heat Map 
+    func heatMapData(for properties: [AuctionProperty], type: HeatMapPoint.HeatMapType) async {
         isLoadingData = true
         defer { isLoadingData = false }
         
@@ -179,8 +179,7 @@ class MapService: NSObject, ObservableObject {
             }
         }
         
-        print("Generated \(heatPoints.count) heat points for type: \(type.displayName)")
-        
+       
         // Add clustering logic for dense areas
         if heatPoints.count > 1 {
             heatPoints = await clusterHeatPoints(heatPoints)
@@ -276,7 +275,7 @@ class MapService: NSObject, ObservableObject {
     }
     
     // Property Clustering
-    func generatePropertyClusters(for properties: [AuctionProperty], region: MKCoordinateRegion) async -> [PropertyCluster] {
+    func propertyClusters(for properties: [AuctionProperty], region: MKCoordinateRegion) async -> [PropertyCluster] {
         let zoomLevel = calculateZoomLevel(from: region)
         let clusterLevel = determineClusterLevel(from: zoomLevel)
         
@@ -406,8 +405,8 @@ class MapService: NSObject, ObservableObject {
         )
     }
     
-    // Analytics Generation
-    func generateMapAnalytics(for properties: [AuctionProperty], region: MKCoordinateRegion) async {
+    // Analying map
+    func mapAnalytics(for properties: [AuctionProperty], region: MKCoordinateRegion) async {
         isLoadingData = true
         defer { isLoadingData = false }
         
@@ -517,7 +516,7 @@ class MapService: NSObject, ObservableObject {
     }
     
     //  Location Intelligence
-    func generateLocationIntelligence(for coordinate: CLLocationCoordinate2D) async {
+    func locationIntelligence(for coordinate: CLLocationCoordinate2D) async {
         isLoadingData = true
         defer { isLoadingData = false }
         
@@ -549,8 +548,9 @@ class MapService: NSObject, ObservableObject {
             
             self.locationIntelligence = intelligence
         } catch {
-            self.errorMessage = "Failed to generate location intelligence: \(error.localizedDescription)"
+            self.errorMessage = "Failed to load location intelligence: \(error.localizedDescription)"
         }
+        
     }
     
     private func fetchDemographics(for coordinate: CLLocationCoordinate2D) async -> LocationIntelligence.Demographics {
