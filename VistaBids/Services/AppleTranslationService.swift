@@ -1,33 +1,26 @@
 import Foundation
 import NaturalLanguage
 
-// NOTE: Using the TranslationServiceProtocol defined in CommunityModels.swift
+
 
 /// Translation service using Apple's NaturalLanguage framework
 class AppleTranslationService: TranslationServiceProtocol {
     private let supportedLanguages = ["en", "es", "fr", "de", "ja", "zh", "ru", "ar", "hi", "pt", "it", "ko", "nl"]
     
-    // Cache for translations to avoid unnecessary API calls
+    
     private var translationCache: [String: [String: String]] = [:]
     
-    /// Translates text to the target language
-    /// - Parameters:
-    ///   - text: The text to translate
-    ///   - targetLanguage: The language code to translate to (e.g., "en", "es", "fr")
-    /// - Returns: The translated text
+   
     func translateText(_ text: String, to targetLanguage: String) async throws -> String {
-        // For a real implementation, you would use a proper translation API like AWS Translate, Google Translate, etc.
-        // This is a simulated implementation for development purposes
         
-        // First detect the source language
         let sourceLanguage = try await detectLanguage(text)
         
-        // If the source and target languages are the same, return the original text
+       
         if sourceLanguage == targetLanguage {
             return text
         }
         
-        // Check cache first
+        
         let cacheKey = "\(sourceLanguage)_\(targetLanguage)"
         if let cachedTranslations = translationCache[cacheKey],
            let cachedTranslation = cachedTranslations[text] {
@@ -35,8 +28,7 @@ class AppleTranslationService: TranslationServiceProtocol {
             return cachedTranslation
         }
         
-        // In a real app, you would call a translation API here
-        // For demonstration purposes, we'll use a mock translation
+        
         let translatedText = try await simulateTranslation(text, from: sourceLanguage, to: targetLanguage)
         
         // Cache the result
@@ -48,15 +40,13 @@ class AppleTranslationService: TranslationServiceProtocol {
         return translatedText
     }
     
-    /// Detects the language of the given text
-    /// - Parameter text: The text to analyze
-    /// - Returns: The language code or nil if detection failed
+    
     func detectLanguage(_ text: String) async throws -> String {
         let recognizer = NLLanguageRecognizer()
         recognizer.processString(text)
         
         guard let language = recognizer.dominantLanguage?.rawValue else {
-            return "en" // Default to English if detection failed
+            return "en" 
         }
         
         // Convert NL language tags to our simplified language codes
@@ -74,18 +64,14 @@ class AppleTranslationService: TranslationServiceProtocol {
         case "it": return "it"
         case "ko": return "ko"
         case "nl": return "nl"
-        default: return "en" // Default to English if unsupported
+        default: return "en" 
         }
     }
     
     /// Simulates translation process for development purposes
-    /// - Parameters:
-    ///   - text: The text to translate
-    ///   - sourceLanguage: The source language code
-    ///   - targetLanguage: The target language code
-    /// - Returns: A simulated translation
+    
     private func simulateTranslation(_ text: String, from sourceLanguage: String, to targetLanguage: String) async throws -> String {
-        // Add a small delay to simulate API call (variable to make it feel more realistic)
+        // Add a small delay to simulate API call 
         let delay = UInt64(300_000_000 + arc4random_uniform(400_000_000)) // 0.3-0.7 seconds
         try await Task.sleep(nanoseconds: delay)
         
@@ -177,7 +163,7 @@ class AppleTranslationService: TranslationServiceProtocol {
             ]
         ]
         
-        // First check if we have a complete translation for the text
+        
         for (phrase, translations) in fullPhraseTranslations {
             if text.lowercased().contains(phrase.lowercased()) {
                 if let targetPhrase = translations[targetLanguage] {
@@ -190,7 +176,7 @@ class AppleTranslationService: TranslationServiceProtocol {
             }
         }
         
-        // If no complete match, perform word-by-word translation
+        
         var translatedText = text
         
         for (phrase, languageMap) in translations {
@@ -206,22 +192,22 @@ class AppleTranslationService: TranslationServiceProtocol {
             }
         }
         
-        // Language-specific formatting
+        
         switch targetLanguage {
         case "zh", "ja":
-            // Remove excess spaces for Asian languages
+            
             translatedText = translatedText.replacingOccurrences(of: " ,", with: ",")
             translatedText = translatedText.replacingOccurrences(of: " .", with: ".")
             translatedText = translatedText.replacingOccurrences(of: "  ", with: " ")
         case "fr":
-            // Add proper spacing for French punctuation
+           
             translatedText = translatedText.replacingOccurrences(of: "!", with: " !")
             translatedText = translatedText.replacingOccurrences(of: "?", with: " ?")
         default:
             break
         }
         
-        // If the text wasn't changed by our translation system, add a note
+        
         if translatedText == text {
             // Pick one of several formats for the translation note to make it feel more natural
             let formats = [

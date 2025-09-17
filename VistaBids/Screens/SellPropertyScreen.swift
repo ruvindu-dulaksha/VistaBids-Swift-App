@@ -288,7 +288,7 @@ struct SellPropertyScreen: View {
     }
 }
 
-// MARK: - Filter Chip
+// Filter Chip
 struct FilterChip: View {
     let title: String
     let isSelected: Bool
@@ -308,7 +308,7 @@ struct FilterChip: View {
     }
 }
 
-// MARK: - Sale Property Card
+// Sale Property Card
 struct SalePropertyCard: View {
     let property: SaleProperty
     let onBuyTap: (SaleProperty) -> Void
@@ -525,7 +525,7 @@ struct SalePropertyCard: View {
     }
 }
 
-// MARK: - Add Sale Property Sheet
+// Add Sale Property Sheet
 struct AddSalePropertySheet: View {
     @ObservedObject var salePropertyService: SalePropertyService
     @Environment(\.dismiss) private var dismiss
@@ -892,7 +892,7 @@ struct AddSalePropertySheet: View {
     SellPropertyScreen()
 }
 
-// MARK: - Filter Sheet View
+//  Filter Sheet View
 struct FilterSheetView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var priceRange: ClosedRange<Double>
@@ -1088,7 +1088,7 @@ struct FilterSheetView: View {
     }
 }
 
-// MARK: - Sale Property Chat View
+// Sale Property Chat View
 struct SalePropertyChatView: View {
     let property: SaleProperty
     @Environment(\.dismiss) private var dismiss
@@ -1308,7 +1308,7 @@ struct SalePropertyChatView: View {
     }
 }
 
-// MARK: - Sale Chat Message
+// Sale Chat Message
 struct SaleChatMessage: Identifiable {
     let id: String
     let senderId: String
@@ -1318,7 +1318,7 @@ struct SaleChatMessage: Identifiable {
     let propertyId: String
 }
 
-// MARK: - Sale Chat Message View
+//  Sale Chat Message View
 struct SaleChatMessageView: View {
     let message: SaleChatMessage
     let isCurrentUser: Bool

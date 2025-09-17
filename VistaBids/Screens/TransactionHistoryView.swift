@@ -445,7 +445,7 @@ struct EmptyTransactionsView: View {
     }
 }
 
-// MARK: - Transaction Status Badge
+// Transaction Status Badge
 struct TransactionStatusBadge: View {
     let status: TransactionRecord.TransactionStatus
     

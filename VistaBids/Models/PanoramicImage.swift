@@ -7,7 +7,7 @@
 
 import Foundation
 
-// MARK: - Panoramic Image
+//  Panoramic Image
 struct PanoramicImage: Identifiable, Codable {
     let id: String
     let imageURL: String

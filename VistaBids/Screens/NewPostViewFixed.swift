@@ -69,7 +69,7 @@ struct NewPostViewV2: View {
         }
     }
     
-    // MARK: - View Components
+    // View Components
     
     private var contentEditorView: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -247,7 +247,7 @@ struct NewPostViewV2: View {
         }
     }
     
-    // MARK: - Helper Methods
+    // Helper Methods
     
     private func handleImageSelection(_ newItems: [PhotosPickerItem]) {
         Task {
@@ -282,8 +282,7 @@ struct NewPostViewV2: View {
         isPosting = true
         
         Task {
-            // In a real app, you would upload images to Firebase Storage first
-            // For now, we'll use placeholder URLs
+            
             let imageURLs = selectedImageData.enumerated().map { index, _ in
                 "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=600&fit=crop&auto=format&q=60&ixid=M3wxMjA3fDB8MHxzZWFyY2h8\(index + 1)fHxob3VzZXxlbnwwfHwwfHx8MA%3D%3D"
             }
@@ -303,7 +302,7 @@ struct NewPostViewV2: View {
     }
 }
 
-// MARK: - Group Picker View
+// Group Picker View
 struct GroupPickerViewV2: View {
     @Binding var selectedGroup: CommunityGroup?
     let groups: [CommunityGroup]

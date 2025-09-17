@@ -105,7 +105,7 @@ struct CreateAuctionView: View {
         }
     }
     
-    // MARK: - Progress Indicator
+    //Progress Indicator
     private var progressIndicator: some View {
         VStack(spacing: 12) {
             HStack {
@@ -131,7 +131,6 @@ struct CreateAuctionView: View {
         .cornerRadius(12)
     }
     
-    // MARK: - Step Content
     @ViewBuilder
     private var stepContent: some View {
         switch currentStep {
@@ -152,7 +151,7 @@ struct CreateAuctionView: View {
         }
     }
     
-    // MARK: - Step 1: Basic Info
+    //  Basic Info
     private var basicInfoStep: some View {
         VStack(alignment: .leading, spacing: 20) {
             stepHeader(
@@ -208,7 +207,7 @@ struct CreateAuctionView: View {
         }
     }
     
-    // MARK: - Step 2: Property Details
+    // Property Details
     private var propertyDetailsStep: some View {
         VStack(alignment: .leading, spacing: 20) {
             stepHeader(
@@ -300,7 +299,7 @@ struct CreateAuctionView: View {
         }
     }
     
-    // MARK: - Step 3: Location
+    // Location
     private var locationStep: some View {
         VStack(alignment: .leading, spacing: 20) {
             stepHeader(
@@ -369,7 +368,7 @@ struct CreateAuctionView: View {
         }
     }
     
-    // MARK: - Step 4: Media Upload
+    //  Media Upload
     private var mediaUploadStep: some View {
         VStack(alignment: .leading, spacing: 20) {
             stepHeader(
@@ -468,14 +467,14 @@ struct CreateAuctionView: View {
                 // Optional walkthrough video URL
                 FormField(
                     title: "Walkthrough Video URL (Optional)",
-                    placeholder: "https://example.com/walkthrough.mp4",
+                    placeholder: "https://youtu.be/QrheSm3RfwE?si=mUlvsgJcnYXnh-Ou",
                     text: $walkthroughVideoURL
                 )
             }
         }
     }
     
-    // MARK: - Step 5: Auction Settings
+    //  Auction Settings
     private var auctionSettingsStep: some View {
         VStack(alignment: .leading, spacing: 20) {
             stepHeader(
@@ -490,7 +489,7 @@ struct CreateAuctionView: View {
         }
     }
     
-    // MARK: - Step 6: Review
+    //  Review
     private var reviewStep: some View {
         VStack(alignment: .leading, spacing: 20) {
             stepHeader(
@@ -530,7 +529,7 @@ struct CreateAuctionView: View {
         }
     }
     
-    // MARK: - Navigation Buttons
+    // Navigation Buttons
     private var navigationButtons: some View {
         HStack(spacing: 16) {
             if currentStep > 0 {
@@ -570,7 +569,7 @@ struct CreateAuctionView: View {
         }
     }
     
-    // MARK: - Helper Views
+    
     private func stepHeader(title: String, subtitle: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
@@ -583,7 +582,7 @@ struct CreateAuctionView: View {
         }
     }
     
-    // MARK: - Computed Properties
+    
     private var canProceed: Bool {
         switch currentStep {
         case 0:
@@ -593,17 +592,17 @@ struct CreateAuctionView: View {
         case 2:
             return !street.isEmpty && !city.isEmpty && !state.isEmpty && !postalCode.isEmpty
         case 3:
-            return !selectedImages.isEmpty // At least one image required
+            return !selectedImages.isEmpty 
         case 4:
-            return true // Auction settings have defaults
+            return true 
         case 5:
-            return true // Review step
+            return true
         default:
             return false
         }
     }
     
-    // MARK: - Methods
+    
     private func nextStep() {
         if validateCurrentStep() {
             currentStep += 1
@@ -654,10 +653,10 @@ struct CreateAuctionView: View {
         
         Task {
             do {
-                // First upload media if needed
+                
                 if !selectedImages.isEmpty {
-                    // Upload images (placeholder implementation)
-                    uploadedImageURLs = ["https://example.com/image1.jpg"] // Replace with actual upload
+                    
+                    uploadedImageURLs = ["https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800"] 
                 }
                 
                 // Create the auction
@@ -723,7 +722,6 @@ struct CreateAuctionView: View {
     }
 }
 
-// MARK: - Supporting Views
 
 struct FormField: View {
     let title: String

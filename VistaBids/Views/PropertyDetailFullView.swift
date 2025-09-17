@@ -2,7 +2,7 @@
 //  PropertyDetailFullView.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2025-09-07.
+//  Created by Ruvindu Dulaksha on 2025-08-17.
 //
 
 import SwiftUI
@@ -722,7 +722,7 @@ struct PropertyDetailFullView: View {
         .frame(maxWidth: .infinity, minHeight: 200)
     }
     
-    // This comment is intentionally left empty as this is the removed duplicate declaration
+    
     
     private func getCurrentTab() -> String {
         switch currentTab {

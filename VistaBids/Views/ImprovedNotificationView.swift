@@ -2,7 +2,7 @@
 //  ImprovedNotificationView.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2025-09-13.
+//  Created by Ruvindu Dulaksha on 2025-09-13.
 //
 
 import SwiftUI
@@ -170,7 +170,7 @@ struct ImprovedNotificationView: View {
         }
     }
     
-    // MARK: - Search Bar
+    // Search Bar
     private var searchBar: some View {
         HStack {
             Image(systemName: "magnifyingglass")
@@ -196,7 +196,7 @@ struct ImprovedNotificationView: View {
         .padding(.top, 8)
     }
     
-    // MARK: - Filter Tabs
+    // Filter Tabs
     private var filterTabs: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
@@ -218,7 +218,7 @@ struct ImprovedNotificationView: View {
         .padding(.vertical, 12)
     }
     
-    // MARK: - Statistics Bar
+    // Statistics Bar
     private var statisticsBar: some View {
         HStack {
             NotificationStatCard(
@@ -253,7 +253,7 @@ struct ImprovedNotificationView: View {
         .padding(.bottom, 8)
     }
     
-    // MARK: - Notifications Content
+    // Notifications Content
     private var notificationsContent: some View {
         Group {
             if isLoading {
@@ -266,7 +266,7 @@ struct ImprovedNotificationView: View {
         }
     }
     
-    // MARK: - Notifications List
+    //  Notifications List
     private var notificationsList: some View {
         ScrollView {
             LazyVStack(spacing: 12) {
@@ -279,7 +279,7 @@ struct ImprovedNotificationView: View {
                             showPaymentView = true
                         },
                         onDismiss: {
-                            // Mark as completed
+                            
                             dismissWinnerNotification(winner)
                         }
                     )
@@ -363,7 +363,7 @@ struct ImprovedNotificationView: View {
     }
     
     private func loadMoreNotifications() {
-        // Implement pagination logic here
+        
         print("Loading more notifications...")
     }
     
@@ -408,7 +408,7 @@ struct ImprovedNotificationView: View {
     }
     
     private func handleNotificationTap(_ notification: AppNotification) {
-        // Mark as read
+        
         if !notification.isRead {
             Task {
                 await notificationService.markAsRead(notification.id)
@@ -421,19 +421,19 @@ struct ImprovedNotificationView: View {
             if let propertyId = notification.data?["propertyId"] {
                 // Navigate to property detail
                 print("Navigate to property: \(propertyId)")
-                // TODO: Implement navigation
+                
             }
         case .communityEvent:
             if let eventId = notification.data?["eventId"] {
                 // Navigate to event detail
                 print("Navigate to event: \(eventId)")
-                // TODO: Implement navigation
+                
             }
         case .groupMessage:
             if let groupId = notification.data?["groupId"] {
                 // Navigate to group chat
                 print("Navigate to group: \(groupId)")
-                // TODO: Implement navigation
+                
             }
         default:
             break
@@ -498,7 +498,7 @@ struct ImprovedNotificationView: View {
     }
 }
 
-// MARK: - Supporting Views
+// Supporting Views
 
 struct NotificationFilterChip: View {
     let filter: ImprovedNotificationView.NotificationFilter

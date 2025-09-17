@@ -19,7 +19,7 @@ struct ARPanoramicView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var ownershipService = PropertyOwnershipService()
     
-    // Property ownership info (can be either AuctionProperty or SaleProperty)
+    // Property ownership info 
     var property: (any OwnableProperty)?
     
     var body: some View {
@@ -347,7 +347,7 @@ struct LocalPanoramicImageView: View {
         print("🔍 Card - Loading local image: \(imageURL)")
         
         if imageURL.hasPrefix("local://") {
-            let cleanPath = String(imageURL.dropFirst(8)) // Remove "local://"
+            let cleanPath = String(imageURL.dropFirst(8)) 
             print("📸 Card - Clean path: \(cleanPath)")
             
             // Try direct path in documents directory
@@ -375,7 +375,7 @@ struct LocalPanoramicImageView: View {
                         // If this file is mentioned in our URL
                         if imageURL.contains(imageFile.lastPathComponent) {
                             if let image = UIImage(contentsOfFile: imageFile.path) {
-                                print("✅ Card - Found image match: \(imageFile.path)")
+                                print(" Card - Found image match: \(imageFile.path)")
                                 DispatchQueue.main.async {
                                     self.uiImage = image
                                 }
@@ -384,7 +384,7 @@ struct LocalPanoramicImageView: View {
                         }
                     }
                 } catch {
-                    print("❌ Card - Error reading images directory: \(error)")
+                    print(" Card - Error reading images directory: \(error)")
                 }
             }
         }
@@ -398,7 +398,7 @@ struct LocalPanoramicImageView: View {
         
         for path in possiblePaths {
             if let image = UIImage(contentsOfFile: path) {
-                print("✅ Card - Found image at fallback path: \(path)")
+                print("Card - Found image at fallback path: \(path)")
                 DispatchQueue.main.async {
                     self.uiImage = image
                 }
@@ -413,17 +413,17 @@ struct LocalPanoramicImageView: View {
                               .replacingOccurrences(of: ".png", with: "")
         
         if let bundleImage = UIImage(named: baseName) {
-            print("✅ Card - Loaded from bundle: \(baseName)")
+            print(" Card - Loaded from bundle: \(baseName)")
             DispatchQueue.main.async {
                 self.uiImage = bundleImage
             }
         } else {
-            print("❌ Card - Could not load image from any source")
+            print(" Card - Could not load image from any source")
         }
     }
 }
 
-// MARK: - AR Panorama Viewer
+//  AR Panorama Viewer
 struct ARPanoramaViewerRepresentable: UIViewRepresentable {
     let panoramicImage: PanoramicImage
     @State private var isLoading = true
@@ -453,7 +453,7 @@ struct ARPanoramaViewerRepresentable: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: ARView, context: Context) {
-        // Update if needed
+        
     }
     
     private func createPanoramicSphere(in arView: ARView) {
@@ -467,9 +467,9 @@ struct ARPanoramaViewerRepresentable: UIViewRepresentable {
                 if let texture = texture {
                     material.color = .init(texture: MaterialParameters.Texture(texture))
                 } else {
-                    // Fallback: Create a better looking error sphere with gradient
+                    //  Create a better looking error sphere with gradient
                     material.color = .init(tint: .blue.withAlphaComponent(0.5))
-                    print("⚠️ Using fallback material for panoramic sphere")
+                    print(" Using fallback material for panoramic sphere")
                 }
                 
                 let sphereEntity = ModelEntity(mesh: sphereMesh, materials: [material])
@@ -495,7 +495,7 @@ struct ARPanoramaViewerRepresentable: UIViewRepresentable {
     
     private func loadPanoramicImageTexture(completion: @escaping (TextureResource?) -> Void) {
         guard !panoramicImage.imageURL.isEmpty else {
-            print("❌ No panoramic image URL provided")
+            print("No panoramic image URL provided")
             completion(nil)
             return
         }
@@ -510,21 +510,21 @@ struct ARPanoramaViewerRepresentable: UIViewRepresentable {
         
         // Handle remote URLs
         guard let url = URL(string: panoramicImage.imageURL) else {
-            print("❌ Invalid panoramic image URL: \(panoramicImage.imageURL)")
+            print(" Invalid panoramic image URL: \(panoramicImage.imageURL)")
             completion(nil)
             return
         }
         
         URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {
-                print("❌ Error loading panoramic image: \(error.localizedDescription)")
+                print(" Error loading panoramic image: \(error.localizedDescription)")
                 completion(nil)
                 return
             }
             
             guard let data = data,
                   let uiImage = UIImage(data: data) else {
-                print("❌ Failed to create image from data")
+                print(" Failed to create image from data")
                 completion(nil)
                 return
             }
@@ -542,7 +542,7 @@ struct ARPanoramaViewerRepresentable: UIViewRepresentable {
         var finalImagePath: String?
         
         if urlString.hasPrefix("local://") {
-            let cleanPath = String(urlString.dropFirst(8)) // Remove "local://"
+            let cleanPath = String(urlString.dropFirst(8)) 
             print("📸 Clean path after removing local://: \(cleanPath)")
             
             // First try direct path in documents directory
@@ -582,7 +582,7 @@ struct ARPanoramaViewerRepresentable: UIViewRepresentable {
         // Try to load the image
         if let imagePath = finalImagePath,
            let uiImage = UIImage(contentsOfFile: imagePath) {
-            print("✅ Successfully loaded panoramic image from: \(imagePath)")
+            print(" Successfully loaded panoramic image from: \(imagePath)")
             createTextureFromImage(uiImage, completion: completion)
             return
         }
@@ -607,43 +607,43 @@ struct ARPanoramaViewerRepresentable: UIViewRepresentable {
                             // If this is our file by checking the last part of imageURL
                             if urlString.contains(imageFile.lastPathComponent) {
                                 if let image = UIImage(contentsOfFile: imageFile.path) {
-                                    print("✅ Found and loaded the image from: \(imageFile.path)")
+                                    print("Found and loaded the image from: \(imageFile.path)")
                                     createTextureFromImage(image, completion: completion)
                                     return
                                 }
                             }
                         }
                     } catch {
-                        print("❌ Error reading images directory: \(error)")
+                        print(" Error reading images directory: \(error)")
                     }
                 }
             }
         } catch {
-            print("❌ Error reading documents directory: \(error)")
+            print("Error reading documents directory: \(error)")
         }
         
-        // Fallback: Try to find by filename in documents directory
+        // Try to find by filename in documents directory
         let filename = URL(fileURLWithPath: urlString).lastPathComponent
         let fallbackPath = documentsPath.appendingPathComponent(filename)
         
         if let fallbackImage = UIImage(contentsOfFile: fallbackPath.path) {
-            print("✅ Loaded panoramic image from fallback path: \(fallbackPath.path)")
+            print(" Loaded panoramic image from fallback path: \(fallbackPath.path)")
             createTextureFromImage(fallbackImage, completion: completion)
             return
         }
         
-        // Last resort: Try app bundle
+        
         let baseFileName = filename.replacingOccurrences(of: ".jpg", with: "")
                                   .replacingOccurrences(of: ".jpeg", with: "")
                                   .replacingOccurrences(of: ".png", with: "")
         
         if let bundleImage = UIImage(named: baseFileName) {
-            print("✅ Loaded panoramic image from bundle: \(baseFileName)")
+            print(" Loaded panoramic image from bundle: \(baseFileName)")
             createTextureFromImage(bundleImage, completion: completion)
             return
         }
         
-        print("❌ Failed to load local panoramic image from all sources. URL: \(urlString)")
+        print(" Failed to load local panoramic image from all sources. URL: \(urlString)")
         completion(nil)
     }
     
@@ -664,7 +664,7 @@ struct ARPanoramaViewerRepresentable: UIViewRepresentable {
     }
 }
 
-// MARK: - Immersive SceneKit AR View for Enhanced Experience
+//  Immersive SceneKit AR View for Enhanced Experience
 struct ImmersiveSceneKitARView: UIViewRepresentable {
     let panoramicImage: PanoramicImage
     
@@ -758,7 +758,7 @@ struct ImmersiveSceneKitARView: UIViewRepresentable {
                 // Set camera as point of view
                 arView.pointOfView = cameraNode
                 
-                print("✅ Enhanced SceneKit panoramic sphere created with immersive camera setup")
+                print(" Enhanced SceneKit panoramic sphere created with immersive camera setup")
             }
         }
     }
@@ -801,26 +801,25 @@ struct ImmersiveSceneKitARView: UIViewRepresentable {
         // First try loading from remote URL since some "local" references might actually be web URLs
         if urlString.hasPrefix("http") {
             guard let url = URL(string: urlString) else {
-                print("❌ SceneKit - Invalid URL: \(urlString)")
+                print(" SceneKit - Invalid URL: \(urlString)")
                 completion(nil)
                 return
             }
             
             let task = URLSession.shared.dataTask(with: url) { data, response, error in
                 if let data = data, let image = UIImage(data: data) {
-                    print("✅ SceneKit - Successfully loaded from remote URL: \(urlString)")
+                    print("SceneKit - Successfully loaded from remote URL: \(urlString)")
                     DispatchQueue.main.async {
                         completion(image)
                     }
                     return
                 } else {
-                    print("⚠️ SceneKit - Failed to load from remote URL, trying local paths: \(error?.localizedDescription ?? "Unknown error")")
+                    print(" SceneKit - Failed to load from remote URL, trying local paths: \(error?.localizedDescription ?? "Unknown error")")
                 }
             }
             task.resume()
             
-            // Give the remote URL a chance to load, but don't completely wait for it to fail
-            // Continue with local paths attempt after a short delay
+            
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 // If we haven't succeeded yet, try local paths
                 if task.state != .completed {
@@ -847,7 +846,7 @@ struct ImmersiveSceneKitARView: UIViewRepresentable {
             print("📸 SceneKit - Checking for file at: \(documentFile.path)")
             
             if let image = UIImage(contentsOfFile: documentFile.path) {
-                print("✅ SceneKit - Found panoramic image at: \(documentFile.path)")
+                print(" SceneKit - Found panoramic image at: \(documentFile.path)")
                 completion(image)
                 return
             }
@@ -856,7 +855,7 @@ struct ImmersiveSceneKitARView: UIViewRepresentable {
             let filename = URL(fileURLWithPath: cleanPath).lastPathComponent
             let filenameOnlyPath = documentsPath.appendingPathComponent(filename)
             if let image = UIImage(contentsOfFile: filenameOnlyPath.path) {
-                print("✅ SceneKit - Found panoramic image by filename: \(filenameOnlyPath.path)")
+                print("SceneKit - Found panoramic image by filename: \(filenameOnlyPath.path)")
                 completion(image)
                 return
             }
@@ -873,7 +872,7 @@ struct ImmersiveSceneKitARView: UIViewRepresentable {
             
             for path in possiblePaths {
                 if let image = UIImage(contentsOfFile: path) {
-                    print("✅ SceneKit - Found image at fallback path: \(path)")
+                    print(" SceneKit - Found image at fallback path: \(path)")
                     completion(image)
                     return
                 }
@@ -886,14 +885,14 @@ struct ImmersiveSceneKitARView: UIViewRepresentable {
                                   .replacingOccurrences(of: ".png", with: "")
             
             if let bundleImage = UIImage(named: baseName) {
-                print("✅ SceneKit - Loaded from bundle: \(baseName)")
+                print(" SceneKit - Loaded from bundle: \(baseName)")
                 completion(bundleImage)
                 return
             }
             
             // Try as asset catalog name
             if let assetImage = UIImage(named: filename) {
-                print("✅ SceneKit - Loaded from asset catalog: \(filename)")
+                print(" SceneKit - Loaded from asset catalog: \(filename)")
                 completion(assetImage)
                 return
             }
@@ -903,7 +902,7 @@ struct ImmersiveSceneKitARView: UIViewRepresentable {
             scanAllDirectoriesForImage(urlString: urlString, documentsPath: documentsPath, completion: completion)
         }
         
-        print("❌ SceneKit - Failed to load panoramic image: \(urlString)")
+        print(" SceneKit - Failed to load panoramic image: \(urlString)")
         completion(nil)
     }
     
@@ -944,20 +943,20 @@ struct ImmersiveSceneKitARView: UIViewRepresentable {
                                 }
                             }
                         } catch {
-                            print("❌ SceneKit - Error reading directory: \(error)")
+                            print(" SceneKit - Error reading directory: \(error)")
                         }
                     }
                 } catch {
-                    print("❌ SceneKit - Error getting resource values: \(error)")
+                    print("SceneKit - Error getting resource values: \(error)")
                 }
             }
             
             if !foundImage {
-                print("❌ SceneKit - No matching image found in deep scan")
+                print(" SceneKit - No matching image found in deep scan")
                 completion(nil)
             }
         } catch {
-            print("❌ SceneKit - Error enumerating directories: \(error)")
+            print(" SceneKit - Error enumerating directories: \(error)")
             completion(nil)
         }
     }

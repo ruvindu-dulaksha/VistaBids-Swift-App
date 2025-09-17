@@ -59,7 +59,7 @@ struct TopAppBar: View {
             
             // Trailing section
             HStack(spacing: 16) {
-                // Custom actions
+                
                 ForEach(actions, id: \.id) { action in
                     if let customView = action.customView {
                         customView
@@ -87,7 +87,7 @@ struct TopAppBar: View {
     }
 }
 
-// MARK: - Theme Toggle Button
+//Theme Toggle Button
 struct ThemeToggleButton: View {
     @EnvironmentObject var themeManager: ThemeManager
     @State private var showThemeSelector = false
@@ -117,7 +117,7 @@ struct ThemeToggleButton: View {
     }
 }
 
-// MARK: - App Bar Action
+// App Bar Action
 struct AppBarAction {
     let id = UUID()
     let icon: String
@@ -137,7 +137,7 @@ struct AppBarAction {
     }
 }
 
-// MARK: - Quick Theme Toggle (for floating action)
+// Quick Theme Toggle (for floating action)
 struct QuickThemeToggle: View {
     @EnvironmentObject var themeManager: ThemeManager
     

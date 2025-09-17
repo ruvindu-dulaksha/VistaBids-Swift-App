@@ -33,7 +33,7 @@ class MapService: NSObject, ObservableObject {
         setupLocationManager()
     }
     
-    // MARK: - Location Management
+    // Location Management
     private func setupLocationManager() {
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
@@ -56,7 +56,7 @@ class MapService: NSObject, ObservableObject {
         locationManager.stopUpdatingLocation()
     }
     
-    // MARK: - Geocoding
+    // Geocoding
     func geocodeAddress(_ address: String) async throws -> CLLocationCoordinate2D {
         return try await withCheckedThrowingContinuation { continuation in
             geocoder.geocodeAddressString(address) { placemarks, error in
@@ -103,7 +103,7 @@ class MapService: NSObject, ObservableObject {
         }
     }
     
-    // MARK: - Distance and Region Calculations
+    // Distance and Region Calculations
     func calculateDistance(from: CLLocationCoordinate2D, to: CLLocationCoordinate2D) -> Double {
         let fromLocation = CLLocation(latitude: from.latitude, longitude: from.longitude)
         let toLocation = CLLocation(latitude: to.latitude, longitude: to.longitude)
@@ -137,7 +137,7 @@ class MapService: NSObject, ObservableObject {
         )
     }
     
-    // MARK: - Heat Map Generation
+    // Heat Map Generation
     func generateHeatMapData(for properties: [AuctionProperty], type: HeatMapPoint.HeatMapType) async {
         isLoadingData = true
         defer { isLoadingData = false }
@@ -275,7 +275,7 @@ class MapService: NSObject, ObservableObject {
         return clusteredPoints
     }
     
-    // MARK: - Property Clustering
+    // Property Clustering
     func generatePropertyClusters(for properties: [AuctionProperty], region: MKCoordinateRegion) async -> [PropertyCluster] {
         let zoomLevel = calculateZoomLevel(from: region)
         let clusterLevel = determineClusterLevel(from: zoomLevel)
@@ -406,7 +406,7 @@ class MapService: NSObject, ObservableObject {
         )
     }
     
-    // MARK: - Analytics Generation
+    // Analytics Generation
     func generateMapAnalytics(for properties: [AuctionProperty], region: MKCoordinateRegion) async {
         isLoadingData = true
         defer { isLoadingData = false }
@@ -516,7 +516,7 @@ class MapService: NSObject, ObservableObject {
         return trends
     }
     
-    // MARK: - Location Intelligence
+    //  Location Intelligence
     func generateLocationIntelligence(for coordinate: CLLocationCoordinate2D) async {
         isLoadingData = true
         defer { isLoadingData = false }
@@ -554,8 +554,7 @@ class MapService: NSObject, ObservableObject {
     }
     
     private func fetchDemographics(for coordinate: CLLocationCoordinate2D) async -> LocationIntelligence.Demographics {
-        // In a real app, this would fetch from demographic data APIs
-        // For now, return sample data
+        
         return LocationIntelligence.Demographics(
             populationDensity: Double.random(in: 100...5000),
             averageIncome: Double.random(in: 30000...120000),
@@ -659,7 +658,7 @@ class MapService: NSObject, ObservableObject {
     }
 }
 
-// MARK: - CLLocationManagerDelegate
+// CLLocationManagerDelegate
 extension MapService: CLLocationManagerDelegate {
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         Task { @MainActor in

@@ -10,7 +10,7 @@ import FirebaseFirestore
 import CoreLocation
 import SwiftUI
 
-// MARK: - Auction Property Model
+//  Auction Property Model
 struct AuctionProperty: Identifiable, Codable {
     var id: String?
     let sellerId: String
@@ -183,7 +183,7 @@ struct AuctionProperty: Identifiable, Codable {
     }
 }
 
-// MARK: - Property Address
+//  Property Address
 struct PropertyAddress: Codable {
     let street: String
     let city: String
@@ -196,7 +196,7 @@ struct PropertyAddress: Codable {
     }
 }
 
-// MARK: - Property Features
+// Property Features
 struct PropertyFeatures: Codable {
     let bedrooms: Int
     let bathrooms: Int
@@ -211,7 +211,7 @@ struct PropertyFeatures: Codable {
     let propertyType: String
 }
 
-// MARK: - Auction Status
+// Auction Status
 enum AuctionStatus: String, CaseIterable, Codable {
     case upcoming = "upcoming"
     case active = "active"
@@ -266,7 +266,7 @@ enum AuctionStatus: String, CaseIterable, Codable {
     }
 }
 
-// MARK: - Property Category
+// Property Category
 enum PropertyCategory: String, CaseIterable, Codable {
     case residential = "Residential"
     case commercial = "Commercial"
@@ -275,7 +275,7 @@ enum PropertyCategory: String, CaseIterable, Codable {
     case investment = "Investment"
 }
 
-// MARK: - Bid Entry
+//  Bid Entry
 struct BidEntry: Identifiable, Codable {
     let id: String
     let bidderId: String
@@ -322,14 +322,14 @@ struct BidEntry: Identifiable, Codable {
     }
 }
 
-// MARK: - Bid Type
+// Bid Type
 enum BidType: String, Codable {
     case regular = "regular"
     case autobid = "autobid"
     case buyNow = "buyNow"
 }
 
-// MARK: - Auction Duration
+// Auction Duration
 enum AuctionDuration: String, CaseIterable, Codable {
     case fiveMinutes = "5"
     case tenMinutes = "10"
@@ -383,7 +383,7 @@ enum AuctionDuration: String, CaseIterable, Codable {
         // If no exact match, try to convert common values
         switch rawValue {
         case "2880": self = .twoDays
-        case "live", "active": self = .oneHour // Default fallback
+        case "live", "active": self = .oneHour 
         default:
             // Try to parse as number and find closest match
             if let minutes = Int(rawValue) {
@@ -400,13 +400,13 @@ enum AuctionDuration: String, CaseIterable, Codable {
                 default: self = .oneHour
                 }
             } else {
-                self = .oneHour // Default fallback
+                self = .oneHour 
             }
         }
     }
 }
 
-// MARK: - Mock Data Extensions
+// Mock Data Extensions
 extension AuctionProperty {
     static func mockProperty() -> AuctionProperty {
         let encoder = JSONEncoder()
@@ -471,7 +471,7 @@ extension AuctionProperty {
     }
 }
 
-// MARK: - User Bid Model
+//  User Bid Model
 struct UserBid: Identifiable, Codable {
     let id: String
     let propertyId: String
@@ -519,7 +519,7 @@ struct UserBid: Identifiable, Codable {
     }
 }
 
-// MARK: - Auction Chat Room Model
+// Auction Chat Room Model
 struct AuctionChatRoom: Identifiable, Codable {
     let id: String
     let propertyId: String

@@ -32,7 +32,7 @@ class APIService: ObservableObject {
         }
     }
     
-    // MARK: - Email/Password Authentication
+    // Email/Password Authentication
     func signIn(email: String, password: String) async throws {
         print("🔐 Attempting email login for: \(email)")
         let result = try await Auth.auth().signIn(withEmail: email, password: password)
@@ -64,7 +64,7 @@ class APIService: ObservableObject {
         }
     }
     
-    // MARK: - Google Sign In
+    // Google Sign In
     @MainActor
     func signInWithGoogle() async throws {
         print("🔍 Starting Google Sign-In process...")
@@ -108,7 +108,7 @@ class APIService: ObservableObject {
         }
     }
     
-    // MARK: - Helper method to get top view controller for iOS 18.5
+    //  Helper method to get top view controller for iOS 18.5
     @MainActor
     private func getTopViewController() async -> UIViewController? {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
@@ -119,14 +119,14 @@ class APIService: ObservableObject {
         return window.rootViewController?.topMostViewController()
     }
     
-    // MARK: - Password Reset
+    // Password Reset
     func resetPassword(email: String) async throws {
         print("📧 Sending password reset email to: \(email)")
         try await Auth.auth().sendPasswordReset(withEmail: email)
         print("✅ Password reset email sent successfully")
     }
     
-    // MARK: - Sign Out
+    //  Sign Out
     func signOut() throws {
         print("👋 Signing out user...")
         try Auth.auth().signOut()
@@ -142,7 +142,7 @@ class APIService: ObservableObject {
         }
     }
     
-    // MARK: - Error Mapping
+    // Error Mapping
     static func mapError(_ error: Error) -> String {
         if let authError = error as? AuthErrorCode {
             switch authError.code {
@@ -175,7 +175,7 @@ class APIService: ObservableObject {
     }
 }
 
-// MARK: - UIViewController Extension for iOS 18.5
+//  UIViewController Extension for iOS 18.5
 extension UIViewController {
     func topMostViewController() -> UIViewController {
         if let presented = self.presentedViewController {
@@ -194,7 +194,7 @@ extension UIViewController {
     }
 }
 
-// MARK: - Auth Errors
+//  Auth Errors
 enum AuthError: LocalizedError {
     case missingClientID
     case noViewController
@@ -233,7 +233,7 @@ enum AuthError: LocalizedError {
     }
 }
 
-// MARK: - Input Validation
+//  Input Validation
 class ValidationService {
     static func isValidEmail(_ email: String) -> Bool {
         let emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"

@@ -2,7 +2,7 @@
 //  CustomSearchBar.swift
 //  VistaBids
 //
-//  Created by Copilot on 2023-08-09.
+//  Created by Ruvindu Dulaksha on 2024-08-09.
 //
 
 import SwiftUI

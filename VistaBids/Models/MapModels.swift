@@ -10,12 +10,12 @@ import MapKit
 import SwiftUI
 import FirebaseFirestore
 
-// MARK: - Heat Map Models
+// Heat Map Models
 struct HeatMapPoint: Identifiable, Codable {
     let id = UUID()
     let coordinate: CLLocationCoordinate2D
     let intensity: Double // 0.0 to 1.0
-    let value: Double // Actual value (price, bids, etc.)
+    let value: Double // Actual value 
     let type: HeatMapType
     let timestamp: Date
     
@@ -56,7 +56,7 @@ struct HeatMapPoint: Identifiable, Codable {
     }
 }
 
-// MARK: - Property Clustering
+// Property Clustering
 struct PropertyCluster: Identifiable {
     let id = UUID()
     let coordinate: CLLocationCoordinate2D
@@ -121,7 +121,7 @@ struct PropertyCluster: Identifiable {
     }
 }
 
-// MARK: - Map Analytics Data
+// Map Analytics Data
 struct MapAnalytics: Codable {
     let regionBounds: RegionBounds
     let timeRange: TimeRange
@@ -174,7 +174,7 @@ struct MapAnalytics: Codable {
     }
 }
 
-// MARK: - Advanced Map Filters
+// Advanced Map Filters
 struct MapFilter: Identifiable {
     let id = UUID()
     let type: FilterType
@@ -222,7 +222,7 @@ struct MapFilter: Identifiable {
     }
 }
 
-// MARK: - Map Layer Configuration
+//  Map Layer Configuration
 struct MapLayerConfig: Identifiable {
     let id = UUID()
     let type: LayerType
@@ -272,7 +272,7 @@ struct MapLayerConfig: Identifiable {
     }
 }
 
-// MARK: - Search and Discovery
+//  Search and Discovery
 struct MapSearchResult: Identifiable {
     let id = UUID()
     let coordinate: CLLocationCoordinate2D
@@ -291,7 +291,7 @@ struct MapSearchResult: Identifiable {
     }
 }
 
-// MARK: - Map Route Information
+//  Map Route Information
 struct MapRoute: Identifiable {
     let id = UUID()
     let name: String
@@ -308,7 +308,7 @@ struct MapRoute: Identifiable {
     }
 }
 
-// MARK: - Location Intelligence
+//  Location Intelligence
 struct LocationIntelligence {
     let coordinate: CLLocationCoordinate2D
     let insights: [Insight]
@@ -365,7 +365,7 @@ struct LocationIntelligence {
     }
 }
 
-// MARK: - Codable Extensions for CLLocationCoordinate2D
+// Codable Extensions for CLLocationCoordinate2D
 extension CLLocationCoordinate2D: Codable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)

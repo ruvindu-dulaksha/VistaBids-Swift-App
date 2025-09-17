@@ -2,7 +2,7 @@
 //  ImmersiveARPanoramaView.swift
 //  VistaBids
 //
-//  Created by AI Assistant on 2025-09-04.
+//  Created by Ruvindu Dulaksha on 2025-09-04.
 //
 
 import SwiftUI
@@ -305,7 +305,7 @@ struct ImmersiveARPanoramaView: View {
     }
 }
 
-// MARK: - AR Panorama Viewer using ARSCNView
+// AR Panorama Viewer using ARSCNView
 struct ImmersiveARPanoramaViewerRepresentable: UIViewRepresentable {
     let image: UIImage
     let panoramaType: ImmersiveARPanoramaView.PanoramaType
@@ -375,7 +375,7 @@ struct ImmersiveARPanoramaViewerRepresentable: UIViewRepresentable {
         // Set the camera as the point of view
         arView.pointOfView = cameraNode
         
-        print("✅ Created panoramic \(panoramaType.rawValue) with image size: \(image.size)")
+        print("Created panoramic \(panoramaType.rawValue) with image size: \(image.size)")
     }
     
     private func addGestureRecognizers(to arView: ARSCNView, context: Context) {
@@ -461,7 +461,7 @@ struct ImmersiveARPanoramaViewerRepresentable: UIViewRepresentable {
             case .changed:
                 let scale = Float(gesture.scale)
                 
-                // Adjust field of view for zoom effect (inverse relationship)
+                // Adjust field of view for zoom effect 
                 let currentFOV = camera.fieldOfView
                 let newFOV = Double(max(10, min(120, currentFOV / Double(scale))))
                 camera.fieldOfView = newFOV
@@ -491,7 +491,7 @@ struct ImmersiveARPanoramaViewerRepresentable: UIViewRepresentable {
     }
 }
 
-// MARK: - Immersive Image Picker
+//  Immersive Image Picker
 struct ImmersiveImagePicker: UIViewControllerRepresentable {
     @Binding var image: UIImage?
     let sourceType: UIImagePickerController.SourceType
@@ -530,7 +530,7 @@ struct ImmersiveImagePicker: UIViewControllerRepresentable {
     }
 }
 
-// MARK: - AR Overlay Controls
+//  AR Overlay Controls
 struct AROverlayControls: View {
     let onClose: () -> Void
     let onReset: () -> Void

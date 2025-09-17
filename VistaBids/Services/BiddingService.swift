@@ -15,7 +15,7 @@ import UserNotifications
 class BiddingService: ObservableObject {
     private let db = Firestore.firestore()
     private let propertyDataService = AuctionPropertyDataService()
-    let auctionTimerService = AuctionTimerService() // Make public for UI access
+    let auctionTimerService = AuctionTimerService() 
     private let paymentService = PaymentService()
     
     @Published var auctionProperties: [AuctionProperty] = []
@@ -52,7 +52,7 @@ class BiddingService: ObservableObject {
         listeners.removeAll()
     }
     
-    // MARK: - Auth State Management
+    //  Auth State Management
     private func setupAuthStateListener() {
         Auth.auth().addStateDidChangeListener { [weak self] _, user in
             guard let self = self else { return }
@@ -67,7 +67,7 @@ class BiddingService: ObservableObject {
         }
     }
     
-    // MARK: - Public Methods for Listener Management
+    // Public Methods for Listener Management
     public func restartListeners() {
         stopListeners()
         setupBasicListeners()
@@ -78,7 +78,7 @@ class BiddingService: ObservableObject {
         listeners.removeAll()
     }
     
-    // MARK: - Basic Real-time Listeners
+    //  Basic Real-time Listeners
     private func setupBasicListeners() {
         guard let userId = Auth.auth().currentUser?.uid else { 
             print("⚠️ BiddingService: No authenticated user, skipping listener setup")
@@ -120,7 +120,7 @@ class BiddingService: ObservableObject {
                 
                 DispatchQueue.main.async {
                     self.auctionProperties = allProperties.sorted(by: { $0.auctionStartTime < $1.auctionStartTime })
-                    self.objectWillChange.send() // Force UI refresh
+                    self.objectWillChange.send() 
                     print("✅ BiddingService: Updated \(self.auctionProperties.count) auction properties")
                     print("🔄 BiddingService: Forced UI refresh")
                 }
@@ -129,7 +129,7 @@ class BiddingService: ObservableObject {
         listeners = [auctionListener]
     }
     
-    // MARK: - Basic Methods (Simplified for checkpoint restoration)
+    //  Basic Methods (Simplified for checkpoint restoration)
     
     func placeBid(on propertyId: String, amount: Double, maxAutoBid: Double?) async throws {
         guard !currentUserId.isEmpty else {
@@ -166,7 +166,7 @@ class BiddingService: ObservableObject {
             "bidAmount": amount,
             "timestamp": Timestamp(date: Date()),
             "status": "active",
-            "isWinning": true,  // This will be the new highest bid
+            "isWinning": true,  
             "maxAutoBid": maxAutoBid ?? 0
         ] as [String : Any]
         
@@ -226,7 +226,7 @@ class BiddingService: ObservableObject {
         }
     }
     
-    // MARK: - Payment Processing
+    //  Payment Processing
     
     func completePayment(for propertyId: String) async throws {
         guard !currentUserId.isEmpty else {
@@ -1158,12 +1158,12 @@ class BiddingService: ObservableObject {
     }
     
     func startListeningToAuctionUpdates(for propertyId: String) {
-        // TODO: Implement real-time auction updates after restoration
+        //  Implement real-time auction updates after restoration
         print("Started listening to auction updates for property: \(propertyId)")
     }
     
     func stopListeningToAuctionUpdates() {
-        // TODO: Implement stopping auction updates after restoration
+        // Implement stopping auction updates after restoration
         print("Stopped listening to auction updates")
     }
     
@@ -1245,7 +1245,7 @@ class BiddingService: ObservableObject {
         print("Sending message: \(message.message)")
     }
     
-    // MARK: - Notification Methods
+    // Notification Methods
     private func sendOutbidNotifications(propertyId: String, newBidAmount: Double, newBidderName: String) async {
         do {
             // Get the property title
@@ -1319,7 +1319,7 @@ class BiddingService: ObservableObject {
         }
     }
     
-    // MARK: - Cart Management
+    // Cart Management
     func addPropertyToCart(propertyId: String) async throws {
         guard !currentUserId.isEmpty else {
             throw BiddingError.userNotAuthenticated
@@ -1346,7 +1346,7 @@ class BiddingService: ObservableObject {
     }
 }
 
-// MARK: - Error Types
+// Error Types
 enum BiddingError: LocalizedError {
     case userNotAuthenticated
     case invalidBidAmount

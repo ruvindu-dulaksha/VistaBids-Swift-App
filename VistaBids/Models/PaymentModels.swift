@@ -10,7 +10,7 @@ import SwiftUI
 import UIKit
 import FirebaseFirestore
 
-// MARK: - PaymentMethod
+// PaymentMethod
 enum PaymentMethod: String, Codable, CaseIterable {
     case creditCard = "credit_card"
     case debitCard = "debit_card"
@@ -92,7 +92,7 @@ enum PaymentMethod: String, Codable, CaseIterable {
     }
 }
 
-// MARK: - PaymentStatus
+//  PaymentStatus
 enum PaymentStatus: String, Codable {
     case pending = "pending"
     case processing = "processing"
@@ -136,7 +136,7 @@ enum PaymentStatus: String, Codable {
     }
 }
 
-// MARK: - TransactionStatus
+//  TransactionStatus
 enum TransactionStatus: String, Codable {
     case pending = "pending"
     case completed = "completed"
@@ -157,14 +157,14 @@ enum TransactionStatus: String, Codable {
     }
 }
 
-// MARK: - TransactionType
+// TransactionType
 enum TransactionType: String, Codable {
     case payment = "payment"
     case refund = "refund"
     case auctionWin = "auction_win"
 }
 
-// MARK: - DeliveryStatus
+//  DeliveryStatus
 enum DeliveryStatus: String, Codable {
     case pending = "pending"
     case processing = "processing"
@@ -172,7 +172,7 @@ enum DeliveryStatus: String, Codable {
     case cancelled = "cancelled"
 }
 
-// MARK: - CardType
+//  CardType
 enum CardType: String, Codable {
     case visa = "visa"
     case mastercard = "mastercard"
@@ -181,13 +181,13 @@ enum CardType: String, Codable {
     case unknown = "unknown"
 }
 
-// MARK: - CardVerificationMethod
+//  CardVerificationMethod
 enum CardVerificationMethod: String, Codable {
     case cvv = "cvv"
     case threeDSecure = "3d_secure"
 }
 
-// MARK: - PaymentReminder
+//  PaymentReminder
 struct PaymentReminder: Codable, Identifiable {
     var id = UUID()
     let auctionId: String
@@ -215,7 +215,7 @@ struct PaymentReminder: Codable, Identifiable {
     }
 }
 
-// MARK: - CardDetails
+//  CardDetails
 struct CardDetails: Codable, Identifiable {
     @DocumentID var id: String?
     let cardType: CardType
@@ -227,7 +227,7 @@ struct CardDetails: Codable, Identifiable {
     let verificationMethod: CardVerificationMethod
 }
 
-// MARK: - BillingAddress
+// BillingAddress
 struct BillingAddress: Codable {
     let street: String
     let city: String
@@ -240,7 +240,7 @@ struct BillingAddress: Codable {
     }
 }
 
-// MARK: - TransactionFees
+//  TransactionFees
 struct TransactionFees: Codable {
     let serviceFee: Double
     let processingFee: Double
@@ -251,7 +251,7 @@ struct TransactionFees: Codable {
     }
 }
 
-// MARK: - TransactionHistory
+//  TransactionHistory
 struct TransactionHistory: Codable, Identifiable {
     @DocumentID var id: String?
     let transactionId: String
@@ -281,7 +281,7 @@ struct TransactionHistory: Codable, Identifiable {
     }
 }
 
-// MARK: - UserPurchaseHistory
+//  UserPurchaseHistory
 struct UserPurchaseHistory: Codable, Identifiable {
     @DocumentID var id: String?
     let userId: String

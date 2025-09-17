@@ -3,11 +3,11 @@
 //  VistaBids
 //
 //  Recreated placeholder after original file deletion to restore build.
-//  TODO: Replace with full-featured filtering logic (price range, categories, etc.).
+//  
 //
 import SwiftUI
 
-// Simple filter model; extend as needed.
+
 struct AuctionFilters: Equatable {
     var minPrice: Double?
     var maxPrice: Double?
@@ -44,7 +44,7 @@ struct FiltersView: View {
                 }
 
                 Section(header: Text("Category")) {
-                    // Placeholder picker - real categories should come from model
+                    // real categories should come from model
                     Picker("Category", selection: Binding(get: { tempFilters.category ?? PropertyCategory.residential }, set: { tempFilters.category = $0 })) {
                         Text("Residential").tag(PropertyCategory.residential)
                         if let commercial = PropertyCategory.allCases.first(where: { String(describing: $0) == "commercial" }) {

@@ -234,7 +234,7 @@ struct PropertyMapView: View {
     }
 }
 
-// MARK: - Advanced Map View
+// Advanced Map View
 struct AdvancedMapView: UIViewRepresentable {
     @Binding var region: MKCoordinateRegion
     @Binding var mapType: MKMapType
@@ -259,7 +259,7 @@ struct AdvancedMapView: UIViewRepresentable {
         mapView.showsTraffic = true
         mapView.showsBuildings = true
         
-        // Register custom annotation views
+        
         mapView.register(PropertyAnnotationView.self, forAnnotationViewWithReuseIdentifier: "PropertyAnnotation")
         mapView.register(ClusterAnnotationView.self, forAnnotationViewWithReuseIdentifier: "ClusterAnnotation")
         
@@ -267,47 +267,46 @@ struct AdvancedMapView: UIViewRepresentable {
     }
     
     func updateUIView(_ mapView: MKMapView, context: Context) {
-        // Update region
+        
         if mapView.region.center.latitude != region.center.latitude ||
            mapView.region.center.longitude != region.center.longitude {
             mapView.setRegion(region, animated: true)
         }
         
-        // Update map type
+        
         mapView.mapType = mapType
         
-        // Update annotations
         updateAnnotations(mapView: mapView)
         
-        // Update overlays
+       
         updateOverlays(mapView: mapView)
         
-        // Store callbacks in coordinator
+        
         context.coordinator.onPropertySelected = onPropertySelected
         context.coordinator.onRegionChanged = onRegionChanged
     }
     
     private func updateAnnotations(mapView: MKMapView) {
-        // Remove existing annotations
+        
         mapView.removeAnnotations(mapView.annotations.filter { !($0 is MKUserLocation) })
         
         if showClusters && !clusters.isEmpty {
-            // Add cluster annotations
+            
             let clusterAnnotations = clusters.map { ClusterAnnotation(cluster: $0) }
             mapView.addAnnotations(clusterAnnotations)
         } else {
-            // Add individual property annotations
+            
             let propertyAnnotations = properties.map { PropertyAnnotation(property: $0) }
             mapView.addAnnotations(propertyAnnotations)
         }
     }
     
     private func updateOverlays(mapView: MKMapView) {
-        // Remove existing overlays
+        
         mapView.removeOverlays(mapView.overlays)
         
         if showHeatMap && !heatMapData.isEmpty {
-            // Add heat map overlay
+            
             print("Adding heatmap overlay with \(heatMapData.count) points")
             let heatMapOverlay = HeatMapOverlay(points: heatMapData)
             mapView.addOverlay(heatMapOverlay)
@@ -321,7 +320,7 @@ struct AdvancedMapView: UIViewRepresentable {
     }
 }
 
-// MARK: - Map View Coordinator
+//Map View Coordinator
 class MapViewCoordinator: NSObject, MKMapViewDelegate {
     var onPropertySelected: ((AuctionProperty) -> Void)?
     var onRegionChanged: ((MKCoordinateRegion) -> Void)?
@@ -375,7 +374,7 @@ class MapViewCoordinator: NSObject, MKMapViewDelegate {
     }
 }
 
-// MARK: - Analytics Panel
+// Analytics Panel
 struct AnalyticsPanel: View {
     let analytics: MapAnalytics
     @State private var isExpanded = false
@@ -397,7 +396,7 @@ struct AnalyticsPanel: View {
             
             if isExpanded {
                 VStack(alignment: .leading, spacing: 12) {
-                    // Activity Metrics
+                    
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Activity")
                             .font(.subheadline)
@@ -476,7 +475,7 @@ struct AnalyticsPanel: View {
     }
 }
 
-// MARK: - Metric View
+// Metric View
 struct MetricView: View {
     let title: String
     let value: String
@@ -496,7 +495,7 @@ struct MetricView: View {
     }
 }
 
-// MARK: - Property Detail Sheet
+// Property Detail Sheet
 struct PropertyMapDetailSheet: View {
     let property: AuctionProperty
     @Environment(\.dismiss) private var dismiss
@@ -586,7 +585,7 @@ struct PropertyMapDetailSheet: View {
     }
 }
 
-// MARK: - Single Property Map View (Legacy compatibility)
+// Single Property Map View 
 struct SinglePropertyMapView: View {
     let property: AuctionProperty
     @Environment(\.dismiss) private var dismiss
@@ -595,7 +594,7 @@ struct SinglePropertyMapView: View {
     init(property: AuctionProperty) {
         self.property = property
         
-        // Validate coordinates and provide default values if invalid (Colombo, Sri Lanka)
+        
         let latitude = property.location.latitude.isNaN || property.location.latitude.isInfinite ? 6.9271 : property.location.latitude
         let longitude = property.location.longitude.isNaN || property.location.longitude.isInfinite ? 79.8612 : property.location.longitude
         
@@ -623,7 +622,7 @@ struct SinglePropertyMapView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 
-                // Property Info Card
+                
                 propertyInfoCard
             }
             .navigationTitle("Property Location")

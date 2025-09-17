@@ -42,7 +42,7 @@ class SalePropertyService: ObservableObject {
             let snapshot = try await db.collection("sale_properties").getDocuments()
             logger.info("🏠 SalePropertyService: Got \(snapshot.documents.count) documents from Firestore")
             
-            // Debug: Print all document IDs and some basic data
+            //  Print all document IDs and some basic data
             for document in snapshot.documents {
                 let data = document.data()
                 logger.debug("🏠 Document ID: \(document.documentID)")
@@ -162,7 +162,7 @@ class SalePropertyService: ObservableObject {
             )
         }
         
-        // Features
+       
         var featuresData: [PropertyFeature] = []
         
         if let features = data["features"] as? [[String: Any]] {
@@ -403,7 +403,7 @@ extension SalePropertyService {
     }
     
     func getFeaturedProperties() -> [SaleProperty] {
-        // Return properties that might be featured (e.g., recently added, high-end)
+        
         return properties
             .sorted(by: { $0.createdAt > $1.createdAt })
             .prefix(6)
@@ -411,7 +411,7 @@ extension SalePropertyService {
     }
 }
 
-// MARK: - Debug Helper Extensions
+
 extension SalePropertyService {
     func printDiagnostics() {
         NSLog("🏠 SalePropertyService Diagnostics:")

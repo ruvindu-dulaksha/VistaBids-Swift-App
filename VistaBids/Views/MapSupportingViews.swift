@@ -52,7 +52,7 @@ class HeatMapOverlay: NSObject, MKOverlay {
     }
 }
 
-// MARK: - Heat Map Renderer
+// Heat Map Renderer
 class HeatMapRenderer: MKOverlayRenderer {
     private let heatMapOverlay: HeatMapOverlay
     
@@ -94,7 +94,7 @@ class HeatMapRenderer: MKOverlayRenderer {
     
     private func drawHeatPoint(at point: CGPoint, intensity: Double, type: HeatMapPoint.HeatMapType, in context: CGContext, zoomScale: MKZoomScale) {
         // Create larger radius based on zoom level and intensity for better visibility
-        let baseRadius = CGFloat(50 + (intensity * 100)) // Larger base radius
+        let baseRadius = CGFloat(50 + (intensity * 100)) 
         let radius = baseRadius / max(sqrt(zoomScale), 0.5) // Scale with zoom level, minimum divisor
         
         // Ensure minimum and maximum radius for visibility
@@ -102,7 +102,7 @@ class HeatMapRenderer: MKOverlayRenderer {
         
         // Create vibrant color based on type and intensity
         let baseColor = colorForHeatMapType(type)
-        let centerAlpha = CGFloat(0.6 + (intensity * 0.4)) // Higher center alpha for visibility
+        let centerAlpha = CGFloat(0.6 + (intensity * 0.4)) 
         let edgeAlpha = CGFloat(0.1)
         
         // Create multiple gradient layers for better heatmap effect
@@ -153,7 +153,7 @@ class HeatMapRenderer: MKOverlayRenderer {
     }
 }
 
-// MARK: - Cluster Annotation
+// Cluster Annotation
 class ClusterAnnotation: NSObject, MKAnnotation {
     let cluster: PropertyCluster
     
@@ -175,7 +175,7 @@ class ClusterAnnotation: NSObject, MKAnnotation {
     }
 }
 
-// MARK: - Enhanced Property Annotation
+// Enhanced Property Annotation
 class PropertyAnnotation: NSObject, MKAnnotation {
     let property: AuctionProperty
     
@@ -200,7 +200,7 @@ class PropertyAnnotation: NSObject, MKAnnotation {
     }
 }
 
-// MARK: - Cluster Annotation View
+// Cluster Annotation View
 class ClusterAnnotationView: MKAnnotationView {
     override var annotation: MKAnnotation? {
         willSet {
@@ -251,7 +251,7 @@ class ClusterAnnotationView: MKAnnotationView {
     }
 }
 
-// MARK: - Enhanced Property Annotation View
+//  Enhanced Property Annotation View
 class PropertyAnnotationView: MKMarkerAnnotationView {
     override var annotation: MKAnnotation? {
         willSet {
@@ -292,7 +292,7 @@ class PropertyAnnotationView: MKMarkerAnnotationView {
     }
 }
 
-// MARK: - Map Filter View
+// Map Filter View
 struct MapFilterView: View {
     @Binding var filters: [MapFilter]
     @Binding var isPresented: Bool
@@ -329,7 +329,7 @@ struct MapFilterView: View {
     }
 }
 
-// MARK: - Filter Row View
+//  Filter Row View
 struct FilterRowView: View {
     @Binding var filter: MapFilter
     
@@ -389,7 +389,7 @@ struct FilterRowView: View {
     }
 }
 
-// MARK: - Map Legend View
+//  Map Legend View
 struct MapLegendView: View {
     let heatMapType: HeatMapPoint.HeatMapType
     
@@ -426,7 +426,7 @@ struct MapLegendView: View {
     }
 }
 
-// MARK: - Map Controls View
+//  Map Controls View
 struct MapControlsView: View {
     @Binding var showHeatMap: Bool
     @Binding var showClusters: Bool
@@ -490,7 +490,7 @@ struct MapControlsView: View {
     }
 }
 
-// MARK: - Extensions
+//  Extensions
 extension MKMapType {
     var displayName: String {
         switch self {

@@ -2,7 +2,7 @@
 //  NearbyPlacesService.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2025-08-21.
+//  Created by Ruvindu Dulaksha on 2025-08-21.
 //
 
 import Foundation
@@ -20,7 +20,7 @@ class NearbyPlacesService: ObservableObject {
     
     private init() {}
     
-    // MARK: - Fetch Nearby Places using MapKit Local Search
+    // Fetch Nearby Places using MapKit Local Search
     func fetchNearbyPlaces(
         coordinate: CLLocationCoordinate2D,
         types: [PlaceType] = PlaceType.allCases,
@@ -126,7 +126,7 @@ class NearbyPlacesService: ObservableObject {
         case .publicTransport:
             return .busStop
         default:
-            return .shopping // Default fallback
+            return .shopping 
         }
     }
     
@@ -170,13 +170,13 @@ class NearbyPlacesService: ObservableObject {
         return uniquePlaces
     }
     
-    // MARK: - Filter places by type
+    // Filter places by type
     func filterPlaces(by type: PlaceType) -> [NearbyPlace] {
         return nearbyPlaces.filter { $0.type == type }
             .sorted { $0.distance < $1.distance }
     }
     
-    // MARK: - Get nearest places for each type
+    // Get nearest places for each type
     func getNearestPlacesByType(limit: Int = 3) -> [PlaceType: [NearbyPlace]] {
         var placesByType: [PlaceType: [NearbyPlace]] = [:]
         
@@ -192,7 +192,7 @@ class NearbyPlacesService: ObservableObject {
     }
 }
 
-// MARK: - Error Handling
+// Error Handling
 extension NearbyPlacesService {
     enum NearbyPlacesError: LocalizedError {
         case locationNotAvailable

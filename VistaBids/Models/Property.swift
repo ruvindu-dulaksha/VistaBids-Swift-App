@@ -8,7 +8,7 @@
 import Foundation
 import MapKit
 
-// MARK: - Property Model (General property type that can be used for both auctions and sales)
+//Property Model (General property type that can be used for both auctions and sales)
 struct Property: Identifiable, Codable {
     let id: String
     let title: String

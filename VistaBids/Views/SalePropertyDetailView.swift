@@ -688,21 +688,21 @@ struct SalePropertyDetailView: View {
             longitude: property.coordinates.longitude
         )
         
-        // Load only essential place types that matter most to property buyers
+       
         let essentialPlaceTypes: [PlaceType] = [.school, .hospital, .shopping, .restaurant, .bank]
         
         Task {
             await nearbyPlacesService.fetchNearbyPlaces(
                 coordinate: coordinate,
                 types: essentialPlaceTypes,
-                radius: 3000 // 3km radius for essential services
+                radius: 3000
             )
         }
     }
     
-    // MARK: - Essential Places Helper
+    // Essential Places Helper
     private func getEssentialPlaces() -> [EssentialPlaceGroup] {
-        // Order by importance for property buyers
+        
         let essentialTypes: [PlaceType] = [.school, .hospital, .shopping, .bank, .restaurant]
         
         return essentialTypes.compactMap { type in
@@ -720,13 +720,13 @@ struct SalePropertyDetailView: View {
     }
 }
 
-// MARK: - Essential Place Group Model
+// Essential Place Group Model
 struct EssentialPlaceGroup {
     let type: PlaceType
     let nearestPlace: NearbyPlace?
 }
 
-// MARK: - Feature Item for Sale Properties
+//  Feature Item for Sale Properties
 struct FeatureItemSale: View {
     let icon: String
     let title: String
@@ -757,7 +757,7 @@ struct FeatureItemSale: View {
     }
 }
 
-// MARK: - Contact Seller Sheet
+// Contact Seller Sheet
 struct ContactSellerSheet: View {
     let property: SaleProperty
     @Environment(\.dismiss) private var dismiss
@@ -851,7 +851,7 @@ struct ContactSellerSheet: View {
     }
     
     private func sendMessage() {
-        // Implement message sending logic here
+        
         print("Sending message: \(message)")
         if isSchedulingVisit {
             print("Scheduling visit for: \(selectedDate)")
@@ -860,7 +860,7 @@ struct ContactSellerSheet: View {
     }
 }
 
-// MARK: - Sale Property Map View
+//  Sale Property Map View
 struct SalePropertyMapView: View {
     let property: SaleProperty
     @Environment(\.dismiss) private var dismiss
@@ -967,7 +967,7 @@ struct SalePropertyMapView: View {
     )
 }
 
-// MARK: - Property Share View
+//  Property Share View
 struct PropertyShareView: UIViewControllerRepresentable {
     let property: SaleProperty
     
@@ -1000,7 +1000,7 @@ struct PropertyShareView: UIViewControllerRepresentable {
             applicationActivities: nil
         )
         
-        // Exclude certain activity types if needed
+        
         activityViewController.excludedActivityTypes = [
             .addToReadingList,
             .assignToContact
@@ -1010,7 +1010,7 @@ struct PropertyShareView: UIViewControllerRepresentable {
     }
     
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {
-        // No updates needed
+        
     }
     
     private func formatPrice(_ price: Double) -> String {

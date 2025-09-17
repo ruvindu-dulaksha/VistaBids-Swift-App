@@ -2,7 +2,7 @@
 //  PaymentSuccessView.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2025-09-12.
+//  Created by Ruvindu Dulaksha on 2025-08-20.
 //
 
 import SwiftUI
@@ -23,7 +23,7 @@ struct PaymentSuccessView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // Modern background gradient using app theme
+                
                 LinearGradient(
                     colors: [
                         Color.backgrounds,
@@ -39,10 +39,10 @@ struct PaymentSuccessView: View {
                 VStack(spacing: 32) {
                     Spacer(minLength: 40)
                     
-                    // Modern success animation
+                    
                     VStack(spacing: 24) {
                         ZStack {
-                            // Animated background circles
+                            
                             Circle()
                                 .fill(Color.green.opacity(0.1))
                                 .frame(width: 140, height: 140)
@@ -94,9 +94,9 @@ struct PaymentSuccessView: View {
                         }
                     }
                     
-                    // Modern property details card
+                    
                     VStack(spacing: 20) {
-                        // Property image and info with enhanced image handling
+                        
                         VStack(spacing: 16) {
                             ZStack {
                                 RoundedRectangle(cornerRadius: 12)
@@ -223,7 +223,7 @@ struct PaymentSuccessView: View {
                             }
                         }
                         
-                        // Payment summary with modern design
+                        
                         VStack(spacing: 12) {
                             Text("Payment Summary")
                                 .font(.headline)
@@ -269,7 +269,7 @@ struct PaymentSuccessView: View {
                             .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
                     )
                     
-                    // Modern next steps section
+                    
                     VStack(spacing: 16) {
                         HStack {
                             Image(systemName: "list.bullet.clipboard")
@@ -320,7 +320,7 @@ struct PaymentSuccessView: View {
                     
                     Spacer(minLength: 20)
                     
-                    // Modern action buttons
+                    
                     VStack(spacing: 12) {
                         // Main continue button
                         Button(action: {
@@ -329,7 +329,7 @@ struct PaymentSuccessView: View {
                             showOTPView = false
                             showPaymentView = false
                             
-                            // Call the dismiss callback to navigate back to BiddingScreen
+                            
                             onDismiss?()
                             
                             // Also dismiss this view
@@ -411,13 +411,12 @@ struct PaymentSuccessView: View {
     }
     
     private func updateUserProfile() {
-        // This will be implemented in the next task
-        // Add the completed bid to user's profile history and activities
+        
         UserProfileService.shared.addPurchaseHistory(property: property)
     }
 }
 
-// Modern payment summary row component
+
 struct PaymentSummaryRow: View {
     let label: String
     let value: String
@@ -449,7 +448,7 @@ struct PaymentSummaryRow: View {
     }
 }
 
-// Updated NextStepItem with modern design
+
 struct NextStepItem: View {
     let icon: String
     let text: String

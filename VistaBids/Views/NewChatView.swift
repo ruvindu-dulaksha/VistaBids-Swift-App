@@ -111,8 +111,7 @@ struct NewChatView: View {
         // Simulate loading users
         isLoading = true
         
-        // In a real app, you would fetch users from your database
-        // For now, we'll create some sample users
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             availableUsers = [
                 ChatUser(id: "user1", displayName: "John Smith", avatarURL: nil),

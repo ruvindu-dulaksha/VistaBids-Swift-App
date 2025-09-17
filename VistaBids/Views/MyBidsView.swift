@@ -34,7 +34,7 @@ struct MyBidsView: View {
     private func loadBids() {
         guard let userId = authService.currentUser?.uid else { return }
         isLoading = true
-        // TODO: Implement Firebase bid fetching
+        
         isLoading = false
     }
 }

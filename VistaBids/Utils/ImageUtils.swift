@@ -2,7 +2,7 @@
 //  ImageUtils.swift
 //  VistaBids
 //
-//  Created by Assistant on 2025-08-24.
+//  Created by Ruvindu Dulaksha on 2025-08-24.
 //
 
 import Foundation
@@ -46,11 +46,7 @@ class ImageUtils {
         }
     }
     
-    /// Save an image to local storage
-    /// - Parameters:
-    ///   - image: The PlatformImage to save
-    ///   - filename: The filename (with extension)
-    /// - Returns: Local URL string in format "local://images/filename"
+   
     func saveImageLocally(_ image: PlatformImage, filename: String) throws -> String {
         ensureImagesDirectoryExists()
         
@@ -81,9 +77,7 @@ class ImageUtils {
         return localURL
     }
     
-    /// Load an image from local storage or remote URL
-    /// - Parameter urlString: URL string (local:// or http://)
-    /// - Returns: PlatformImage if found, nil otherwise
+   
     func loadImage(from urlString: String) async -> PlatformImage? {
         if urlString.hasPrefix("local://") {
             return await loadLocalImage(from: urlString)
@@ -93,9 +87,7 @@ class ImageUtils {
         return nil
     }
     
-    /// Load an image from local storage
-    /// - Parameter urlString: Local URL string starting with "local://"
-    /// - Returns: PlatformImage if found, nil otherwise
+  
     private func loadLocalImage(from urlString: String) async -> PlatformImage? {
         let cleanPath = String(urlString.dropFirst(8)) // Remove "local://"
         
@@ -135,9 +127,7 @@ class ImageUtils {
         return nil
     }
     
-    /// Load an image from a remote URL
-    /// - Parameter url: Remote URL
-    /// - Returns: UIImage if downloaded successfully, nil otherwise
+    
     private func loadRemoteImage(from url: URL) async -> UIImage? {
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
@@ -156,9 +146,7 @@ class ImageUtils {
         }
     }
     
-    /// Delete an image from local storage
-    /// - Parameter urlString: Local URL string
-    /// - Returns: True if deleted successfully, false otherwise
+   
     func deleteLocalImage(_ urlString: String) -> Bool {
         guard urlString.hasPrefix("local://") else { return false }
         
@@ -175,8 +163,7 @@ class ImageUtils {
         }
     }
     
-    /// Get the size of the images directory
-    /// - Returns: Size in bytes
+    
     func getImageStorageSize() -> Int64 {
         guard let enumerator = FileManager.default.enumerator(at: imagesDirectory, includingPropertiesForKeys: [.fileSizeKey]) else {
             return 0
@@ -208,7 +195,7 @@ class ImageUtils {
     }
 }
 
-// MARK: - Error Types
+
 enum ImageUtilsError: LocalizedError {
     case compressionFailed
     case fileWriteFailed
@@ -226,11 +213,9 @@ enum ImageUtilsError: LocalizedError {
     }
 }
 
-// MARK: - SwiftUI Image View Extension
+
 extension Image {
-    /// Create an Image from a local or remote URL string
-    /// - Parameter urlString: URL string
-    /// - Returns: Image or placeholder
+    
     static func from(urlString: String) -> some View {
         AsyncImageView(urlString: urlString)
     }

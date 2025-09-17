@@ -22,7 +22,7 @@ struct SignUpScreen: View {
             VStack {
                 Spacer()
 
-                Image("loginlogo") // You can use a different image if you want
+                Image("loginlogo") 
                     .resizable()
                     .scaledToFit()
                     .frame(height: 200)
@@ -143,7 +143,7 @@ struct SignUpScreen: View {
         .navigationBarBackButtonHidden(true)
     }
     
-    // MARK: - Authentication Methods
+    // Authentication Methods
     @MainActor
     private func handleSignUp() async {
         // Validate input

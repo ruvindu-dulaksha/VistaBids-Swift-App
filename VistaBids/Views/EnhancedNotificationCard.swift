@@ -2,7 +2,7 @@
 //  EnhancedNotificationCard.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2025-09-13.
+//  Created by Ruvindu Dulaksha on 2025-09-13.
 //
 
 import SwiftUI
@@ -64,7 +64,7 @@ struct EnhancedNotificationCard: View {
                                     offset = -120
                                     showingActions = true
                                 } else if value.translation.width > 100 {
-                                    // Mark as read
+                                    
                                     onMarkRead()
                                     offset = 0
                                     showingActions = false
@@ -154,7 +154,7 @@ struct EnhancedNotificationCard: View {
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
                 
-                // Additional metadata
+                
                 if let metadata = notification.data {
                     HStack {
                         ForEach(Array(metadata.prefix(2)), id: \.key) { key, value in
@@ -176,7 +176,7 @@ struct EnhancedNotificationCard: View {
                 }
             }
             
-            // Chevron indicator
+            
             Image(systemName: "chevron.right")
                 .font(.caption.weight(.medium))
                 .foregroundColor(Color(.tertiaryLabel))
@@ -201,7 +201,7 @@ struct EnhancedNotificationCard: View {
     
     private var actionButtons: some View {
         HStack(spacing: 8) {
-            // Mark as read/unread button
+            
             Button(action: onMarkRead) {
                 VStack {
                     Image(systemName: notification.isRead ? "envelope.badge" : "envelope.open")
@@ -244,7 +244,7 @@ struct EnhancedWinnerNotificationCard: View {
     @State private var timeRemaining: TimeInterval = 0
     @State private var timer: Timer?
     
-    // Since paymentDeadline is not in the model, we'll calculate it
+    // Since paymentDeadline is not in the model,
     private let paymentDeadlineHours: TimeInterval = 24 * 3600 // 24 hours
     
     private var isExpired: Bool {
@@ -442,8 +442,6 @@ struct EnhancedWinnerNotificationCard: View {
         timeRemaining = deadline.timeIntervalSince(Date())
     }
 }
-
-// MARK: - Preview
 
 #Preview("Enhanced Notification Card") {
     VStack(spacing: 16) {

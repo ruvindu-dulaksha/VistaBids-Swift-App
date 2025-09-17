@@ -9,7 +9,7 @@ import Foundation
 import MapKit
 import SwiftUI
 
-// MARK: - Nearby Place Model
+// Nearby Place Model
 struct NearbyPlace: Identifiable {
     let id: String
     let name: String
@@ -26,7 +26,7 @@ struct NearbyPlace: Identifiable {
     }
 }
 
-// MARK: - Place Type Enum
+//  Place Type Enum
 enum PlaceType: String, CaseIterable {
     case restaurant
     case school
@@ -85,7 +85,7 @@ enum PlaceType: String, CaseIterable {
     }
 }
 
-// MARK: - Double Extension for Rounding
+//  Double Extension for Rounding
 extension Double {
     func rounded(toDecimalPlaces places: Int) -> Double {
         let divisor = pow(10.0, Double(places))

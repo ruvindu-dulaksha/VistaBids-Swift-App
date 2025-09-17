@@ -210,7 +210,7 @@ struct AuctionChatView: View {
         }
     }
     
-    // MARK: - Helper Views
+    
     private var loadingView: some View {
         ProgressView("Loading messages...")
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -246,7 +246,6 @@ struct AuctionChatView: View {
     }
 }
 
-// MARK: - Message Row
 struct MessageRow: View {
     let message: AuctionChatMessage
     let isCurrentUser: Bool

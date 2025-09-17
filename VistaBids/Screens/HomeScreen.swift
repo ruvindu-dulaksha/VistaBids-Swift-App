@@ -373,7 +373,7 @@ struct HomeScreen: View {
 
 
 
-// MARK: - Property Marker View (for Sale Properties)
+// Property Marker View (for Sale Properties)
 struct PropertyMarkerView: View {
     let property: SaleProperty
     let isSelected: Bool
@@ -398,7 +398,7 @@ struct PropertyMarkerView: View {
     }
 }
 
-// MARK: - Property Card View (Firestore)
+// Property Card View (Firestore)
 struct PropertyCardView: View {
     let property: SaleProperty
     @State private var showingQuickInfo = false
@@ -526,7 +526,7 @@ struct PropertyCardView: View {
     }
 }
 
-// MARK: - Property Detail Sheet
+// Property Detail Sheet
 struct PropertyDetailSheet: View {
     let property: SaleProperty
     let onClose: () -> Void
@@ -1127,7 +1127,7 @@ struct TabButton: View {
     }
 }
 
-// MARK: - Filter View
+//  Filter View
 struct FilterView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var minPrice: String = ""
@@ -1341,8 +1341,7 @@ struct FilterView: View {
     }
     
     private func applyFilters() {
-        // In a real app, this would update a shared filter state
-        // For this demo, we'll just print the selected filters
+        
         print("Applying filters: Price range $\(minPrice)-$\(maxPrice), Bedrooms: \(selectedBedrooms > 0 ? bedroomOptions[selectedBedrooms] : "Any"), Bathrooms: \(selectedBathrooms > 0 ? bathroomOptions[selectedBathrooms] : "Any"), Property Type: \(selectedPropertyType.isEmpty ? "Any" : selectedPropertyType), Status: \(selectedStatus?.displayText ?? "Any")")
     }
 }
@@ -1352,7 +1351,7 @@ struct FilterView: View {
         .environmentObject(ThemeManager())
 }
 
-// MARK: - Helper functions for map coordinates
+// Helper functions for map coordinates
 extension HomeScreen {
     func offSetFor(coordinate: CLLocationCoordinate2D) -> CGPoint {
         let mapCenter = region.center
@@ -1384,7 +1383,7 @@ extension MKCoordinateRegion {
     }
 }
 
-// MARK: - Custom property pin view
+// Custom property pin view
 struct PropertyPinView: View {
     let property: SaleProperty
     let isSelected: Bool
@@ -1412,7 +1411,7 @@ struct PropertyPinView: View {
     }
 }
 
-// MARK: - Advanced Search View
+// Advanced Search View
 struct AdvancedSearchView: View {
     @Binding var options: AdvancedSearchOptions
     

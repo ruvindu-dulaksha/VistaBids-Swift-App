@@ -50,7 +50,7 @@ class AuctionTimerService: ObservableObject {
         }
     }
     
-    // MARK: - Timer Management
+    // Timer Management
     func startAuctionTimer(for property: AuctionProperty) {
         let propertyId = property.id ?? ""
         
@@ -172,7 +172,7 @@ class AuctionTimerService: ObservableObject {
         }
     }
     
-    // MARK: - Time Formatting
+    //  Time Formatting
     func formatTimeRemaining(_ timeInterval: TimeInterval) -> String {
         if timeInterval <= 0 {
             return "Ended"
@@ -211,7 +211,7 @@ class AuctionTimerService: ObservableObject {
         }
     }
     
-    // MARK: - Notification Scheduling
+    //  Notification Scheduling
     private func scheduleAuctionStartNotification(for timer: AuctionTimer) {
         let content = UNMutableNotificationContent()
         content.title = "🔥 Auction Started!"
@@ -289,7 +289,7 @@ class AuctionTimerService: ObservableObject {
         let request = UNNotificationRequest(
             identifier: "auction_warning_\(timer.propertyId)_\(Int(timeRemaining))",
             content: content,
-            trigger: nil // Immediate
+            trigger: nil 
         )
         
         UNUserNotificationCenter.current().add(request) { error in
@@ -314,7 +314,7 @@ class AuctionTimerService: ObservableObject {
         let request = UNNotificationRequest(
             identifier: "auction_upcoming_\(timer.propertyId)_15min",
             content: content,
-            trigger: nil // Immediate
+            trigger: nil 
         )
         
         UNUserNotificationCenter.current().add(request) { error in
@@ -337,7 +337,7 @@ class AuctionTimerService: ObservableObject {
         let request = UNNotificationRequest(
             identifier: "auction_winner_\(timer.propertyId)",
             content: content,
-            trigger: nil // Immediate
+            trigger: nil 
         )
         
         UNUserNotificationCenter.current().add(request) { error in
@@ -429,7 +429,7 @@ class AuctionTimerService: ObservableObject {
     }
 }
 
-// MARK: - Auction Timer Model
+// Auction Timer Model
 struct AuctionTimer {
     let propertyId: String
     let propertyTitle: String

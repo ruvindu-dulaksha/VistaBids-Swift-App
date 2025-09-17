@@ -8,7 +8,7 @@
 import SwiftUI
 import CoreLocation
 
-// MARK: - New Event View
+//  New Event View
 struct NewEventView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) var colorScheme
@@ -258,7 +258,7 @@ struct NewEventView: View {
     }
 }
 
-// MARK: - Event Detail View
+// Event Detail View
 struct EventDetailView: View {
     let event: CommunityEvent
     let communityService: CommunityService
@@ -441,7 +441,7 @@ struct EventDetailView: View {
     }
     
     private func checkAttendanceStatus() {
-        isAttending = event.attendees.contains("user1") // Mock current user
+        isAttending = event.attendees.contains("user1") 
     }
     
     private func toggleAttendance() {

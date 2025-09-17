@@ -2,7 +2,7 @@
 //  NotificationBellView.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2025-08-21.
+//  Created by Ruvindu Dulaksha on 2025-08-21.
 //
 
 import SwiftUI
@@ -31,7 +31,7 @@ struct NotificationBellView: View {
                         .animation(.interpolatingSpring(stiffness: 300, damping: 10), value: bounceAnimation)
                         .animation(.easeInOut(duration: 0.1).repeatCount(3, autoreverses: true), value: bellAnimation)
                     
-                    // Unread count badge
+
                     if notificationService.unreadCount > 0 {
                         VStack {
                             HStack {
@@ -59,7 +59,7 @@ struct NotificationBellView: View {
             }
             .frame(width: 44, height: 44)
             
-            // Ripple effect for new notifications
+            
             if notificationService.hasNewNotification {
                 RippleEffect()
                     .frame(width: 60, height: 60)
@@ -119,7 +119,6 @@ struct NotificationBellView: View {
     }
 }
 
-// MARK: - Ripple Effect for New Notifications
 struct RippleEffect: View {
     @State private var animate = false
     
@@ -148,7 +147,7 @@ struct RippleEffect: View {
     }
 }
 
-// MARK: - Notification Badge (Standalone)
+
 struct NotificationBadge: View {
     let count: Int
     let color: Color
@@ -174,7 +173,7 @@ struct NotificationBadge: View {
     }
 }
 
-// MARK: - Animated Bell Icon (Standalone)
+
 struct AnimatedBellIcon: View {
     @State private var isRinging = false
     let hasNotifications: Bool

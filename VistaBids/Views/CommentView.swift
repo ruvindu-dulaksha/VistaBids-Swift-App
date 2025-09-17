@@ -96,12 +96,12 @@ struct CommentView: View {
         
         Task {
             print("💬 Adding comment to post: \(postId)")
-            newComment = ""  // Clear the field immediately for better UX
+            newComment = ""  
             
             await communityService.addComment(to: postId, content: commentText)
             await loadComments()
             
-            // Post a notification to refresh the feed
+            
             DispatchQueue.main.async {
                 NotificationCenter.default.post(name: NSNotification.Name("RefreshCommunityFeed"), object: nil)
             }

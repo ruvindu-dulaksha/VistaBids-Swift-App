@@ -15,16 +15,16 @@ import Combine
 @MainActor
 class ImageUploadService: ObservableObject {
     
-    // MARK: - Published Properties
+    // Published Properties
     @Published var isUploading = false
     @Published var uploadProgress: Double = 0.0
     @Published var lastError: Error?
     
-    // MARK: - Private Properties
+    //  Private Properties
     private let documentsDirectory: URL
     private let imagesDirectory: URL
     
-    // MARK: - Initialization
+    //  Initialization
     init() {
         // Set up local storage directories
         self.documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
@@ -34,13 +34,7 @@ class ImageUploadService: ObservableObject {
         createImageDirectoryIfNeeded()
     }
     
-    // MARK: - Public Methods
     
-    /// Upload multiple property images
-    /// - Parameters:
-    ///   - images: Array of UIImages to upload
-    ///   - propertyId: Unique identifier for the property
-    /// - Returns: Array of image URLs
     func uploadPropertyImages(_ images: [UIImage], propertyId: String) async throws -> [String] {
         guard !images.isEmpty else { return [] }
         
@@ -82,12 +76,7 @@ class ImageUploadService: ObservableObject {
         return imageUrls
     }
     
-    /// Upload a panoramic image for AR viewing
-    /// - Parameters:
-    ///   - image: The panoramic image
-    ///   - propertyId: Unique identifier for the property
-    ///   - roomType: Type of room for organization
-    /// - Returns: Image URL
+   
     func uploadPanoramicImage(_ image: UIImage, propertyId: String, roomType: PanoramicImage.RoomType) async throws -> String {
         isUploading = true
         uploadProgress = 0.0
@@ -144,35 +133,24 @@ class ImageUploadService: ObservableObject {
         }
     }
     
-    /// Get local image URL for a file name
-    /// - Parameter fileName: Name of the image file
-    /// - Returns: Local file URL as string
+   
     func getLocalImageUrl(fileName: String) -> String {
         return imagesDirectory.appendingPathComponent(fileName).path
     }
     
-    /// Check if an image exists locally
-    /// - Parameter fileName: Name of the image file
-    /// - Returns: True if the file exists
+    
     func imageExistsLocally(fileName: String) -> Bool {
         let filePath = imagesDirectory.appendingPathComponent(fileName).path
         return FileManager.default.fileExists(atPath: filePath)
     }
     
-    /// Delete a local image
-    /// - Parameter fileName: Name of the image file to delete
+    
     func deleteLocalImage(fileName: String) throws {
         let fileUrl = imagesDirectory.appendingPathComponent(fileName)
         try FileManager.default.removeItem(at: fileUrl)
     }
     
-    // MARK: - Private Methods
     
-    /// Save image to local storage
-    /// - Parameters:
-    ///   - image: UIImage to save
-    ///   - fileName: Name for the saved file
-    /// - Returns: Local file URL as string
     private func saveImageLocally(_ image: UIImage, fileName: String) async throws -> String {
         return try await withCheckedThrowingContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
@@ -225,7 +203,7 @@ class ImageUploadService: ObservableObject {
     }
 }
 
-// MARK: - Error Types
+//  Error Types
 
 enum ImageUploadError: LocalizedError {
     case serviceUnavailable
@@ -247,7 +225,7 @@ enum ImageUploadError: LocalizedError {
     }
 }
 
-// MARK: - Backward Compatibility
+// Backward Compatibility
 
 extension ImageUploadService {
     
@@ -264,7 +242,7 @@ extension ImageUploadService {
     }
 }
 
-// MARK: - Future Firebase Storage Integration Points
+// Future Firebase Storage Integration Points
 
 /*
  When Firebase Storage is properly configured, replace the local storage methods with:

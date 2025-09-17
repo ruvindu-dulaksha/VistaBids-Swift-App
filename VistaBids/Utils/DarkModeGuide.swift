@@ -2,7 +2,7 @@
 //  DarkModeGuide.swift
 //  VistaBids
 //
-//  Created by Assistant on 2025-08-11.
+//  Created by Ruvindu Dulaksha on 2025-08-11.
 //
 
 import SwiftUI
@@ -69,7 +69,7 @@ import SwiftUI
  ```
  */
 
-// MARK: - Dark Mode Testing Utilities
+// Dark Mode Testing Utilities
 #if DEBUG
 struct DarkModePreview<Content: View>: View {
     let content: Content

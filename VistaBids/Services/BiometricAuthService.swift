@@ -20,7 +20,7 @@ class BiometricAuthService: ObservableObject {
         checkBiometricAvailability()
     }
     
-    // MARK: - Check Biometric Availability
+    //Check Biometric Availability
     func checkBiometricAvailability() {
         var error: NSError?
         
@@ -50,7 +50,7 @@ class BiometricAuthService: ObservableObject {
         }
     }
     
-    // MARK: - Authenticate with Biometrics
+    //  Authenticate with Biometrics
     func authenticateWithBiometrics() async throws -> Bool {
         guard isBiometricAvailable else {
             throw BiometricError.notAvailable
@@ -90,7 +90,7 @@ class BiometricAuthService: ObservableObject {
         }
     }
     
-    // MARK: - Helper Properties
+    // Helper Properties
     var biometricDisplayName: String {
         switch biometricType {
         case .faceID:
@@ -117,7 +117,7 @@ class BiometricAuthService: ObservableObject {
         }
     }
     
-    // MARK: - Error Mapping
+    // Error Mapping
     private func mapLAError(_ error: Error) -> BiometricError {
         guard let laError = error as? LAError else {
             return BiometricError.unknown(error.localizedDescription)
@@ -150,7 +150,7 @@ class BiometricAuthService: ObservableObject {
     }
 }
 
-// MARK: - Biometric Errors
+//  Biometric Errors
 enum BiometricError: LocalizedError {
     case notAvailable
     case notEnrolled

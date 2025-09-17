@@ -214,7 +214,7 @@ struct PropertyDetailView: View {
         }
     }
     
-    // MARK: - SiriKit Integration
+    //  SiriKit Integration
     
     @available(iOS 13.0, *)
     private func addBidShortcutToSiri() {
@@ -721,7 +721,7 @@ struct PropertyDetailView: View {
                 .buttonStyle(PlainButtonStyle())
             }
             
-            // 3D Model AR (if available)
+            // 3D Model AR 
             if let arModelURL = property.arModelURL, !arModelURL.isEmpty {
                 Button(action: { showingARView = true }) {
                     HStack {
@@ -803,7 +803,7 @@ struct PropertyDetailView: View {
                 
                 if !property.bidHistory.isEmpty && property.bidHistory.count > 5 {
                     Button("View All (\(property.bidHistory.count))") {
-                        // TODO: Show full bid history sheet
+                        // Show full bid history sheet
                         print("Show all \(property.bidHistory.count) bids")
                     }
                     .font(.caption)
@@ -906,7 +906,7 @@ struct PropertyDetailView: View {
         }
     }
     
-    // MARK: - Auction End State Views
+    // Auction End State Views
     
     private var auctionEndedButtons: some View {
         VStack(spacing: 12) {
@@ -1003,7 +1003,7 @@ struct PropertyDetailView: View {
         }
     }
     
-    // MARK: - Helper Properties
+    // Helper Properties
     
     private var isUserWinningBid: Bool {
         guard let currentUserId = Auth.auth().currentUser?.uid,
@@ -1013,7 +1013,7 @@ struct PropertyDetailView: View {
         return currentUserId == highestBidderId
     }
     
-    // MARK: - Auction End Handling
+    // Auction End Handling
     
     private func handleAuctionEnd() async {
         guard let propertyId = property.id else { return }
@@ -1041,10 +1041,10 @@ struct PropertyDetailView: View {
                 )
             }
             
-            print("✅ Auction end handling completed")
+            print("Auction end handling completed")
             
         } catch {
-            print("❌ Error handling auction end: \(error)")
+            print("Error handling auction end: \(error)")
         }
     }
     
@@ -1064,9 +1064,9 @@ struct PropertyDetailView: View {
         
         do {
             try await db.collection("notifications").addDocument(data: notification)
-            print("✅ Winner notification sent to \(winnerName)")
+            print("Winner notification sent to \(winnerName)")
         } catch {
-            print("❌ Error sending winner notification: \(error)")
+            print("Error sending winner notification: \(error)")
         }
     }
     
@@ -1098,7 +1098,7 @@ struct PropertyDetailView: View {
                     return
                 }
                 
-                // Check file size - limit to 5MB for Firestore (Firestore has a 1MB limit per document)
+                 
                 if videoData.count > 5 * 1024 * 1024 {
                     await MainActor.run {
                         isUploadingVideo = false
@@ -1183,7 +1183,7 @@ struct PropertyDetailView: View {
     }
 }
 
-// MARK: - Video Thumbnail View
+// Video Thumbnail View
 struct VideoThumbnailView: View {
     let videoURL: String
     let title: String
@@ -1266,7 +1266,7 @@ struct VideoThumbnailView: View {
     }
 }
 
-// MARK: - Property Feature Item
+//  Property Feature Item
 struct PropertyFeatureItem: View {
     let icon: String
     let title: String

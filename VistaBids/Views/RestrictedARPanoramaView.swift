@@ -2,7 +2,7 @@
 //  RestrictedARPanoramaView.swift
 //  VistaBids
 //
-//  Created by AI Assistant on 2025-09-04.
+//  Created by Ruvindu Dulaksha on 2025-09-04.
 //
 
 import SwiftUI
@@ -103,7 +103,7 @@ struct RestrictedARPanoramaView: View {
     }
 }
 
-// MARK: - Restricted AR Viewer (View Only)
+//  Restricted AR Viewer (View Only)
 struct RestrictedARViewerRepresentable: UIViewRepresentable {
     let panoramicImage: PanoramicImage
     let panoramaType: RestrictedARPanoramaView.PanoramaType
@@ -211,7 +211,7 @@ struct RestrictedARViewerRepresentable: UIViewRepresentable {
                 }
             }
             
-            // Try bundle
+            
             let filename = URL(fileURLWithPath: cleanPath).lastPathComponent
             let baseName = filename.replacingOccurrences(of: ".jpg", with: "")
                                   .replacingOccurrences(of: ".jpeg", with: "")
@@ -223,7 +223,7 @@ struct RestrictedARViewerRepresentable: UIViewRepresentable {
             }
         }
         
-        // Handle remote URLs
+        
         if let url = URL(string: urlString) {
             URLSession.shared.dataTask(with: url) { data, response, error in
                 if let data = data, let image = UIImage(data: data) {

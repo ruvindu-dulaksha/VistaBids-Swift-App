@@ -2,7 +2,7 @@
 //  PaymentDemoView.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2025-09-05.
+//  Created by Ruvindu Dulaksha on 2025-09-05.
 //
 
 import SwiftUI

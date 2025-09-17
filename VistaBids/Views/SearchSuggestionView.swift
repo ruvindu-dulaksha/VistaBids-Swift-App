@@ -2,7 +2,7 @@
 //  SearchSuggestionView.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2023-08-23.
+//  Created by Ruvindu Dulaksha on 2025-08-23.
 //
 
 import SwiftUI
@@ -47,7 +47,7 @@ struct SearchSuggestionView: View {
     }
 }
 
-// MARK: - Search Status View
+// Search Status View
 struct SearchStatusView: View {
     let count: Int
     let searchText: String

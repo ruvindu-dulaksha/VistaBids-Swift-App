@@ -283,7 +283,7 @@ struct NewPostView: View {
     }
 }
 
-// MARK: - Group Picker View
+// Group Picker View
 struct GroupPickerView: View {
     @Binding var selectedGroup: CommunityGroup?
     let groups: [CommunityGroup]

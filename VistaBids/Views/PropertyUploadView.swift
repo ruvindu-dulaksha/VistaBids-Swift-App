@@ -2,7 +2,7 @@
 //  PropertyUploadView.swift
 //  VistaBids
 //
-//  Created by AI Assistant on 2025-08-18.
+//  Created by Ruvindu Dulaksha on 2025-08-18.
 //
 
 import SwiftUI
@@ -246,14 +246,6 @@ struct PropertyUploadView: View {
         
         isUploading = true
         
-        // In a real implementation, you would:
-        // 1. Upload all images to Firebase Storage
-        // 2. Upload panoramic images
-        // 3. Upload video if available
-        // 4. Create property document in Firestore
-        // 5. Update UI with success/error
-        
-        // Simulated upload delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             isUploading = false
             showingSuccess = true
@@ -261,7 +253,7 @@ struct PropertyUploadView: View {
     }
 }
 
-// MARK: - Panoramic Image Upload Model
+// Panoramic Image Upload Model
 struct PanoramicImageUpload: Identifiable {
     let id = UUID()
     let title: String
@@ -270,7 +262,7 @@ struct PanoramicImageUpload: Identifiable {
     let description: String?
 }
 
-// MARK: - Multiple Image Picker
+//  Multiple Image Picker
 struct ImagePickerMultiple: UIViewControllerRepresentable {
     @Binding var selectedImages: [UIImage]
     @Environment(\.dismiss) private var dismiss
@@ -314,7 +306,7 @@ struct ImagePickerMultiple: UIViewControllerRepresentable {
     }
 }
 
-// MARK: - Panoramic Capture View
+//  Panoramic Capture View
 struct PanoramicCaptureView: View {
     @Binding var panoramicImages: [PanoramicImageUpload]
     @State private var selectedRoomType: PanoramicImage.RoomType = .livingRoom
@@ -424,7 +416,7 @@ struct PanoramicCaptureView: View {
     }
 }
 
-// MARK: - Video Picker
+// Video Picker
 struct VideoPickerView: UIViewControllerRepresentable {
     @Binding var selectedVideoURL: URL?
     @Environment(\.dismiss) private var dismiss

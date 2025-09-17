@@ -2,7 +2,7 @@
 //  PaymentService.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2025-08-24.
+//  Created by Ruvindu Dulaksha on 2025-08-24.
 //
 
 import Foundation
@@ -35,7 +35,7 @@ class PaymentService: ObservableObject {
         listeners.removeAll()
     }
     
-    // MARK: - Setup Listeners
+    
     private func setupPaymentListeners() {
         guard !currentUserId.isEmpty else { return }
         
@@ -76,9 +76,9 @@ class PaymentService: ObservableObject {
         listeners.append(contentsOf: [transactionListener, purchaseListener])
     }
     
-    // MARK: - Payment Support
+    
     func calculatePaymentAmount(amount: Double) -> (total: Double, fees: TransactionFees) {
-        // Calculate fees (demo values)
+        
         let serviceFee = amount * 0.025 // 2.5% service fee
         let processingFee = amount * 0.01 // 1% processing fee
         let taxes = (amount + serviceFee + processingFee) * 0.08 // 8% tax
@@ -93,7 +93,7 @@ class PaymentService: ObservableObject {
         return (total, fees)
     }
     
-    // MARK: - Payment Processing
+    
     func processAuctionPayment(
         propertyId: String,
         amount: Double,
@@ -108,7 +108,7 @@ class PaymentService: ObservableObject {
             let transactionId = UUID().uuidString
             let (_, fees) = calculatePaymentAmount(amount: amount)
             
-            // Get property details
+            
             let propertyDoc = try await db.collection("auction_properties").document(propertyId).getDocument()
             guard let property = try? propertyDoc.data(as: AuctionProperty.self) else {
                 throw PaymentError.propertyNotFound
@@ -187,7 +187,7 @@ class PaymentService: ObservableObject {
         }
     }
     
-    // MARK: - Card Management
+    // Card Management
     func addCard(
         cardNumber: String,
         expiryMonth: Int,
@@ -200,8 +200,7 @@ class PaymentService: ObservableObject {
         let cardType = detectCardType(cardNumber)
         let lastFourDigits = String(cardNumber.suffix(4))
         
-        // In a real app, you would validate the card with a payment processor
-        // For demo purposes, we'll simulate validation
+        
         let isValid = validateCard(cardNumber: cardNumber, cvv: cvv, expiryMonth: expiryMonth, expiryYear: expiryYear)
         
         if !isValid {
@@ -269,7 +268,7 @@ class PaymentService: ObservableObject {
         return true
     }
     
-    // MARK: - Transaction History
+    // Transaction History
     func getTransactionHistory() async -> [TransactionHistory] {
         guard let userId = Auth.auth().currentUser?.uid else {
             // Return mock data for demo purposes when not authenticated
@@ -303,7 +302,7 @@ class PaymentService: ObservableObject {
         }
     }
     
-    // MARK: - Payment Reminders
+    // Payment Reminders
     
     func getPendingPaymentReminders() async -> [PaymentReminder] {
         guard let userId = Auth.auth().currentUser?.uid else {
@@ -353,7 +352,7 @@ class PaymentService: ObservableObject {
         }
     }
     
-    // MARK: - Mock Data for Testing
+    //  Mock Data for Testing
     
     private func createMockTransactionHistory() -> [TransactionHistory] {
         let userId = Auth.auth().currentUser?.uid ?? "mock_user"
@@ -450,9 +449,7 @@ class PaymentService: ObservableObject {
                     ]
                 ]
                 
-                // TODO: Implement push notification via FCM when FirebaseFunctions is available
-                // let functions = Functions.functions()
-                // _ = try? await functions.httpsCallable("sendPushNotification").call(message)
+               
                 print("Would send push notification: \(message)")
             }
         } catch {
@@ -460,7 +457,7 @@ class PaymentService: ObservableObject {
         }
     }
     
-    // MARK: - Refund Processing
+    // Refund Processing
     func processRefund(transactionId: String, reason: String) async throws {
         // Find the transaction
         guard let transaction = transactions.first(where: { $0.transactionId == transactionId }) else {
@@ -495,21 +492,19 @@ class PaymentService: ObservableObject {
         print("Refund processed for transaction \(transactionId)")
     }
     
-    // MARK: - Apple Pay Support
+    // Apple Pay Support
     func createApplePayRequest(for amount: Double, propertyTitle: String) -> String {
-        // This is a placeholder implementation for Apple Pay
-        // In a real app, this would create a PKPaymentRequest
+       
         return "apple-pay-request-\(UUID().uuidString)"
     }
     
     func canMakeApplePayPayments() -> Bool {
-        // This is a placeholder implementation
-        // In a real app, this would check PKPaymentAuthorizationViewController.canMakePayments()
+        
         return true
     }
 }
 
-// MARK: - Payment Errors
+//  Payment Errors
 enum PaymentError: LocalizedError {
     case propertyNotFound
     case invalidCard

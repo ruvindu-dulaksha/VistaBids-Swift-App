@@ -16,17 +16,17 @@ import UIKit
 @MainActor
 class AuctionPropertyDataService: ObservableObject {
     
-    // MARK: - Dependencies
+    //  Dependencies
     private let db = Firestore.firestore()
     private let imageUploadService = ImageUploadService()
     
-    // MARK: - Published Properties
+    //  Published Properties
     @Published var isCreatingProperties = false
     @Published var creationProgress: Double = 0.0
     @Published var lastError: Error?
     @Published var createdPropertiesCount = 0
     
-    // MARK: - Property Templates
+    //  Property Templates
     private let propertyTemplates: [(
         title: String,
         description: String,
@@ -198,7 +198,7 @@ class AuctionPropertyDataService: ObservableObject {
         )
     ]
     
-    // MARK: - High-Quality Sample Images
+    //  High-Quality Sample Images
     private let sampleImageSets: [[String]] = [
         // Luxury Oceanfront Villa
         [
@@ -258,7 +258,7 @@ class AuctionPropertyDataService: ObservableObject {
         ]
     ]
     
-    // MARK: - Panoramic Image URLs
+    //  Panoramic Image URLs
     private let panoramicImageSets: [[String]] = [
         // Luxury Villa panoramic images
         [
@@ -298,7 +298,7 @@ class AuctionPropertyDataService: ObservableObject {
         ]
     ]
     
-    // MARK: - Public Methods
+    // Public Methods
     
     /// Create a comprehensive set of auction properties with Firebase storage
     func createEnhancedAuctionProperties() async throws {
@@ -321,7 +321,7 @@ class AuctionPropertyDataService: ObservableObject {
             do {
                 print("🏠 Creating property \(index + 1)/\(totalProperties): \(template.title)")
                 
-                // Update progress
+                
                 await MainActor.run {
                     creationProgress = Double(index) / Double(totalProperties)
                 }
@@ -456,7 +456,7 @@ class AuctionPropertyDataService: ObservableObject {
         return documentRef.documentID
     }
     
-    // MARK: - Private Methods
+    //  Private Methods
     
     private func createSingleAuctionProperty(
         template: (
@@ -573,14 +573,14 @@ class AuctionPropertyDataService: ObservableObject {
     }
 }
 
-// MARK: - Array Safe Subscript Extension
+// Array Safe Subscript Extension
 extension Array {
     subscript(safe index: Int) -> Element? {
         return indices.contains(index) ? self[index] : nil
     }
 }
 
-// MARK: - Error Types
+
 enum AuctionPropertyError: LocalizedError {
     case notAuthenticated
     case imageUploadFailed

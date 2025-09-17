@@ -27,7 +27,7 @@ class AppLockService: ObservableObject {
         NotificationCenter.default.removeObserver(self)
     }
     
-    // MARK: - App Lifecycle Management
+    // App Lifecycle Management
     private func setupAppLifecycleObservers() {
         // Listen for app entering background
         NotificationCenter.default.addObserver(
@@ -66,11 +66,10 @@ class AppLockService: ObservableObject {
     
     @objc private func appWillResignActive() {
         print("⏸️ App resigning active - preparing for potential lock...")
-        // Optionally lock immediately when app loses focus for sensitive apps
-        // For now, we'll only lock when actually going to background
+        
     }
     
-    // MARK: - Lock State Management
+    // Lock State Management
     func checkInitialLockState() {
         // Check if user has Face ID enabled for app lock
         let credentialsService = BiometricCredentialsService()
@@ -82,12 +81,11 @@ class AppLockService: ObservableObject {
         print("   - Has launched before: \(hasLaunchedBefore)")
         print("   - Biometric available: \(biometricService.isBiometricAvailable)")
         
-        // Lock the app if Face ID is enabled and biometric is available
-        // This will be evaluated with user login state in ContentView
+        
         if isFaceIDEnabled && biometricService.isBiometricAvailable {
             print("🔒 App should be locked on startup (will check login state)")
             isAppLocked = true
-            shouldShowBiometricPrompt = true // Show prompt immediately for app startup
+            shouldShowBiometricPrompt = true 
         } else {
             print("🔓 App unlocked on startup")
             isAppLocked = false
@@ -109,7 +107,7 @@ class AppLockService: ObservableObject {
         print("🔒 Locking app - Face ID authentication required")
         DispatchQueue.main.async {
             self.isAppLocked = true
-            self.shouldShowBiometricPrompt = false // Don't show prompt immediately
+            self.shouldShowBiometricPrompt = false 
         }
     }
     
@@ -135,7 +133,7 @@ class AppLockService: ObservableObject {
         }
     }
     
-    // MARK: - Authentication Methods
+    // Authentication Methods
     func authenticateWithBiometrics() {
         guard !isAuthenticating else { return }
         guard canUseBiometric else {
@@ -213,14 +211,13 @@ class AppLockService: ObservableObject {
     
     private func handleBiometricLockout() {
         print("🚫 Biometric authentication locked out")
-        // For app lock, we don't need to clear credentials or force logout
-        // Just unlock the app and let user try again later
+       
         unlockApp()
     }
     
     private func handlePrivacyPermissionError() {
         print("🚫 Privacy permission error - disabling Face ID app lock")
-        // Disable Face ID app lock feature since permission is denied
+        
         UserDefaults.standard.set(false, forKey: "face_id_app_lock_enabled")
         unlockApp()
         
@@ -228,7 +225,7 @@ class AppLockService: ObservableObject {
         NotificationCenter.default.post(name: .biometricPrivacyPermissionDenied, object: nil)
     }
     
-    // MARK: - Manual Control
+    
     func enableFaceIDAppLock() {
         print("🔐 Face ID app lock enabled (managed by BiometricCredentialsService)")
         UserDefaults.standard.set(true, forKey: "has_launched_before")
@@ -236,7 +233,7 @@ class AppLockService: ObservableObject {
     
     func disableFaceIDAppLock() {
         print("🔓 Face ID app lock disabled (managed by BiometricCredentialsService)")
-        // If app is currently locked, unlock it
+        
         if isAppLocked {
             unlockApp()
         }
@@ -252,7 +249,7 @@ class AppLockService: ObservableObject {
         lockAppIfBiometricEnabled()
     }
     
-    // MARK: - Utility Methods
+    //  Utility Methods
     var canUseBiometric: Bool {
         return biometricService.isBiometricAvailable
     }
@@ -270,7 +267,7 @@ class AppLockService: ObservableObject {
     }
 }
 
-// MARK: - Notification Names
+// Notification Names
 extension Notification.Name {
     static let biometricLockoutOccurred = Notification.Name("biometricLockoutOccurred")
     static let biometricPrivacyPermissionDenied = Notification.Name("biometricPrivacyPermissionDenied")

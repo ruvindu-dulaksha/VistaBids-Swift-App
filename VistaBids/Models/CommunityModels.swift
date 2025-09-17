@@ -6,11 +6,10 @@
 //
 
 import Foundation
-// Temporarily commenting out Firebase imports to fix build errors
 import FirebaseFirestore
 
 
-// MARK: - Community Post Model
+// Community Post Model
 struct CommunityPost: Identifiable, Codable {
     @DocumentID var id: String?
     let userId: String
@@ -36,7 +35,7 @@ struct CommunityPost: Identifiable, Codable {
     }
 }
 
-// MARK: - Post Location Model
+//  Post Location Model
 struct PostLocation: Codable {
     let name: String
     let latitude: Double
@@ -44,7 +43,7 @@ struct PostLocation: Codable {
     let address: String?
 }
 
-// MARK: - Community Event Model
+// Community Event Model
 struct CommunityEvent: Identifiable, Codable {
     @DocumentID var id: String?
     let userId: String
@@ -69,7 +68,7 @@ struct CommunityEvent: Identifiable, Codable {
     }
 }
 
-// MARK: - Event Location Model
+//  Event Location Model
 struct EventLocation: Codable {
     let name: String
     let address: String
@@ -77,7 +76,7 @@ struct EventLocation: Codable {
     let longitude: Double
 }
 
-// MARK: - Event Category Enum
+//  Event Category Enum
 enum EventCategory: String, CaseIterable, Codable {
     case workshop = "Workshop"
     case viewing = "Property Viewing"
@@ -88,7 +87,7 @@ enum EventCategory: String, CaseIterable, Codable {
     case meetup = "Meetup"
 }
 
-// MARK: - Community Group Model
+// Community Group Model
 struct CommunityGroup: Identifiable, Codable {
     @DocumentID var id: String?
     let name: String
@@ -117,7 +116,7 @@ struct CommunityGroup: Identifiable, Codable {
     }
 }
 
-// MARK: - Group Category Enum
+//  Group Category Enum
 enum GroupCategory: String, CaseIterable, Codable {
     case investors = "Investors"
     case firstTimeBuyers = "First Time Buyers"
@@ -130,7 +129,7 @@ enum GroupCategory: String, CaseIterable, Codable {
     case local = "Local Community"
 }
 
-// MARK: - Chat Message Model
+//  Chat Message Model
 struct ChatMessage: Identifiable, Codable {
     @DocumentID var id: String?
     let senderId: String
@@ -152,7 +151,7 @@ struct ChatMessage: Identifiable, Codable {
     }
 }
 
-// MARK: - Message Type Enum
+//  Message Type Enum
 enum MessageType: String, Codable {
     case text = "text"
     case image = "image"
@@ -160,7 +159,7 @@ enum MessageType: String, Codable {
     case property = "property"
 }
 
-// MARK: - Chat Room Model
+// Chat Room Model
 struct ChatRoom: Identifiable, Codable {
     @DocumentID var id: String?
     let name: String
@@ -180,7 +179,7 @@ struct ChatRoom: Identifiable, Codable {
     }
 }
 
-// MARK: - Comment Model
+// Comment Model
 struct PostComment: Identifiable, Codable {
     @DocumentID var id: String?
     let postId: String
@@ -201,13 +200,13 @@ struct PostComment: Identifiable, Codable {
     }
 }
 
-// MARK: - Translation Service Protocol
+//  Translation Service Protocol
 protocol TranslationServiceProtocol {
     func translateText(_ text: String, to targetLanguage: String) async throws -> String
     func detectLanguage(_ text: String) async throws -> String
 }
 
-// MARK: - Translation Errors
+// Translation Errors
 enum TranslationError: LocalizedError {
     case unsupportedLanguage
     case invalidURL

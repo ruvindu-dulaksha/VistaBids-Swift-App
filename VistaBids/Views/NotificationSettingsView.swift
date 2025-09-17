@@ -2,7 +2,7 @@
 //  NotificationSettingsView.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2025-09-13.
+//  Created by Ruvindu Dulaksha on 2025-09-13.
 //
 
 import SwiftUI
@@ -87,7 +87,7 @@ struct NotificationSettingsView: View {
         }
     }
     
-    // MARK: - Push Notification Section
+    // Push Notification Section
     private var pushNotificationSection: some View {
         Section {
             HStack {
@@ -129,7 +129,7 @@ struct NotificationSettingsView: View {
         }
     }
     
-    // MARK: - Notification Types Section
+    // Notification Types Section
     private var notificationTypesSection: some View {
         Section {
             NotificationTypeRow(
@@ -178,7 +178,7 @@ struct NotificationSettingsView: View {
         }
     }
     
-    // MARK: - Delivery Methods Section
+    // Delivery Methods Section
     private var deliveryMethodsSection: some View {
         Section {
             HStack {
@@ -225,7 +225,7 @@ struct NotificationSettingsView: View {
         }
     }
     
-    // MARK: - Quiet Hours Section
+    // Quiet Hours Section
     private var quietHoursSection: some View {
         Section {
             HStack {
@@ -272,7 +272,7 @@ struct NotificationSettingsView: View {
         }
     }
     
-    // MARK: - Sound Settings Section
+    // Sound Settings Section
     private var soundSettingsSection: some View {
         Section {
             HStack {
@@ -297,7 +297,7 @@ struct NotificationSettingsView: View {
         }
     }
     
-    // MARK: - Advanced Settings Section
+    //  Advanced Settings Section
     private var advancedSettingsSection: some View {
         Section {
             Button(action: clearAllNotifications) {
@@ -329,7 +329,7 @@ struct NotificationSettingsView: View {
         }
     }
     
-    // MARK: - Helper Methods
+    // Helper Methods
     private func loadCurrentSettings() {
         // Load settings from UserDefaults or service
         pushNotificationsEnabled = UserDefaults.standard.bool(forKey: "pushNotificationsEnabled")
@@ -415,7 +415,7 @@ struct NotificationSettingsView: View {
     }
 }
 
-// MARK: - Supporting Views
+//  Supporting Views
 
 struct NotificationTypeRow: View {
     let icon: String

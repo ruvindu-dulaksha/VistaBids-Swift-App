@@ -3,7 +3,7 @@ import SwiftUI
 struct TranslationButton: View {
     @EnvironmentObject var translationManager: TranslationManager
     let sourceLanguage: String
-    let contentId: String // Optional identifier for the content being translated
+    let contentId: String 
     let isCompact: Bool
     @State private var isTranslated: Bool = false
     
@@ -27,8 +27,7 @@ struct TranslationButton: View {
             } else {
                 // Otherwise, trigger new translation
                 Task {
-                    // The actual translation happens in the parent view
-                    // We just update the state here
+                    
                     isTranslated = true
                     
                     // Haptic feedback for translation start
@@ -78,7 +77,7 @@ struct TranslationButton: View {
         .disabled(translationManager.isTranslating || sourceLanguage == translationManager.selectedLanguage)
         .opacity(sourceLanguage == translationManager.selectedLanguage ? 0 : 1)
         .onAppear {
-            // Sync with global translation state on appear
+            
             isTranslated = translationManager.isTranslated
         }
         .onChange(of: translationManager.isTranslated) { _, newValue in

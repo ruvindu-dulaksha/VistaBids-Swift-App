@@ -8,7 +8,7 @@
 import SwiftUI
 import Foundation
 
-// MARK: - Theme Mode Enum
+// Theme Mode Enum
 enum ThemeMode: String, CaseIterable {
     case light = "light"
     case dark = "dark"
@@ -31,7 +31,7 @@ enum ThemeMode: String, CaseIterable {
     }
 }
 
-// MARK: - Theme Manager
+// Theme Manager
 class ThemeManager: ObservableObject {
     @Published var currentTheme: ThemeMode {
         didSet {
@@ -116,5 +116,5 @@ class ThemeManager: ObservableObject {
     }
 }
 
-// MARK: - Theme Colors
+
 

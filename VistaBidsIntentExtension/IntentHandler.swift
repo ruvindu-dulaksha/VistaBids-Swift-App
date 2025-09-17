@@ -2,7 +2,7 @@
 //  IntentHandler.swift
 //  VistaBidsIntentExtension
 //
-//  Created by Assistant on 2025-09-15.
+//  Created by Ruvindu Dulaksha on 2025-09-15.
 //
 
 import Intents

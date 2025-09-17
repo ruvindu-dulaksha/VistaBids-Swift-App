@@ -125,7 +125,7 @@ struct PaymentCartView: View {
             do {
                 // Process payment for all properties in the cart
                 for property in properties {
-                    print("🎯 Processing payment for property: \(property.title)")
+                    //print("Processing payment for property: \(property.title)")
                     try await biddingService.completePayment(for: property.id ?? "")
                 }
                 
@@ -133,13 +133,13 @@ struct PaymentCartView: View {
                 await MainActor.run {
                     processingPayment = false
                     showPaymentSuccess = true
-                    print("✅ All payments processed successfully")
+                    //print("All payments processed successfully")
                 }
                 
             } catch {
                 await MainActor.run {
                     processingPayment = false
-                    print("❌ Payment processing failed: \(error.localizedDescription)")
+                   // print("Payment processing failed: \(error.localizedDescription)")
                     // You might want to show an error alert here
                 }
             }
@@ -147,7 +147,7 @@ struct PaymentCartView: View {
     }
 }
 
-// MARK: - Payment Cart Item View
+// Payment Cart Item View
 struct PaymentCartItemView: View {
     let property: AuctionProperty
     
@@ -174,7 +174,7 @@ struct PaymentCartItemView: View {
     }
 }
 
-// MARK: - Component Views
+// Component Views
 struct PropertyCartHeader: View {
     let property: AuctionProperty
     
@@ -311,7 +311,7 @@ struct PropertyCartFooter: View {
     }
 }
 
-// MARK: - Payment Method Selector
+// Payment Method Selector
 struct PaymentMethodSelector: View {
     @Binding var selectedMethod: PaymentMethod
     @State private var showingMethods = false

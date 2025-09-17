@@ -648,7 +648,7 @@ struct AddPropertyForAuctionView: View {
                             let filePath = imagesDir.appendingPathComponent(fileName)
                             try imageData.write(to: filePath)
                             imageURL = "local://images/\(fileName)"
-                            print("✅ Saved AR panoramic locally: \(imageURL)")
+                            print(" Saved AR panoramic locally: \(imageURL)")
                         } else {
                             imageURL = "placeholder_ar_panoramic_\(index)"
                         }
@@ -686,7 +686,7 @@ struct AddPropertyForAuctionView: View {
                             let filePath = imagesDir.appendingPathComponent(fileName)
                             try imageData.write(to: filePath)
                             imageURL = "local://images/\(fileName)"
-                            print("✅ Saved gallery panoramic locally: \(imageURL)")
+                            print(" Saved gallery panoramic locally: \(imageURL)")
                         } else {
                             imageURL = "placeholder_gallery_panoramic_\(index)"
                         }
@@ -761,7 +761,7 @@ struct AddPropertyForAuctionView: View {
     }
 }
 
-// MARK: - Helper Views
+
 // AuctionDuration enum is now defined in BiddingModels.swift
 
 #Preview {

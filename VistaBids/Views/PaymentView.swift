@@ -2,7 +2,7 @@
 //  PaymentViewFixed.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2025-09-13.
+//  Created by Ruvindu Dulaksha on 2025-08-19.
 //
 
 import SwiftUI
@@ -538,7 +538,7 @@ struct PaymentView: View {
     }
     
     private var isFormValid: Bool {
-        if selectedPaymentMethod == 1 { // Apple Pay
+        if selectedPaymentMethod == 1 { 
             return true
         }
         

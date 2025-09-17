@@ -9,7 +9,7 @@ import MapKit
 import Foundation
 import SwiftUI
 
-// MARK: - MKMapView Extensions
+//  MKMapView Extensions
 extension MKMapView {
     
     /// Add heat map overlay to the map
@@ -95,7 +95,7 @@ extension MKMapView {
     }
 }
 
-// MARK: - MKCoordinateRegion Extensions
+//  MKCoordinateRegion Extensions
 extension MKCoordinateRegion {
     
     /// Calculate region area in square kilometers
@@ -134,7 +134,7 @@ extension MKCoordinateRegion {
     }
 }
 
-// MARK: - CLLocationCoordinate2D Extensions
+//  CLLocationCoordinate2D Extensions
 extension CLLocationCoordinate2D {
     
     /// Calculate distance to another coordinate
@@ -182,7 +182,7 @@ extension CLLocationCoordinate2D {
     }
 }
 
-// MARK: - CLLocation Extensions
+// CLLocation Extensions
 extension CLLocation {
     
     /// Format distance as readable string
@@ -206,7 +206,7 @@ extension CLLocation {
     }
 }
 
-// MARK: - MKAnnotation Protocol Extensions
+//  MKAnnotation Protocol Extensions
 extension MKAnnotation {
     
     /// Calculate distance from user location
@@ -229,7 +229,7 @@ extension MKAnnotation {
     }
 }
 
-// MARK: - MKPolyline Extensions
+//  MKPolyline Extensions
 extension MKPolyline {
     
     /// Calculate polyline length
@@ -259,7 +259,7 @@ extension MKPolyline {
     }
 }
 
-// MARK: - Color Extensions for Map Styling
+//  Color Extensions for Map Styling
 extension Color {
     
     /// Heat map color based on intensity
@@ -304,7 +304,7 @@ extension Color {
     }
 }
 
-// MARK: - Map Style Configurations
+//  Map Style Configurations
 struct MapStyleConfig {
     static let defaultStyle = MKStandardMapConfiguration()
     

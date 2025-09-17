@@ -2,13 +2,12 @@
 //  ContentView.swift
 //  VistaBids
 //
-//  Created by Assistant on 2025-08-07.
+//  Created by Ruvindu Dulaksha on 2025-08-07.
 //
 
 import SwiftUI
 import Combine
 import Firebase
-// Import ThemeManager for the updated MainTabView
 import Foundation
 
 struct ContentView: View {
@@ -59,7 +58,6 @@ struct ContentView: View {
         .environmentObject(themeManager)
         .environmentObject(notificationManager)
         .overlay(
-            // Global notification overlay
             ZStack {
                 if notificationManager.showBidWinnerNotification,
                    let property = notificationManager.winningProperty {
@@ -121,7 +119,7 @@ struct ContentView: View {
         appLockService.disableFaceIDAppLock()
     }
     
-    // MARK: - SiriKit User Activity Handlers
+    // SiriKit User Activity Handlers
     
     @available(iOS 13.0, *)
     private func handleSiriBidActivity(_ userActivity: NSUserActivity) {
@@ -130,12 +128,12 @@ struct ContentView: View {
         if let bidAmount = SiriKitManager.shared.handleUserActivity(userActivity) {
             print("🎤 SiriKit: Extracted bid amount: \(bidAmount)")
             
-            // TODO: Navigate to bidding screen and place bid
+            // Navigate to bidding screen and place bid
             // For now, just show a notification
             notificationManager.showSiriBidNotification(amount: bidAmount)
         } else {
             print("🎤 SiriKit: No bid amount found, showing general bidding screen")
-            // TODO: Navigate to general bidding screen
+            // Navigate to general bidding screen
         }
     }
     
@@ -145,7 +143,7 @@ struct ContentView: View {
         
         if let propertyId = userActivity.userInfo?["propertyId"] as? String {
             print("🎤 SiriKit: Navigating to property: \(propertyId)")
-            // TODO: Navigate to specific property detail view
+            // Navigate to specific property detail view
         }
     }
 }

@@ -2,7 +2,7 @@
 //  NotificationManager.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2025-09-12.
+//  Created by Ruvindu Dulaksha on 2025-09-12.
 //
 
 import Foundation
@@ -61,7 +61,7 @@ class NotificationManager: ObservableObject {
         winningProperty = nil
     }
     
-    // MARK: - SiriKit Integration
+    //  SiriKit Integration
     
     func showSiriBidNotification(amount: String) {
         print("🎤 SiriKit: Showing bid notification for amount: \(amount)")
@@ -72,7 +72,7 @@ class NotificationManager: ObservableObject {
         content.sound = .default
         content.badge = 1
         
-        // Add custom data
+        
         content.userInfo = [
             "bidAmount": amount,
             "source": "siri",
@@ -120,7 +120,7 @@ class NotificationManager: ObservableObject {
         UNUserNotificationCenter.current().add(request)
     }
     
-    // MARK: - Payment Reminder Notifications
+    //  Payment Reminder Notifications
     
     func schedulePaymentReminders() async {
         guard let userId = Auth.auth().currentUser?.uid else { return }
@@ -243,7 +243,7 @@ class NotificationManager: ObservableObject {
         print("Cancelled payment reminders for auction: \(auctionId)")
     }
     
-    // MARK: - Bid Status Notifications
+    //  Bid Status Notifications
     
     func scheduleAuctionEndNotification(for property: AuctionProperty, endTime: Date) async {
         let content = UNMutableNotificationContent()

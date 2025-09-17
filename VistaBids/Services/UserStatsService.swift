@@ -2,7 +2,7 @@
 //  UserStatsService.swift
 //  VistaBids
 //
-//  Created by Assistant on 2025-08-21.
+//  Created by Ruvindu Dulaksha on 2025-08-21.
 //
 
 import Foundation
@@ -45,7 +45,7 @@ class UserStatsService: ObservableObject {
         loadUserStats()
     }
     
-    // MARK: - User Stats Loading
+    // User Stats Loading
     func loadUserStats() {
         guard let userId = Auth.auth().currentUser?.uid else {
             print("❌ No authenticated user for stats")
@@ -102,7 +102,7 @@ class UserStatsService: ObservableObject {
         }
     }
     
-    // MARK: - Individual Data Fetchers
+    // Individual Data Fetchers
     private func fetchPropertiesSold(userId: String) async throws -> Int {
         let snapshot = try await db.collection("saleProperties")
             .whereField("seller.id", isEqualTo: userId)
@@ -174,7 +174,7 @@ class UserStatsService: ObservableObject {
         }
     }
     
-    // MARK: - User Actions
+    //  User Actions
     func addToFavorites(propertyId: String) async {
         guard let userId = Auth.auth().currentUser?.uid else { return }
         
@@ -187,7 +187,7 @@ class UserStatsService: ObservableObject {
             
             try await db.collection("favorites").addDocument(data: favoriteData)
             
-            // Refresh stats
+            
             loadUserStats()
         } catch {
             await MainActor.run {
@@ -209,7 +209,7 @@ class UserStatsService: ObservableObject {
                 try await document.reference.delete()
             }
             
-            // Refresh stats
+            
             loadUserStats()
         } catch {
             await MainActor.run {
@@ -230,7 +230,7 @@ class UserStatsService: ObservableObject {
             
             try await db.collection("watchlist").addDocument(data: watchlistData)
             
-            // Refresh stats
+            
             loadUserStats()
         } catch {
             await MainActor.run {
@@ -252,7 +252,7 @@ class UserStatsService: ObservableObject {
                 try await document.reference.delete()
             }
             
-            // Refresh stats
+            
             loadUserStats()
         } catch {
             await MainActor.run {
@@ -261,7 +261,7 @@ class UserStatsService: ObservableObject {
         }
     }
     
-    // MARK: - Profile Management
+    //  Profile Management
     func updateUserProfile(displayName: String?, photoURL: String?) async throws {
         guard let user = Auth.auth().currentUser else {
             throw UserStatsError.notAuthenticated
@@ -413,7 +413,7 @@ class UserStatsService: ObservableObject {
     }
 }
 
-// MARK: - Supporting Models
+
 struct TransactionRecord: Identifiable, Codable {
     let id: String
     let userId: String

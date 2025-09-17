@@ -76,7 +76,7 @@ struct ImagePicker: UIViewControllerRepresentable {
     }
 }
 
-// MARK: - Camera Permission Helper
+//  Camera Permission Helper
 extension ImagePicker {
     static func checkCameraPermission() -> Bool {
         return AVCaptureDevice.authorizationStatus(for: .video) == .authorized

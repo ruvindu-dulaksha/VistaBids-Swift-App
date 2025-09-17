@@ -8,7 +8,7 @@
 import Foundation
 import MapKit
 
-// MARK: - Sale Property Model (for direct sales, not auctions)
+// Sale Property Model (for direct sales, not auctions)
 struct SaleProperty: Identifiable, Codable {
     let id: String
     let title: String
@@ -61,7 +61,7 @@ struct SaleProperty: Identifiable, Codable {
     }
 }
 
-// MARK: - Sale Property Status
+// Sale Property Status
 enum SalePropertyStatus: String, Codable, CaseIterable {
     case draft = "draft"
     case active = "active"
@@ -90,7 +90,7 @@ enum SalePropertyStatus: String, Codable, CaseIterable {
     }
 }
 
-// MARK: - Property Search Helper
+//  Property Search Helper
 extension SaleProperty {
     static func filter(properties: [SaleProperty], options: AdvancedSearchOptions, searchText: String) -> [SaleProperty] {
         var filteredProperties = properties
@@ -149,7 +149,7 @@ extension SaleProperty {
             propertyType.displayName.lowercased().contains(searchText.lowercased())
     }
     
-    // Sample data for previews and testing
+    
     static var example: SaleProperty {
         SaleProperty(
             id: "sp1",

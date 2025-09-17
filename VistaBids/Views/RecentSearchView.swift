@@ -2,7 +2,7 @@
 //  RecentSearchView.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2023-08-23.
+//  Created by Ruvindu Dulaksha on 2025-08-23.
 //
 
 import SwiftUI
@@ -48,7 +48,7 @@ struct RecentSearchView: View {
     }
 }
 
-// MARK: - UserDefaults Extension for Search History
+// UserDefaults Extension for Search History
 extension UserDefaults {
     private enum Keys {
         static let recentSearches = "recentSearches"

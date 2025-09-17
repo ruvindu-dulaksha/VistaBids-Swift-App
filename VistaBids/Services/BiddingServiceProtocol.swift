@@ -7,7 +7,7 @@
 
 import Foundation
 
-// Placeholder - Future implementation for Bidding Service Protocol
+// Future implementation for Bidding Service Protocol
 protocol BiddingServiceProtocol {
     // Future implementation
 }

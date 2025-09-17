@@ -29,13 +29,13 @@ struct EnhancedBiddingView: View {
     }
     
     private var canBid: Bool {
-        // TODO: Implement canPlaceBid in BiddingService
+        
         // biddingService.canPlaceBid(on: property)
         property.status == .active
     }
     
     private var minimumBidAmount: Double {
-        // TODO: Implement getMinimumBidAmount in BiddingService  
+         
         // biddingService.getMinimumBidAmount(for: property)
         property.currentBid + 100
     }
@@ -89,7 +89,7 @@ struct EnhancedBiddingView: View {
         .onAppear {
             setupAuctionMonitoring()
         }
-        // TODO: Fix timer service integration
+       
         // .onReceive(timerService.$properties) { properties in
         //     if let updatedProperty = properties.first(where: { $0.id == property.id }) {
         //         updateTimeRemaining(for: updatedProperty)
@@ -118,7 +118,7 @@ struct EnhancedBiddingView: View {
         }
     }
     
-    // MARK: - Auction Header
+    // Auction Header
     private var auctionHeaderView: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -152,7 +152,7 @@ struct EnhancedBiddingView: View {
         .shadow(radius: 2)
     }
     
-    // MARK: - Property Images
+    //Property Images
     private var propertyImageCarousel: some View {
         TabView(selection: $selectedImageIndex) {
             ForEach(0..<property.images.count, id: \.self) { index in
@@ -181,7 +181,7 @@ struct EnhancedBiddingView: View {
         .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: .always))
     }
     
-    // MARK: - Property Details
+    // Property Details
     private var propertyDetailsView: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Property Details")
@@ -232,7 +232,7 @@ struct EnhancedBiddingView: View {
         .shadow(radius: 2)
     }
     
-    // MARK: - Current Bid View
+    // Current Bid View
     private var currentBidView: some View {
         VStack(spacing: 12) {
             HStack {
@@ -273,7 +273,7 @@ struct EnhancedBiddingView: View {
         .shadow(radius: 2)
     }
     
-    // MARK: - Auction Timer
+    // Auction Timer
     private var auctionTimerView: some View {
         VStack(spacing: 16) {
             HStack {
@@ -311,7 +311,7 @@ struct EnhancedBiddingView: View {
         .shadow(radius: 2)
     }
     
-    // MARK: - Bidding Section
+    // Bidding Section
     private var biddingSection: some View {
         VStack(spacing: 16) {
             Text("Place Your Bid")
@@ -360,7 +360,7 @@ struct EnhancedBiddingView: View {
         .shadow(radius: 2)
     }
     
-    // MARK: - Winner Section
+    // Winner Section
     private var winnerSection: some View {
         VStack(spacing: 16) {
             Image(systemName: "crown.fill")
@@ -424,7 +424,7 @@ struct EnhancedBiddingView: View {
         .shadow(radius: 2)
     }
     
-    // MARK: - Auction Ended Section
+    // Auction Ended Section
     private var auctionEndedSection: some View {
         VStack(spacing: 16) {
             Image(systemName: "flag.checkered")
@@ -462,7 +462,7 @@ struct EnhancedBiddingView: View {
         .shadow(radius: 2)
     }
     
-    // MARK: - Upcoming Auction Section
+    //  Upcoming Auction Section
     private var upcomingAuctionSection: some View {
         VStack(spacing: 16) {
             Image(systemName: "clock.badge.exclamationmark")
@@ -490,7 +490,7 @@ struct EnhancedBiddingView: View {
         .shadow(radius: 2)
     }
     
-    // MARK: - Action Buttons
+    // Action Buttons
     private var actionButtonsView: some View {
         HStack(spacing: 16) {
             Button(action: shareProperty) {
@@ -521,7 +521,7 @@ struct EnhancedBiddingView: View {
         }
     }
     
-    // MARK: - Bid History
+    //  Bid History
     private var bidHistoryView: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Bid History")
@@ -552,7 +552,7 @@ struct EnhancedBiddingView: View {
         .shadow(radius: 2)
     }
     
-    // MARK: - Computed Properties
+    // Computed Properties
     private var isValidBid: Bool {
         guard let amount = Double(bidAmount) else { return false }
         return amount >= minimumBidAmount
@@ -570,7 +570,6 @@ struct EnhancedBiddingView: View {
         return formatter
     }
     
-    // MARK: - Methods
     private func setupAuctionMonitoring() {
         biddingService.startListeningToAuctionUpdates(for: property.id ?? "")
         timerService.startAuctionTimer(for: property)
@@ -656,7 +655,7 @@ struct EnhancedBiddingView: View {
         showPaymentView = false
         // Refresh property data to show updated payment status
         Task {
-            // Refresh the property data
+            
         }
     }
     
@@ -685,7 +684,7 @@ struct EnhancedBiddingView: View {
     }
 }
 
-// MARK: - Supporting Views
+// Supporting Views
 
 struct AuctionStatusBadge: View {
     let status: AuctionStatus

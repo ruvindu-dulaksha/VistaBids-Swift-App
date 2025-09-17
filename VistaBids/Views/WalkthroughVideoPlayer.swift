@@ -2,7 +2,7 @@
 //  WalkthroughVideoPlayer.swift
 //  VistaBids
 //
-//  Created by AI Assistant on 2025-08-18.
+//  Created by Ruvindu Dulaksha on 2025-08-18.
 //
 
 import SwiftUI
@@ -227,7 +227,7 @@ struct WalkthroughVideoPlayerView: UIViewRepresentable {
     }
 }
 
-// MARK: - Walkthrough Video Card
+// Walkthrough Video Card
 struct WalkthroughVideoCard: View {
     let videoURL: String
     let title: String
@@ -267,7 +267,7 @@ struct WalkthroughVideoCard: View {
                         Image(systemName: "play.fill")
                             .font(.title2)
                             .foregroundColor(.white)
-                            .offset(x: 2) // Slight offset to center visually
+                            .offset(x: 2) 
                     }
                     
                     VStack {

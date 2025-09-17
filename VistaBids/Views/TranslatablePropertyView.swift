@@ -2,7 +2,7 @@
 //  TranslatablePropertyView.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2025-09-10.
+//  Created by Ruvindu Dulaksha on 2025-09-10.
 //
 
 import SwiftUI
@@ -75,7 +75,7 @@ struct TranslatablePropertyView: View {
             // Initialize translatable property
             translatableProperty = TranslatableProperty(property: property, originalLanguage: sourceLanguage)
             
-            // Auto-translate if global translation is enabled
+            
             if translationManager.isTranslated && 
                sourceLanguage != translationManager.selectedLanguage &&
                translationManager.targetLanguage == translationManager.selectedLanguage {
@@ -99,7 +99,7 @@ struct TranslatablePropertyView: View {
     }
     
     private func translateProperty() {
-        // Skip if already translating or languages match
+        
         if isTranslating || sourceLanguage == translationManager.selectedLanguage {
             return
         }

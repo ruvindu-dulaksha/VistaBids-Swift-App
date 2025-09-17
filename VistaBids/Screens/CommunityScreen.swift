@@ -104,7 +104,7 @@ struct CommunityScreen: View {
     }
 }
 
-// MARK: - Language Selector
+//Language Selector
 struct LanguageSelectorOriginal: View {
     @Binding var selectedLanguage: String
     
@@ -142,7 +142,7 @@ struct LanguageSelectorOriginal: View {
     }
 }
 
-// MARK: - Feed View
+// Feed View
 struct FeedView: View {
     @ObservedObject var communityService: CommunityService
     let selectedLanguage: String
@@ -209,7 +209,7 @@ struct FeedView: View {
     }
 }
 
-// MARK: - Groups View
+//Groups View
 struct GroupsView: View {
     @ObservedObject var communityService: CommunityService
     let selectedLanguage: String
@@ -313,7 +313,7 @@ struct EventsView: View {
     }
 }
 
-// MARK: - Chat View
+// Chat View
 struct ChatView: View {
     @ObservedObject var communityService: CommunityService
     let selectedLanguage: String
@@ -333,7 +333,7 @@ struct ChatView: View {
     }
 }
 
-// MARK: - Post Card
+//Post Card
 struct PostCardOriginal: View {
     let post: CommunityPost
     let selectedLanguage: String
@@ -345,7 +345,7 @@ struct PostCardOriginal: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Debug info - remove this later
+            // Debug info 
             if post.originalLanguage != selectedLanguage {
                 Text("🔍 Debug: Post(\(post.originalLanguage)) vs Selected(\(selectedLanguage))")
                     .font(.caption2)
@@ -565,8 +565,7 @@ struct PostCardOriginal: View {
                     }
                 }) {
                     HStack {
-                        // Check if current user has liked the post
-                        // Get current user ID or use "currentUser" as fallback for testing
+                        
                         let currentUserId = Auth.auth().currentUser?.uid ?? "currentUser"
                         Image(systemName: post.likedBy.contains(currentUserId) ? "heart.fill" : "heart")
                         Text("\(post.likes)")
@@ -625,8 +624,7 @@ struct PostCardOriginal: View {
     }
     
     private func showCommentSheet(for postId: String) {
-        // Set the selected post ID first, then show the sheet after a small delay
-        // to ensure the binding is updated before the sheet is presented
+        
         selectedPostId = postId
         
         // Ensure we're on the main thread when updating UI state
@@ -705,7 +703,7 @@ struct PostCardOriginal: View {
     }
 }
 
-// MARK: - Group Card
+// Group Card
 struct GroupCardOriginal: View {
     let group: CommunityGroup
     let selectedLanguage: String
@@ -771,7 +769,7 @@ struct GroupCardOriginal: View {
     }
 }
 
-// MARK: - Event Card
+//Event Card
 struct EventCardOriginal: View {
     let event: CommunityEvent
     let selectedLanguage: String

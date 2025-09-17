@@ -9,7 +9,7 @@ class SharedDataManager {
     
     private init() {}
     
-    // MARK: - User Session Management
+    // User Session Management
     func saveUserSession(userId: String, email: String) {
         userDefaults?.set(userId, forKey: "currentUserId")
         userDefaults?.set(email, forKey: "currentUserEmail")

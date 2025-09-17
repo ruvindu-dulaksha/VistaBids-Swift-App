@@ -110,7 +110,7 @@ struct ARPropertyView: View {
                 .padding()
             }
             
-            // Loading Overlay
+        
             if isLoading {
                 VStack(spacing: 20) {
                     ProgressView()
@@ -125,7 +125,7 @@ struct ARPropertyView: View {
                 .background(Color.black.opacity(0.8))
             }
             
-            // Error Overlay
+            
             if let error = loadingError {
                 VStack(spacing: 20) {
                     Image(systemName: "exclamationmark.triangle")
@@ -155,7 +155,7 @@ struct ARPropertyView: View {
                 .background(Color.black.opacity(0.8))
             }
             
-            // Instructions Overlay
+            
             if showingInstructions && !isLoading && loadingError == nil {
                 VStack(spacing: 16) {
                     Text("AR Instructions")
@@ -230,7 +230,7 @@ struct ARPropertyView: View {
     }
 }
 
-// MARK: - AR View Representable
+// AR View Representable
 struct ARViewRepresentable: UIViewRepresentable {
     @Binding var arView: ARSCNView
     let modelURL: String
@@ -267,7 +267,7 @@ struct ARViewRepresentable: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: ARSCNView, context: Context) {
-        // Update if needed
+        
     }
     
     func makeCoordinator() -> Coordinator {
@@ -292,8 +292,7 @@ struct ARViewRepresentable: UIViewRepresentable {
                 return
             }
             
-            // For demo purposes, create a simple 3D house model
-            // In a real app, you would load the actual 3D model from the URL
+            
             DispatchQueue.global(qos: .userInitiated).async {
                 let houseNode = self.createDemoHouseModel()
                 
@@ -392,7 +391,7 @@ struct ARViewRepresentable: UIViewRepresentable {
             gesture.setTranslation(.zero, in: parent.arView)
         }
         
-        // MARK: - ARSessionDelegate
+        //  ARSessionDelegate
         func session(_ session: ARSession, didFailWithError error: Error) {
             DispatchQueue.main.async {
                 self.parent.loadingError = "AR Session failed: \(error.localizedDescription)"
@@ -402,7 +401,7 @@ struct ARViewRepresentable: UIViewRepresentable {
     }
 }
 
-// MARK: - Instruction Row
+// Instruction Row
 struct InstructionRow: View {
     let icon: String
     let text: String

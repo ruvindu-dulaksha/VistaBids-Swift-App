@@ -2,7 +2,7 @@
 //  NotificationView.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2025-08-21.
+//  Created by Ruvindu Dulaksha on 2025-08-21.
 //
 
 import SwiftUI
@@ -74,7 +74,7 @@ struct NotificationView: View {
         }
     }
     
-    // MARK: - Filter Tabs
+    // Filter Tabs
     private var filterTabs: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
@@ -134,7 +134,7 @@ struct NotificationView: View {
         }
     }
     
-    // MARK: - Notifications List
+    // Notifications List
     private var notificationsList: some View {
         List {
             ForEach(filteredNotifications) { notification in
@@ -159,12 +159,11 @@ struct NotificationView: View {
         }
         .listStyle(PlainListStyle())
         .refreshable {
-            // Refresh notifications
-            // The real-time listener will automatically update
+            
         }
     }
     
-    // MARK: - Empty State
+    // Empty State
     private var emptyState: some View {
         VStack(spacing: 20) {
             Image(systemName: "bell.slash")
@@ -196,7 +195,7 @@ struct NotificationView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
-    // MARK: - Handle Notification Tap
+    //  Handle Notification Tap
     private func handleNotificationTap(_ notification: AppNotification) {
         // Handle navigation based on notification type
         switch notification.type {
@@ -230,7 +229,7 @@ struct NotificationView: View {
     }
 }
 
-// MARK: - Notification Row View
+// Notification Row View
 struct NotificationRowView: View {
     let notification: AppNotification
     let onTap: () -> Void

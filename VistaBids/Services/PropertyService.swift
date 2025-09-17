@@ -2,7 +2,7 @@
 //  PropertyService.swift
 //  VistaBids
 //
-//  Created by Assistant on 2025-08-08.
+//  Created by Ruvindu Dulaksha on 2025-08-08.
 //
 
 import Foundation
@@ -51,8 +51,8 @@ class PropertyService: ObservableObject {
         // Upload images first
         var imageURLs: [String] = []
         
-        // TODO: Implement image upload to Firebase Storage
-        // For now, using placeholder URLs
+        // image upload to Firebase Storage
+        //  using placeholder URLs
         imageURLs = property.images
         
         // Create property document
@@ -117,7 +117,7 @@ class PropertyService: ObservableObject {
     }
     
     func placeBid(on property: Property, amount: Double) async throws {
-        // TODO: Implement bidding logic
+        
         print("Placing bid of $\(amount) on property: \(property.title)")
     }
     

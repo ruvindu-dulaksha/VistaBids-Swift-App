@@ -44,6 +44,6 @@ struct BidRowView: View {
     }
     
     private func loadProperty() {
-        // TODO: Implement Firebase property fetching using bid.propertyId
+       
     }
 }

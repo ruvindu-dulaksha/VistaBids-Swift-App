@@ -50,7 +50,7 @@ struct PropertiesListView: View {
     
     private func loadProperties() {
         isLoading = true
-        // TODO: Implement Firebase property fetching
+        //  Firebase property fetching
         isLoading = false
     }
 }

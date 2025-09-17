@@ -68,7 +68,7 @@ struct UserActivityView: View {
         }
     }
     
-    // MARK: - Views
+    //  Views
     
     private var emptyStateView: some View {
         VStack(spacing: 20) {
@@ -103,7 +103,7 @@ struct UserActivityView: View {
         }
     }
     
-    // MARK: - Helper Properties
+    // Helper Properties
     
     private var filteredActivities: [ActivityItem] {
         switch selectedFilter {
@@ -165,7 +165,7 @@ struct UserActivityView: View {
         }
     }
     
-    // MARK: - Methods
+    //  Methods
     
     private func loadData() {
         isLoading = true
@@ -174,7 +174,7 @@ struct UserActivityView: View {
             do {
                 try await biddingService.fetchUserBids()
                 try await biddingService.fetchAuctionProperties()
-                // Note: PaymentService already has listeners set up in init()
+                // PaymentService already has listeners set up in init()
                 
                 await MainActor.run {
                     isLoading = false
@@ -189,7 +189,7 @@ struct UserActivityView: View {
     }
 }
 
-// MARK: - ActivityItem Model
+// ActivityItem Model
 
 struct ActivityItem: Identifiable {
     let id: String
@@ -261,7 +261,7 @@ struct ActivityItem: Identifiable {
     }
 }
 
-// MARK: - Activity Row View
+// Activity Row View
 
 struct ActivityRow: View {
     let activity: ActivityItem
@@ -317,7 +317,7 @@ struct ActivityRow: View {
                 loadPropertyAndNavigate(propertyId: activity.propertyId)
             }
             
-            // Navigation link (hidden)
+            // Navigation link 
             if let property = selectedProperty {
                 NavigationLink(
                     destination: PropertyDetailView(property: property, biddingService: biddingService),

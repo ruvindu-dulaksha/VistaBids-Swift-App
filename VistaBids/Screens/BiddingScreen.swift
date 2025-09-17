@@ -12,14 +12,11 @@ struct BiddingScreen: View {
     
     private let filters = ["All", "Live", "Upcoming", "Ended"]
     
-    // Properties that require payment (won auctions with pending payment by current user)
+    // Properties that require payment 
     private var propertiesNeedingPayment: [AuctionProperty] {
         let currentUserId = biddingService.currentUserId
         return biddingService.auctionProperties.filter { property in
-            // Only show properties where:
-            // 1. Current user is the winner
-            // 2. Payment status is pending
-            // 3. Auction has ended
+            
             property.winnerId == currentUserId && 
             property.paymentStatus == .pending && 
             property.status == .ended
@@ -39,7 +36,7 @@ struct BiddingScreen: View {
                     Spacer()
                     
                     HStack(spacing: 12) {
-                        // Cart icon - always visible
+                        // Cart icon 
                         Button(action: { showingPaymentCart = true }) {
                             HStack(spacing: 4) {
                                 Image(systemName: "cart.fill")
@@ -61,13 +58,13 @@ struct BiddingScreen: View {
                             .cornerRadius(15)
                         }
                         
-                        // Debug button to populate sample data
+                        // Debug button
                         if biddingService.auctionProperties.isEmpty {
                             Button(action: {
                                 Task {
                                     do {
                                         try await biddingService.createEnhancedAuctionData()
-                                        // After creating sample data, reload from Firestore
+                                        
                                         await biddingService.loadAuctionProperties()
                                     } catch {
                                         print("Failed to create sample data: \(error)")
@@ -106,7 +103,7 @@ struct BiddingScreen: View {
                 .padding(.horizontal)
                 .padding(.top, 8)
                 
-                // Filter Pills with Counts
+                
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
                         ForEach(filters, id: \.self) { filter in
@@ -238,7 +235,7 @@ struct BiddingScreen: View {
                     biddingService.restartListeners()
                     await biddingService.loadAuctionProperties()
                     
-                    // Setup auto-refresh timer (every 30 seconds)
+                    // Setup auto-refresh timer
                     self.refreshTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) { _ in
                         Task {
                             await biddingService.loadAuctionProperties()
@@ -289,7 +286,7 @@ struct BiddingScreen: View {
         NSLog("🔍 filteredProperties() called with filter: \(selectedFilter)")
         NSLog("🔍 Total properties before filtering: \(biddingService.auctionProperties.count)")
         
-        // Debug: Print current time and property statuses
+      
         let currentTime = Date()
         NSLog("🕐 Current time: \(currentTime)")
         
@@ -298,7 +295,7 @@ struct BiddingScreen: View {
         }
         NSLog("🔍 Status breakdown before filtering: \(statusCounts)")
         
-        // Print each property's status and timing details
+        
         for (index, property) in biddingService.auctionProperties.enumerated() {
             let timeToStart = property.auctionStartTime.timeIntervalSince(currentTime)
             let timeToEnd = property.auctionEndTime.timeIntervalSince(currentTime)
@@ -370,7 +367,7 @@ struct BiddingScreen: View {
     }
 }
 
-// MARK: - Supporting Views
+//  Supporting Views
 struct FilterPillButtonWithCount: View {
     let title: String
     let count: Int
@@ -637,7 +634,7 @@ struct PropertyDetailsSection: View {
             if let propertyId = property.id,
                let timeRemaining = biddingService.auctionTimerService.auctionTimeRemaining[propertyId],
                timeRemaining <= 300 {
-                return "timer" // Critical time
+                return "timer"
             }
             return "timer"
         case .ended:
@@ -728,7 +725,7 @@ struct PropertyActionButtons: View {
     }
 }
 
-// MARK: - Extensions
+// Extensions
 
 extension View {
     func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {

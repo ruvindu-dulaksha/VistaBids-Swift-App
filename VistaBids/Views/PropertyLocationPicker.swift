@@ -9,7 +9,7 @@ struct PropertyLocationPicker: View {
     
     @StateObject private var locationManager = PropertyLocationManager()
     @State private var region = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 6.9271, longitude: 79.8612), // Colombo, Sri Lanka
+        center: CLLocationCoordinate2D(latitude: 6.9271, longitude: 79.8612), 
         span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
     )
     @State private var searchText = ""
@@ -252,9 +252,7 @@ class PropertyLocationManager: NSObject, ObservableObject, CLLocationManagerDele
             clLocationManager.startUpdatingLocation()
         }
     }
-    
-    // MARK: - CLLocationManagerDelegate
-    
+     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
         DispatchQueue.main.async {

@@ -104,7 +104,7 @@ struct VistaBidsApp: App {
         }
     }
     
-    // MARK: - Auto Start Auction
+    // Auto Start Auction
     private func autoStartAuctionOnLaunch() async {
         print("🚀 Starting automatic auction on app launch...")
         
@@ -113,7 +113,7 @@ struct VistaBidsApp: App {
             let db = Firestore.firestore()
             let auctionSnapshot = try await db.collection("auction_properties").getDocuments()
             
-            // If we have fewer than 3 properties, reset and create varied properties
+           
             if auctionSnapshot.documents.count < 3 {
                 print("🏠 Creating varied auction properties using AuctionPropertyDataService...")
                 
@@ -127,12 +127,12 @@ struct VistaBidsApp: App {
                     print("✅ Deleted \(auctionSnapshot.documents.count) existing auction documents")
                 }
                 
-                // Create varied auction properties using the data service
+                
                 let auctionPropertyDataService = AuctionPropertyDataService()
                 try await auctionPropertyDataService.createEnhancedAuctionProperties()
                 print("✅ Created varied auction properties with different locations, images, and panoramic views")
                 
-                // Also create one immediate auto-start auction property
+               
                 let property = createAutoStartAuctionProperty()
                 
                 try await biddingService.createAuctionProperty(
@@ -174,7 +174,6 @@ struct VistaBidsApp: App {
         let startTime = now.addingTimeInterval(30) // Start in 30 seconds
         let endTime = now.addingTimeInterval(3600) // End in 1 hour
         
-        // Generate a random variant for this auto auction
         let variant = Int.random(in: 0...2)
         
         // Different property templates to choose from
@@ -391,7 +390,7 @@ struct VistaBidsApp: App {
         }
     }
     
-    // MARK: - Sample Notifications
+    //Sample Notifications
     private func createSampleNotifications() async {
         print("📱 Creating sample notifications...")
         // Add a small delay to ensure authentication is complete

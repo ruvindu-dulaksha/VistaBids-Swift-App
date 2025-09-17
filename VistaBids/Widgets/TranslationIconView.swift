@@ -2,7 +2,7 @@
 //  TranslationIconView.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2025-09-07.
+//  Created by Ruvindu Dulaksha on 2025-09-07.
 //
 
 import SwiftUI
@@ -54,7 +54,6 @@ struct TranslationIconView: View {
                 withAnimation {
                     animateIcon = true
                     
-                    // Reset animation after a short delay
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                         animateIcon = false
                     }

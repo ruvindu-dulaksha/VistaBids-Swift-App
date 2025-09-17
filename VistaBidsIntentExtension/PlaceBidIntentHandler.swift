@@ -2,7 +2,7 @@
 //  PlaceBidIntentHandler.swift
 //  VistaBidsIntentExtension
 //
-//  Created by Assistant on 2025-09-15.
+//  Created by Ruvindu Dulaksha on 2025-09-15.
 //
 
 import Foundation
@@ -24,7 +24,7 @@ class PlaceBidIntentHandler: NSObject, PlaceBidIntentHandling {
         }
     }
     
-    // MARK: - Intent Handling
+    //  Intent Handling
     
     func handle(intent: PlaceBidIntent, completion: @escaping (PlaceBidIntentResponse) -> Void) {
         print("🎤 SiriKit: Handling place bid intent")
@@ -106,7 +106,7 @@ class PlaceBidIntentHandler: NSObject, PlaceBidIntentHandling {
         }
     }
     
-    // MARK: - Helper Methods
+    //  Helper Methods
     
     private func getCurrentActiveAuction(completion: @escaping (AuctionProperty?) -> Void) {
         db.collection("auction_properties")
@@ -181,7 +181,7 @@ class PlaceBidIntentHandler: NSObject, PlaceBidIntentHandling {
     }
 }
 
-// MARK: - AuctionProperty Model (Simplified for Intent Extension)
+// AuctionProperty Model (Simplified for Intent Extension)
 
 struct AuctionProperty: Codable {
     let id: String?

@@ -23,7 +23,7 @@ struct PlaceBidView: View {
     @State private var alertTitle = ""
     
     private var minimumBid: Double {
-        property.currentBid + 1000 // Minimum increment of $1000
+        property.currentBid + 1000 
     }
     
     private var bidAmountValue: Double {
@@ -371,16 +371,16 @@ struct PlaceBidView: View {
         
         // Validate that we have a valid property ID
         guard let propertyId = property.id, !propertyId.isEmpty else {
-            print("❌ PlaceBidView: Property ID is nil or empty - cannot place bid")
+            //print("PlaceBidView: Property ID is nil or empty - cannot place bid")
             alertTitle = "Bid Failed"
             alertMessage = "Property ID is missing. Please try again."
             showingAlert = true
             return
         }
         
-        print("🔍 PlaceBidView: Placing bid on property ID: \(propertyId)")
-        print("🔍 PlaceBidView: Property title: \(property.title)")
-        print("🔍 PlaceBidView: Bid amount: \(bidAmountValue)")
+       // print("🔍 PlaceBidView: Placing bid on property ID: \(propertyId)")
+        //print("🔍 PlaceBidView: Property title: \(property.title)")
+       // print("🔍 PlaceBidView: Bid amount: \(bidAmountValue)")
         
         isPlacingBid = true
         

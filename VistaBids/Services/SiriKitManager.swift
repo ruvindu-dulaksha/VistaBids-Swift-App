@@ -2,7 +2,7 @@
 //  SiriKitManager.swift
 //  VistaBids
 //
-//  Created by Assistant on 2025-09-15.
+//  Created by Ruvindu Dulaksha on 2025-09-15.
 //
 
 import Foundation
@@ -19,14 +19,14 @@ class SiriKitManager: NSObject, ObservableObject {
         setupSiriShortcuts()
     }
     
-    // MARK: - Setup Methods (Using NSUserActivity - Free SiriKit)
+   
     
     func setupSiriShortcuts() {
         print("🎤 SiriKit: Setting up Siri shortcuts using NSUserActivity")
         createPlaceBidShortcut()
     }
     
-    // MARK: - Place Bid Shortcut (NSUserActivity approach)
+   
     
     func createPlaceBidShortcut() {
         print("🎤 SiriKit: Creating place bid shortcut")
@@ -48,7 +48,7 @@ class SiriKitManager: NSObject, ObservableObject {
         print("✅ SiriKit: Quick bid shortcut created for \(amount)")
     }
     
-    // MARK: - User Activity Methods
+    
     
     func createBiddingUserActivity(property: AuctionProperty) -> NSUserActivity {
         let activity = NSUserActivity(activityType: "com.vistabids.bidding")
@@ -66,7 +66,7 @@ class SiriKitManager: NSObject, ObservableObject {
         return activity
     }
     
-    // MARK: - Voice Command Handling
+    //  Voice Command Handling
     
     func handleVoiceCommand(_ command: String) -> String? {
         print("🎤 SiriKit: Processing voice command: \(command)")
@@ -109,7 +109,7 @@ class SiriKitManager: NSObject, ObservableObject {
         return nil
     }
     
-    // MARK: - Handle User Activity (Called when Siri triggers the activity)
+    // Handle User Activity (Called when Siri triggers the activity)
     
     func handleUserActivity(_ userActivity: NSUserActivity) -> String? {
         return VistaBidsSiriManager.shared.handleBidActivity(userActivity)

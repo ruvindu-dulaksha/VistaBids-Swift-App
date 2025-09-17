@@ -2,7 +2,7 @@
 //  EnhancedProfileView.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2025-08-24.
+//  Created by Ruvindu Dulaksha on 2025-08-24.
 //
 
 import SwiftUI
@@ -181,7 +181,7 @@ struct EnhancedProfileView: View {
     }
 }
 
-// MARK: - Overview Tab
+// Overview Tab
 struct OverviewTab: View {
     let purchases: [UserPurchaseHistory]
     let bids: [UserBid]
@@ -204,7 +204,7 @@ struct OverviewTab: View {
     }
 }
 
-// MARK: - Purchases Tab
+// Purchases Tab
 struct PurchasesTab: View {
     let purchases: [UserPurchaseHistory]
     
@@ -220,7 +220,7 @@ struct PurchasesTab: View {
     }
 }
 
-// MARK: - Bids Tab
+// Bids Tab
 struct BidsTab: View {
     let bids: [UserBid]
     
@@ -236,7 +236,7 @@ struct BidsTab: View {
     }
 }
 
-// MARK: - Watchlist Tab
+//  Watchlist Tab
 struct WatchlistTab: View {
     let watchlist: [WatchlistItem]
     
@@ -252,7 +252,7 @@ struct WatchlistTab: View {
     }
 }
 
-// MARK: - Transactions Tab
+//  Transactions Tab
 struct TransactionsTab: View {
     let transactions: [TransactionHistory]
     
@@ -268,7 +268,7 @@ struct TransactionsTab: View {
     }
 }
 
-// MARK: - Supporting Views
+// Supporting Views
 
 struct StatCard: View {
     let title: String

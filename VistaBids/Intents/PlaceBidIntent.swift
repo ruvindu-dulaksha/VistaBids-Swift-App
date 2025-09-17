@@ -2,21 +2,21 @@
 //  PlaceBidIntent.swift
 //  VistaBids
 //
-//  Created by Assistant on 2025-09-15.
+//  Created by Ruvindu Dulaksha on 2025-09-15.
 //
 
 import Foundation
 import Intents
 import IntentsUI
 
-// MARK: - Place Bid Intent (Using NSUserActivity for free SiriKit)
+// Place Bid Intent (Using NSUserActivity for free SiriKit)
 
 @available(iOS 13.0, *)
 class VistaBidsSiriManager: NSObject, ObservableObject {
     
     static let shared = VistaBidsSiriManager()
     
-    // MARK: - User Activity Constants
+    // User Activity Constants
     
     private let placeBidActivityType = "com.vistabids.placeBid"
     private let viewAuctionsActivityType = "com.vistabids.viewAuctions"
@@ -27,7 +27,7 @@ class VistaBidsSiriManager: NSObject, ObservableObject {
         setupSiriDonations()
     }
     
-    // MARK: - Setup Methods
+    // Setup Methods
     
     func setupSiriDonations() {
         print("🎤 VistaBidsSiri: Setting up Siri donations")
@@ -37,7 +37,7 @@ class VistaBidsSiriManager: NSObject, ObservableObject {
         donateCheckBidsActivity()
     }
     
-    // MARK: - Place Bid Activity
+    // Place Bid Activity
     
     func createPlaceBidActivity(bidAmount: String? = nil) -> NSUserActivity {
         let activity = NSUserActivity(activityType: placeBidActivityType)
@@ -72,7 +72,7 @@ class VistaBidsSiriManager: NSObject, ObservableObject {
         print("✅ VistaBidsSiri: Donated place bid activity for \(propertyTitle)")
     }
     
-    // MARK: - View Auctions Activity
+    // View Auctions Activity
     
     func createViewAuctionsActivity() -> NSUserActivity {
         let activity = NSUserActivity(activityType: viewAuctionsActivityType)
@@ -92,7 +92,7 @@ class VistaBidsSiriManager: NSObject, ObservableObject {
         print("✅ VistaBidsSiri: Donated view auctions activity")
     }
     
-    // MARK: - Check Bids Activity
+    // Check Bids Activity
     
     func createCheckBidsActivity() -> NSUserActivity {
         let activity = NSUserActivity(activityType: checkBidsActivityType)
@@ -112,7 +112,7 @@ class VistaBidsSiriManager: NSObject, ObservableObject {
         print("✅ VistaBidsSiri: Donated check bids activity")
     }
     
-    // MARK: - Activity Handling
+    // Activity Handling
     
     func handleBidActivity(_ activity: NSUserActivity) -> String? {
         print("🎤 VistaBidsSiri: Handling bid activity")
@@ -202,7 +202,7 @@ class VistaBidsSiriManager: NSObject, ObservableObject {
     }
 }
 
-// MARK: - Notification Names
+// Notification Names
 
 extension Notification.Name {
     static let siriPlaceBid = Notification.Name("siriPlaceBid")

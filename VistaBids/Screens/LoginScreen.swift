@@ -174,7 +174,7 @@ struct LoginScreen: View {
                         }
                     }
                     // Navigate to main app or dashboard
-                    // You can implement navigation here
+                    
                 } else {
                     print("👋 LOGIN STATUS CHANGED: User is logged out")
                 }
@@ -191,7 +191,7 @@ struct LoginScreen: View {
         .navigationBarBackButtonHidden(true)
     }
     
-    // MARK: - Authentication Methods
+    //Authentication Methods
     private func handleLogin() {
         print("🔐 Starting email/password login process...")
         // Clear previous errors
@@ -329,7 +329,7 @@ struct LoginScreen: View {
             } catch {
                 await MainActor.run {
                     if let biometricError = error as? BiometricError, case .userCancelled = biometricError {
-                        // User cancelled, don't show error
+                        
                         return
                     }
                     alertMessage = "Failed to enable biometric login: \(error.localizedDescription)"

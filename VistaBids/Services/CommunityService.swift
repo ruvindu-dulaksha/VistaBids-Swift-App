@@ -10,7 +10,7 @@ import FirebaseFirestore
 import FirebaseAuth
 import Combine
 
-// MARK: - Community Service
+// Community Service
 @MainActor
 class CommunityService: ObservableObject {
     private let db = Firestore.firestore()
@@ -34,7 +34,7 @@ class CommunityService: ObservableObject {
         }
     }
     
-    // MARK: - Posts
+    // Posts
     func loadPosts() async {
         isLoading = true
         do {
@@ -101,7 +101,7 @@ class CommunityService: ObservableObject {
             author: user.displayName ?? "Anonymous",
             authorAvatar: user.photoURL?.absoluteString,
             content: content,
-            originalLanguage: "en", // TODO: Detect language
+            originalLanguage: "en", 
             timestamp: Date(),
             likes: 0,
             comments: 0,
@@ -167,7 +167,7 @@ class CommunityService: ObservableObject {
         }
     }
     
-    // MARK: - Comments
+    //  Comments
     func addComment(to postId: String, content: String) async {
         guard let user = Auth.auth().currentUser else { return }
         
@@ -274,7 +274,7 @@ class CommunityService: ObservableObject {
         return updatedPost
     }
     
-    // MARK: - Events
+    // Events
     func loadEvents() async {
         isLoading = true
         do {
@@ -422,7 +422,7 @@ class CommunityService: ObservableObject {
         }
     }
     
-    // MARK: - Groups
+    //Groups
     func loadGroups() async {
         isLoading = true
         do {
@@ -533,7 +533,7 @@ class CommunityService: ObservableObject {
         }
     }
     
-    // MARK: - Chat
+    // Chat
     func loadChatRooms() async {
         // If no authenticated user, just use the sample data that was loaded in init()
         guard let user = Auth.auth().currentUser else { 
@@ -581,7 +581,7 @@ class CommunityService: ObservableObject {
         isLoading = false
     }
     
-    // MARK: - Messages
+    // Messages
     func loadMessages(forChatId chatId: String) async -> [ChatMessage] {
         do {
             print("🧩 CommunityService: Loading messages for chat \(chatId)")
@@ -769,7 +769,7 @@ class CommunityService: ObservableObject {
         }
     }
     
-    // MARK: - Sample Data
+   
     private func loadSampleData() {
         print("🧩 CommunityService: Loading sample data")
         // Sample Posts
@@ -1101,7 +1101,7 @@ class CommunityService: ObservableObject {
         ]
     }
     
-    // MARK: - Upload Sample Data to Firebase
+    // Upload Sample Data to Firebase
     func uploadSamplePostsToFirebase() async {
         print("🔥 CommunityService: Starting to upload sample posts to Firebase")
         let samplePosts = createSamplePosts()
@@ -1150,7 +1150,7 @@ class CommunityService: ObservableObject {
         isLoading = false
     }
     
-    // MARK: - Clear and Refresh Firebase Data
+    // Clear and Refresh Firebase Data
     func clearAndUploadFreshData() async {
         print("🧹 CommunityService: Clearing existing posts and uploading fresh data")
         

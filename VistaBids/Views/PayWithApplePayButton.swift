@@ -2,7 +2,7 @@
 //  PayWithApplePayButton.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2025-09-05.
+//  Created by Ruvindu Dulaksha on 2025-08-15.
 //
 
 import SwiftUI
@@ -31,7 +31,7 @@ struct ApplePayButton: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: PKPaymentButton, context: Context) {
-        // No updates needed
+        
     }
 }
 

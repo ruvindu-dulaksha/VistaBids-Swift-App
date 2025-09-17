@@ -14,7 +14,7 @@ struct LocationPickerView: View {
     
     @StateObject private var locationManager = LocationManager()
     @State private var region = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 6.9271, longitude: 79.8612), // Colombo, Sri Lanka
+        center: CLLocationCoordinate2D(latitude: 6.9271, longitude: 79.8612), 
         span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
     )
     @State private var searchText = ""
@@ -86,7 +86,7 @@ struct LocationPickerView: View {
     }
 }
 
-// MARK: - View Components
+// View Components
 extension LocationPickerView {
     private var searchBar: some View {
         VStack(spacing: 0) {
@@ -189,14 +189,14 @@ extension LocationPickerView {
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
             .padding()
-            .background(Color.blue) // Changed from .accentBlues to .blue
+            .background(Color.blue) 
             .cornerRadius(12)
         }
         .padding()
     }
 }
 
-// MARK: - Private Methods
+//  Private Methods
 extension LocationPickerView {
     private func requestLocationPermission() {
         locationManager.requestPermission()

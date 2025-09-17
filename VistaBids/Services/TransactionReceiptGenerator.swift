@@ -2,7 +2,7 @@
 //  TransactionReceiptGenerator.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2025-09-05.
+//  Created by Ruvindu Dulakshaa on 2025-09-05.
 //
 
 import Foundation
@@ -14,7 +14,7 @@ class TransactionReceiptGenerator {
     
     private init() {}
     
-    // MARK: - PDF Generation
+    //  PDF Generation
     func generateReceiptPDF(transaction: TransactionHistory) -> Data? {
         let pdfMetaData = [
             kCGPDFContextCreator: "VistaBids",
@@ -159,7 +159,7 @@ class TransactionReceiptGenerator {
         yPosition += 25
     }
     
-    // MARK: - Error
+    //  Error
     enum ReceiptError: LocalizedError {
         case pdfGenerationFailed
         

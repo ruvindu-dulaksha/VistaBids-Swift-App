@@ -4,7 +4,7 @@ import FirebaseFirestore
 import CoreLocation
 import SwiftUI
 
-// MARK: - Property Types and Features
+// Property Types and Features
 enum PropertyType: String, CaseIterable, Codable {
     case house = "house"
     case apartment = "apartment"
@@ -90,7 +90,7 @@ struct PropertySeller: Codable, Identifiable {
     }
 }
 
-// MARK: - Auction Chat
+//  Auction Chat
 struct AuctionChatMessage: Codable, Identifiable {
     let id: String
     let senderID: String
@@ -106,7 +106,7 @@ struct AuctionChatMessage: Codable, Identifiable {
     }
 }
 
-// MARK: - User Lists and History
+//  User Lists and History
 struct WatchlistItem: Codable, Identifiable {
     let id: String
     let propertyID: String
@@ -132,7 +132,7 @@ struct BidHistoryItem: Codable, Identifiable {
     }
 }
 
-// MARK: - Notifications
+//  Notifications
 struct AuctionWinnerNotification: Codable, Identifiable {
     let id: String
     let propertyID: String
@@ -143,7 +143,7 @@ struct AuctionWinnerNotification: Codable, Identifiable {
     let actionRequired: Bool
 }
 
-// MARK: - Search and Filters
+//  Search and Filters
 struct PropertySearchFilters: Codable {
     var propertyTypes: [PropertyType] = []
     var minPrice: Double?
@@ -176,7 +176,7 @@ struct PropertySearchFilters: Codable {
     }
 }
 
-// MARK: - Analytics
+//  Analytics
 struct PropertyAnalytics: Codable {
     let viewCount: Int
     let watchlistCount: Int
@@ -186,7 +186,7 @@ struct PropertyAnalytics: Codable {
     let geographicDistribution: [String: Int] // region: count
 }
 
-// MARK: - User Preferences
+//  User Preferences
 struct UserNotificationSettings: Codable {
     var bidOutbid: Bool = true
     var auctionEnding: Bool = true
@@ -208,7 +208,7 @@ struct UserPreferences: Codable {
     var bidIncrement: Double = 1000.0
 }
 
-// MARK: - Advanced Search Options
+// Advanced Search Options
 struct AdvancedSearchOptions: Codable {
     var filtersEnabled: Bool = false
     var minPrice: Double?

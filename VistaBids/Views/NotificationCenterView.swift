@@ -2,7 +2,7 @@ import SwiftUI
 import UserNotifications
 import FirebaseFirestore
 
-// MARK: - Notification Models
+//  Notification Models
 struct AuctionNotification: Codable, Identifiable {
     let id: String?
     let userId: String
@@ -160,7 +160,7 @@ struct NotificationCenterView: View {
         .background(Color(.systemGray6))
     }
     
-    // MARK: - Notifications List
+    // Notifications List
     private var notificationsList: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
@@ -190,7 +190,6 @@ struct NotificationCenterView: View {
         }
     }
     
-    // MARK: - Empty State
     private var emptyStateView: some View {
         VStack(spacing: 20) {
             Image(systemName: "bell.slash")
@@ -210,7 +209,7 @@ struct NotificationCenterView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
-    // MARK: - Methods
+    // Methods
     private func loadNotifications() {
         isLoading = true
         
@@ -264,14 +263,14 @@ struct NotificationCenterView: View {
     }
     
     private func handleNotificationTap(_ notification: AuctionNotification) {
-        print("🔔 Notification tapped: \(notification.type.rawValue)")
+        print("Notification tapped: \(notification.type.rawValue)")
         
         // Handle navigation based on notification type
         switch notification.type {
         case .auctionWin:
             // For auction win notifications, show payment view
             if let propertyId = notification.data["propertyId"] {
-                print("🔔 Opening payment for property: \(propertyId)")
+                print(" Opening payment for property: \(propertyId)")
                 selectedPropertyId = propertyId
                 showPaymentView = true
             }
@@ -290,7 +289,7 @@ struct NotificationCenterView: View {
         case .paymentSuccess, .paymentFailed:
             // Navigate to transaction history
             print("🔔 Opening payment history")
-            // TODO: Navigate to payment history
+            
         default:
             print("🔔 Unhandled notification type: \(notification.type.rawValue)")
         }
@@ -302,7 +301,7 @@ struct NotificationCenterView: View {
     private func markAsRead(_ notification: AuctionNotification) {
         Task {
             // try await notificationService.markNotificationAsRead(notificationId: notification.id ?? "")
-            // TODO: Implement markNotificationAsRead in NotificationService
+            
             loadNotifications()
         }
     }
@@ -310,7 +309,7 @@ struct NotificationCenterView: View {
     private func clearAllNotifications() {
         Task {
             // try await notificationService.clearAllNotifications()
-            // TODO: Implement clearAllNotifications in NotificationService
+            
             await MainActor.run {
                 notifications.removeAll()
                 winnerNotifications.removeAll()
@@ -327,7 +326,7 @@ struct NotificationCenterView: View {
     }
     
     private func createTestWinNotification() {
-        print("🧪 Creating test auction win notification")
+        print("Creating test auction win notification")
         let testNotification = AuctionNotification(
             id: UUID().uuidString,
             userId: biddingService.currentUserId,
@@ -346,11 +345,11 @@ struct NotificationCenterView: View {
         // Add to local notifications for immediate testing
         notifications.insert(testNotification, at: 0)
         
-        print("🧪 Test notification added. Total notifications: \(notifications.count)")
+        print("Test notification added. Total notifications: \(notifications.count)")
     }
 }
 
-// MARK: - Supporting Views
+// Supporting Views
 
 struct FilterTab: View {
     let filter: NotificationCenterView.NotificationFilter
@@ -632,7 +631,7 @@ struct WinnerNotificationCard: View {
     }
 }
 
-// MARK: - Helper Functions for NotificationCenterView
+// Helper Functions for NotificationCenterView
 extension NotificationCenterView {
     private func createAuctionPropertyFromWinner(_ winner: AuctionWinnerNotification) -> AuctionProperty {
         return AuctionProperty(

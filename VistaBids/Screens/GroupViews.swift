@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-// MARK: - New Group View
+//  New Group View
 struct NewGroupView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) var colorScheme
@@ -243,7 +243,7 @@ struct NewGroupView: View {
     }
 }
 
-// MARK: - Group Detail Components
+// Group Detail Components
 
 // Group Header Component
 struct GroupHeaderView: View {
@@ -427,7 +427,7 @@ struct EmptyPostsView: View {
     }
 }
 
-// MARK: - Group Detail View
+// Group Detail View
 struct GroupDetailView: View {
     let group: CommunityGroup
     let communityService: CommunityService
@@ -521,7 +521,7 @@ struct GroupDetailView: View {
     }
     
     private func checkMembershipStatus() {
-        isMember = group.members.contains("user1") // Mock current user
+        isMember = group.members.contains("user1")
     }
     
     private func loadGroupPosts() {

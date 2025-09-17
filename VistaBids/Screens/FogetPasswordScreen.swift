@@ -20,8 +20,8 @@ struct ForgetPasswordScreen: View {
 
     var body: some View {
         VStack {
-            // Top Illustration
-            Image("loginlogo") // Replace with "forgetpassword_illustration" if you have it
+            
+            Image("loginlogo") 
                 .resizable()
                 .scaledToFit()
                 .frame(height: 200)
@@ -99,7 +99,7 @@ struct ForgetPasswordScreen: View {
         }
     }
     
-    // MARK: - Password Reset Method
+    //Password Reset Method
     private func handlePasswordReset() {
         // Clear previous errors
         clearValidationError()

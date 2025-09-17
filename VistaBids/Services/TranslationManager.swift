@@ -40,10 +40,7 @@ class TranslationManager: ObservableObject {
         return languageDisplayName(for: targetLanguage.isEmpty ? selectedLanguage : targetLanguage)
     }
     
-    /// Translates text to the currently selected language
-    /// - Parameter text: The text to translate
-    /// - Parameter sourceLanguage: The source language code (if known)
-    /// - Returns: The translated text
+    
     func translateText(_ text: String, from sourceLanguage: String) async throws -> String {
         isTranslating = true
         defer { isTranslating = false }
@@ -71,9 +68,7 @@ class TranslationManager: ObservableObject {
         }
     }
     
-    /// Translates a CommunityPost to the currently selected language
-    /// - Parameter post: The post to translate
-    /// - Returns: The translated post
+   
     func translatePost(_ post: CommunityPost) async -> CommunityPost {
         isTranslating = true
         defer { isTranslating = false }
@@ -112,9 +107,7 @@ class TranslationManager: ObservableObject {
         return updatedPost
     }
     
-    /// Translates a ChatMessage to the currently selected language
-    /// - Parameter message: The message to translate
-    /// - Returns: The translated message
+    
     func translateMessage(_ message: ChatMessage) async -> ChatMessage {
         isTranslating = true
         defer { isTranslating = false }
@@ -148,9 +141,7 @@ class TranslationManager: ObservableObject {
         return updatedMessage
     }
     
-    /// Translates a property listing
-    /// - Parameter property: The property to translate
-    /// - Returns: The translated property wrapped in a TranslatableProperty
+   
     func translateProperty(_ property: Property, from sourceLanguage: String = "en") async -> TranslatableProperty {
         isTranslating = true
         defer { isTranslating = false }
@@ -204,30 +195,22 @@ class TranslationManager: ObservableObject {
         }
     }
     
-    /// Gets the display name for a language code
-    /// - Parameter code: The language code
-    /// - Returns: The display name
+    
     func languageDisplayName(for code: String) -> String {
         return supportedLanguages.first { $0.code == code }?.display ?? "Unknown"
     }
     
-    /// Gets the flag emoji for a language code
-    /// - Parameter code: The language code
-    /// - Returns: The flag emoji
+    
     func languageFlag(for code: String) -> String {
         return supportedLanguages.first { $0.code == code }?.flag ?? "🏳️"
     }
     
-    /// Gets the native name for a language code
-    /// - Parameter code: The language code
-    /// - Returns: The native name
+   
     func languageNativeName(for code: String) -> String {
         return supportedLanguages.first { $0.code == code }?.nativeName ?? "Unknown"
     }
     
-    /// Gets the formatted display text for a language code (flag + code)
-    /// - Parameter code: The language code
-    /// - Returns: The formatted display text
+    
     func languageDisplay(for code: String) -> String {
         let flag = languageFlag(for: code)
         return "\(flag) \(code.uppercased())"

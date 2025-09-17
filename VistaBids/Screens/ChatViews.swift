@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-// MARK: - Chat List View
+//Chat List View
 struct ChatListView: View {
     @ObservedObject var communityService: CommunityService
     @Environment(\.colorScheme) var colorScheme
@@ -73,7 +73,7 @@ struct ChatListView: View {
     }
 }
 
-// MARK: - Chat Row View
+// Chat Row View
 struct ChatRowView: View {
     let chatRoom: ChatRoom
     @Environment(\.colorScheme) var colorScheme
@@ -110,7 +110,7 @@ struct ChatRowView: View {
                 }
             }
             
-            // Content
+            
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(chatRoom.name)
@@ -152,7 +152,7 @@ struct ChatRowView: View {
     }
 }
 
-// MARK: - Chat Detail View
+// Chat Detail View
 struct ChatDetailView: View {
     let chatRoom: ChatRoom
     @State private var messageText = ""
@@ -261,7 +261,7 @@ struct ChatDetailView: View {
     }
 }
 
-// MARK: - Chat Message View
+// Chat Message View
 struct ChatMessageView: View {
     let message: ChatMessage
     let isCurrentUser: Bool

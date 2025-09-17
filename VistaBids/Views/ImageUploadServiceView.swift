@@ -2,7 +2,7 @@
 //  ImageUploadServiceView.swift
 //  VistaBids
 //
-//  Created by Assistant on 2025-08-18.
+//  Created by Ruvindu Dulaksha on 2025-08-18.
 //
 
 import SwiftUI

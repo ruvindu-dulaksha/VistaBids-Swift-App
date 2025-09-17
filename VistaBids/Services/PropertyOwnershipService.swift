@@ -2,7 +2,7 @@
 //  PropertyOwnershipService.swift
 //  VistaBids
 //
-//  Created by AI Assistant on 2025-09-04.
+//  Created by Ruvindu Dulaksha on 2025-09-04.
 //
 
 import Foundation
@@ -10,7 +10,7 @@ import FirebaseAuth
 import FirebaseFirestore
 import UIKit
 
-// MARK: - Property Ownership Protocol
+//  Property Ownership Protocol
 protocol OwnableProperty {
     var panoramicImages: [PanoramicImage] { get }
     func getOwnerId() -> String
@@ -43,7 +43,7 @@ class PropertyOwnershipService: ObservableObject {
         }
     }
     
-    // MARK: - Ownership Checks
+    // Ownership Checks
     
     /// Check if the current user owns the auction property
     func isOwner(of property: AuctionProperty) -> Bool {
@@ -83,7 +83,7 @@ class PropertyOwnershipService: ObservableObject {
         return currentUserId != nil
     }
     
-    // MARK: - Image Storage Management
+    //  Image Storage Management
     
     /// Save panoramic image for a property (only owner can do this)
     func savePanoramicImage(_ image: UIImage, for propertyId: String, roomType: PanoramicImage.RoomType, title: String, description: String? = nil) async throws -> PanoramicImage {
@@ -132,7 +132,7 @@ class PropertyOwnershipService: ObservableObject {
         try await removePanoramicImageFromProperty(imageId, propertyId: propertyId)
     }
     
-    // MARK: - Private Helper Methods
+    
     
     private func getProperty(_ propertyId: String) async throws -> AuctionProperty {
         let document = try await db.collection("auction_properties").document(propertyId).getDocument()
@@ -175,7 +175,7 @@ class PropertyOwnershipService: ObservableObject {
     }
 }
 
-// MARK: - Property Ownership Errors
+// Property Ownership Errors
 
 enum PropertyOwnershipError: LocalizedError {
     case notAuthenticated

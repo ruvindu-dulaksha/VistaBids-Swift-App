@@ -9,7 +9,7 @@ import Foundation
 import MapKit
 import CoreLocation
 
-// MARK: - Extended Place Categories
+//  Extended Place Categories
 // This extends the existing PlaceType enum with additional categories for enhanced place search
 enum ExtendedPlaceCategory: String, CaseIterable, Codable {
     case pharmacy = "pharmacy"

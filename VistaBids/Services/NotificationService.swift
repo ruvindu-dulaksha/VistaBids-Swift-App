@@ -2,7 +2,7 @@
 //  NotificationService.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2025-08-21.
+//  Created by Ruvindu Dulaksha on 2025-08-21.
 //
 
 import Foundation
@@ -11,7 +11,7 @@ import FirebaseAuth
 import FirebaseMessaging
 import UserNotifications
 
-// MARK: - App Notification Model
+// App Notification Model
 struct AppNotification: Identifiable, Codable {
     let id: String
     let userId: String
@@ -81,7 +81,7 @@ struct AppNotification: Identifiable, Codable {
     }
 }
 
-// MARK: - Enhanced Notification Service
+//  Enhanced Notification Service
 @MainActor
 class NotificationService: NSObject, ObservableObject {
     static let shared = NotificationService()
@@ -105,7 +105,7 @@ class NotificationService: NSObject, ObservableObject {
         notificationListener?.remove()
     }
     
-    // MARK: - Setup Methods
+    // Setup Methods
     private func setupNotifications() {
         UNUserNotificationCenter.current().delegate = self
         Messaging.messaging().delegate = self
@@ -151,7 +151,7 @@ class NotificationService: NSObject, ObservableObject {
         }
     }
     
-    // MARK: - Notification Listening
+    // Notification Listening
     private func startListeningToNotifications() {
         guard let userId = Auth.auth().currentUser?.uid else { return }
         
@@ -187,7 +187,7 @@ class NotificationService: NSObject, ObservableObject {
             }
     }
     
-    // MARK: - Public Methods
+    // Public Methods
     func markAsRead(_ notificationId: String) async {
         do {
             try await db.collection("notifications").document(notificationId).updateData([
@@ -339,7 +339,7 @@ class NotificationService: NSObject, ObservableObject {
         }
     }
     
-    // MARK: - Send Notifications
+    // Send Notifications
     func sendNotificationToAllUsers(
         title: String,
         body: String,
@@ -425,7 +425,7 @@ class NotificationService: NSObject, ObservableObject {
         }
     }
     
-    // MARK: - Push Notifications
+    // Push Notifications
     private func sendPushNotificationToAllUsers(
         title: String,
         body: String,
@@ -459,7 +459,7 @@ class NotificationService: NSObject, ObservableObject {
         }
     }
     
-    // MARK: - Convenience Methods for Specific Events
+    //  Convenience Methods for Specific Events
     func notifyNewBiddingProperty(property: AuctionProperty) async {
         let title = "🏠 New Property Available for Bidding!"
         let body = "\(property.title) is now available for auction. Starting bid: $\(Int(property.startingPrice))"
@@ -573,7 +573,7 @@ class NotificationService: NSObject, ObservableObject {
 }
 
 extension NotificationService {
-    // MARK: - Demo & Sample Data Methods
+    // Demo & Sample Data Methods
     
     /// Creates sample notifications for development and demo purposes
     func createSampleNotifications() async {
@@ -659,7 +659,7 @@ extension NotificationService {
     }
 }
 
-// MARK: - UNUserNotificationCenterDelegate
+// UNUserNotificationCenterDelegate
 extension NotificationService: @preconcurrency UNUserNotificationCenterDelegate {
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
@@ -669,8 +669,6 @@ extension NotificationService: @preconcurrency UNUserNotificationCenterDelegate 
         let userInfo = response.notification.request.content.userInfo
         print("📱 Notification tapped: \(userInfo)")
         
-        // Handle notification tap actions here
-        // You can navigate to specific screens based on the notification data
         
         completionHandler()
     }
@@ -685,7 +683,7 @@ extension NotificationService: @preconcurrency UNUserNotificationCenterDelegate 
     }
 }
 
-// MARK: - MessagingDelegate
+//  MessagingDelegate
 extension NotificationService: @preconcurrency MessagingDelegate {
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         guard let fcmToken = fcmToken else { return }

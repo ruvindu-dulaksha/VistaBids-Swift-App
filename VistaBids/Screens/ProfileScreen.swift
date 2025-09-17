@@ -395,7 +395,7 @@ struct ProfileScreen: View {
     }
 }
 
-// MARK: - Profile Menu Item
+//  Profile Menu Item
 struct ProfileMenuItem: View {
     let icon: String
     let title: String
@@ -448,12 +448,12 @@ struct ProfileMenuItem: View {
     }
 }
 
-// MARK: - Edit Profile View
+//  Edit Profile View
 struct ProfileEditView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var authService: APIService
     @StateObject private var userStatsService = UserStatsService.shared
-    @Binding var extendedProfile: ExtendedUserProfile  // Add binding to parent's profile
+    @Binding var extendedProfile: ExtendedUserProfile  
     @State private var displayName = ""
     @State private var photoURL = ""
     @State private var phoneNumber = ""
@@ -490,7 +490,7 @@ struct ProfileEditView: View {
                                         )
                                 } else {
                                     ProfileImageView(imageURL: photoURL, displayName: displayName.isEmpty ? "U" : displayName)
-                                        .scaleEffect(1.2) // Make it slightly larger in edit mode
+                                        .scaleEffect(1.2) 
                                 }
                             }
                         }
@@ -545,7 +545,7 @@ struct ProfileEditView: View {
                                 }
                         }
                         
-                        // Photo URL Field (Advanced)
+                        // Photo URL Field 
                         DisclosureGroup("Advanced Options") {
                             VStack(spacing: 16) {
                                 ProfileTextField(
@@ -558,7 +558,7 @@ struct ProfileEditView: View {
                             .padding(.top, 12)
                         }
                         
-                        // Current Email (Read Only)
+                        // Current Email 
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Email")
                                 .font(.headline)
@@ -675,7 +675,7 @@ struct ProfileEditView: View {
         // Handle photoURL migration from old format to new format
         let currentPhotoURL = extendedProfile.photoURL.isEmpty ? (authService.currentUser?.photoURL?.absoluteString ?? "") : extendedProfile.photoURL
         
-        // Check if we need to migrate from old file:// format to new local:// format
+        
         if currentPhotoURL.hasPrefix("file://") {
             // Try to extract filename and convert to new format
             if let url = URL(string: currentPhotoURL) {
@@ -743,7 +743,7 @@ struct ProfileEditView: View {
                 )
                 
                 await MainActor.run {
-                    extendedProfile = updatedProfile  // Update the binding
+                    extendedProfile = updatedProfile  
                     isLoading = false
                     showingSuccessAlert = true
                 }
@@ -775,7 +775,7 @@ struct ProfileEditView: View {
     }
 }
 
-// MARK: - Profile Text Field
+// Profile Text Field
 struct ProfileTextField: View {
     let title: String
     @Binding var text: String
@@ -803,7 +803,7 @@ struct ProfileTextField: View {
     }
 }
 
-// MARK: - Profile Errors
+// Profile Errors
 enum ProfileError: LocalizedError {
     case notAuthenticated
     case imageProcessingFailed
@@ -821,7 +821,7 @@ enum ProfileError: LocalizedError {
     }
 }
 
-// MARK: - Settings View
+// Settings View
 struct ProfileSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var themeManager: ThemeManager
@@ -1075,7 +1075,7 @@ struct ProfileSettingsView: View {
                     if let biometricError = error as? BiometricError {
                         switch biometricError {
                         case .userCancelled:
-                            // Don't show error for user cancellation
+                            
                             return
                         case .notEnrolled:
                             biometricAlertMessage = "\(biometricAuthService.biometricDisplayName) is not set up on this device. Please set it up in Settings app first."
@@ -1131,7 +1131,7 @@ struct ProfileSettingsView: View {
     }
 }
 
-// MARK: - Notification Toggle Row
+// Notification Toggle Row
 struct NotificationToggleRow: View {
     let icon: String
     let title: String
@@ -1154,7 +1154,7 @@ struct NotificationToggleRow: View {
     }
 }
 
-// MARK: - Profile Image View
+//  Profile Image View
 struct ProfileImageView: View {
     let imageURL: String
     let displayName: String
@@ -1244,7 +1244,7 @@ struct ProfileImageView: View {
     }
 }
 
-// MARK: - Saved Cards View
+//  Saved Cards View
 struct SavedCardsView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var authService: APIService
@@ -1430,7 +1430,7 @@ struct SavedCardsView: View {
     }
 }
 
-// MARK: - Saved Cards Service
+// Saved Cards Service
 class SavedCardsService: ObservableObject {
     static let shared = SavedCardsService()
     
@@ -1442,7 +1442,7 @@ class SavedCardsService: ObservableObject {
     
     private init() {}
     
-    // MARK: - Load Cards
+    // Load Cards
     func loadSavedCards() {
         isLoading = true
         
@@ -1469,7 +1469,7 @@ class SavedCardsService: ObservableObject {
         }
     }
     
-    // MARK: - Add Card
+    //  Add Card
     func addCard(_ card: SavedCard) async throws {
         // If this is set as default, remove default from other cards first
         if card.isDefault {
@@ -1484,7 +1484,7 @@ class SavedCardsService: ObservableObject {
         print("Successfully added card: \(card.maskedNumber)")
     }
     
-    // MARK: - Remove Card
+    // Remove Card
     func removeCard(_ card: SavedCard) async throws {
         await MainActor.run {
             savedCards.removeAll { $0.id == card.id }
@@ -1494,7 +1494,7 @@ class SavedCardsService: ObservableObject {
         print("Successfully removed card: \(card.maskedNumber)")
     }
     
-    // MARK: - Set Default Card
+    // Set Default Card
     func setDefaultCard(_ card: SavedCard) async throws {
         await clearDefaultCards()
         
@@ -1517,7 +1517,7 @@ class SavedCardsService: ObservableObject {
         print("Successfully set default card: \(card.maskedNumber)")
     }
     
-    // MARK: - Clear Default Cards
+    //  Clear Default Cards
     private func clearDefaultCards() async {
         await MainActor.run {
             for index in savedCards.indices {
@@ -1538,12 +1538,12 @@ class SavedCardsService: ObservableObject {
         }
     }
     
-    // MARK: - Get Default Card
+    //  Get Default Card
     func getDefaultCard() -> SavedCard? {
         return savedCards.first { $0.isDefault }
     }
     
-    // MARK: - Save to Storage
+    // Save to Storage
     private func saveCardsToStorage() {
         do {
             let encoder = JSONEncoder()
@@ -1555,13 +1555,13 @@ class SavedCardsService: ObservableObject {
         }
     }
     
-    // MARK: - Stop Listening
+    //  Stop Listening
     func stopListening() {
         // For UserDefaults implementation, no listening to stop
     }
 }
 
-// MARK: - Saved Card Model
+// Saved Card Model
 struct SavedCard: Identifiable, Codable {
     var id = UUID()
     let lastFourDigits: String
@@ -1592,7 +1592,7 @@ struct SavedCard: Identifiable, Codable {
     }
 }
 
-// MARK: - Saved Card Row
+// Saved Card Row
 struct SavedCardRow: View {
     let card: SavedCard
     let onDelete: () -> Void
@@ -1680,7 +1680,7 @@ struct SavedCardRow: View {
     }
 }
 
-// MARK: - Add Card View
+//  Add Card View
 struct AddCardView: View {
     @Environment(\.dismiss) private var dismiss
     let onCardAdded: (SavedCard) -> Void

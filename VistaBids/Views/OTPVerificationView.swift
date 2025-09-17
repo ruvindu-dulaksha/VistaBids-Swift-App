@@ -2,7 +2,7 @@
 //  OTPVerificationView.swift
 //  VistaBids
 //
-//  Created by GitHub Copilot on 2025-09-12.
+//  Created by Ruvindu Dulaksha on 2025-09-12.
 //
 
 import SwiftUI
@@ -20,7 +20,7 @@ struct OTPVerificationView: View {
     @State private var timeRemaining = 300 // 5 minutes in seconds
     @State private var showPaymentSuccess = false
     @State private var timer: Timer?
-    @State private var lastGeneratedOTP: String? // For testing purposes
+    @State private var lastGeneratedOTP: String? 
     @Environment(\.colorScheme) var colorScheme
     
     // Get current user's email from Firebase Auth
@@ -77,7 +77,7 @@ struct OTPVerificationView: View {
                             .foregroundColor(.red)
                     }
                     
-                    // Show OTP for testing (remove in production)
+                    // Show OTP for testing 
                     if let otp = lastGeneratedOTP {
                         VStack(spacing: 4) {
                             Text("FOR TESTING - Your OTP is:")
