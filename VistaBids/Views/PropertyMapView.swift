@@ -130,7 +130,25 @@ struct PropertyMapView: View {
             )
         }
         
-        region = mapService.calculateRegion(for: coordinates, padding: 0.05)
+        // Filter out invalid coordinates
+        let validCoordinates = coordinates.filter { coordinate in
+            !coordinate.latitude.isNaN &&
+            !coordinate.longitude.isNaN &&
+            !coordinate.latitude.isInfinite &&
+            !coordinate.longitude.isInfinite &&
+            coordinate.latitude >= -90 && coordinate.latitude <= 90 &&
+            coordinate.longitude >= -180 && coordinate.longitude <= 180
+        }
+        
+        if validCoordinates.isEmpty {
+            // Use default region if no valid coordinates
+            region = MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 6.9271, longitude: 79.8612),
+                span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
+            )
+        } else {
+            region = mapService.calculateRegion(for: validCoordinates, padding: 0.05)
+        }
     }
     
     private func initializeFilters() {

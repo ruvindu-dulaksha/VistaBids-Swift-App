@@ -14,7 +14,7 @@ import Combine
 @MainActor
 class CommunityService: ObservableObject {
     private let db = Firestore.firestore()
-    private let translationService = AppleTranslationService()
+    private let translationService: TranslationServiceProtocol = TranslatorService.shared
     
     @Published var posts: [CommunityPost] = []
     @Published var events: [CommunityEvent] = []

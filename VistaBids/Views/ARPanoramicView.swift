@@ -54,7 +54,7 @@ struct ARPanoramicView: View {
                 if isARSessionActive {
                     VStack {
                         HStack {
-                            Button("Exit AR") {
+                           /* Button("Exit AR") {
                                 isARSessionActive = false
                                 selectedImage = nil
                             }
@@ -62,7 +62,7 @@ struct ARPanoramicView: View {
                             .padding(.horizontal, 16)
                             .padding(.vertical, 8)
                             .background(.black.opacity(0.7))
-                            .cornerRadius(20)
+                            .cornerRadius(20)*/
                             
                             Spacer()
                             

@@ -40,6 +40,9 @@ struct PropertyDetailView: View {
     @State private var uploadAlertMessage = ""
     @State private var siriKitManager = SiriKitManager.shared
     @State private var showPaymentView = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
+    @State private var showingAlert = false
     
     init(property: AuctionProperty, biddingService: BiddingService) {
         self._property = State(initialValue: property)
@@ -153,6 +156,9 @@ struct PropertyDetailView: View {
             .sheet(isPresented: $showPaymentView) {
                 PaymentView(property: property, showPaymentView: $showPaymentView)
             }
+            .alert(isPresented: $showingAlert) {
+                Alert(title: Text(alertTitle), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+            }
             .onAppear {
                 print("PropertyDetailView: onAppear - property ID: \(property.id ?? "nil"), title: \(property.title)")
                 startTimer()
@@ -192,9 +198,12 @@ struct PropertyDetailView: View {
                 
                 guard let document = snapshot,
                       document.exists,
-                      let updatedProperty = try? document.data(as: AuctionProperty.self) else {
+                      var updatedProperty = try? document.data(as: AuctionProperty.self) else {
                     return
                 }
+                
+                // Set the document ID as the property ID
+                updatedProperty.id = document.documentID
                 
                 DispatchQueue.main.async {
                     self.property = updatedProperty
@@ -494,7 +503,15 @@ struct PropertyDetailView: View {
             // Auction Action Buttons
             VStack(spacing: 12) {
                 if property.status == .active {
-                    Button(action: { showingBidSheet = true }) {
+                    Button(action: {
+                        if property.id == nil || property.id?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == true {
+                            alertTitle = "Bid Failed"
+                            alertMessage = "Property ID is missing. Please try again."
+                            showingAlert = true
+                        } else {
+                            showingBidSheet = true
+                        }
+                    }) {
                         Text("Place Bid")
                             .font(.headline)
                             .fontWeight(.semibold)

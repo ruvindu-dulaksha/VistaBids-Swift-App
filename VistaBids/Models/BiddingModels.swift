@@ -214,7 +214,7 @@ struct PropertyFeatures: Codable {
 // Auction Status
 enum AuctionStatus: String, CaseIterable, Codable {
     case upcoming = "upcoming"
-    case active = "active"
+    case active = "live"
     case ended = "ended"
     case sold = "sold"
     case cancelled = "cancelled"
@@ -244,22 +244,18 @@ enum AuctionStatus: String, CaseIterable, Codable {
         let container = try decoder.singleValueContainer()
         let rawValue = try container.decode(String.self)
         
-        // Try exact match first
-        if let status = AuctionStatus(rawValue: rawValue) {
-            self = status
-            return
-        }
-        
-        // Handle alternative values
         switch rawValue.lowercased() {
-        case "live": self = .active
-        case "running": self = .active
-        case "finished": self = .ended
-        case "completed": self = .ended
-        case "closed": self = .ended
-        case "pending": self = .upcoming
-        case "waiting": self = .upcoming
-        default: 
+        case "live", "active", "running":
+            self = .active
+        case "upcoming", "pending", "waiting":
+            self = .upcoming
+        case "ended", "finished", "completed", "closed":
+            self = .ended
+        case "sold":
+            self = .sold
+        case "cancelled":
+            self = .cancelled
+        default:
             print("⚠️ Unknown auction status: \(rawValue), defaulting to 'upcoming'")
             self = .upcoming
         }

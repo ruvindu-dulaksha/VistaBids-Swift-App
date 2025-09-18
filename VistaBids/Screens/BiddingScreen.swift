@@ -71,7 +71,7 @@ struct BiddingScreen: View {
                                     }
                                 }
                             }) {
-                                HStack(spacing: 6) {
+                                /*HStack(spacing: 6) {
                                     Image(systemName: "plus.circle.fill")
                                     Text("Add Sample Data")
                                         .font(.caption)
@@ -81,7 +81,7 @@ struct BiddingScreen: View {
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 6)
                                 .background(Color.orange)
-                                .cornerRadius(15)
+                                .cornerRadius(15)*/
                             }
                         }
                         
@@ -150,11 +150,11 @@ struct BiddingScreen: View {
                             .fontWeight(.semibold)
                             .foregroundColor(.textPrimary)
                         
-                        Text("Tap 'Add Sample Data' to populate with example auctions, or 'Add Property' to create your first auction.")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 40)
+                       // Text("Tap 'Add Sample Data' to populate with example auctions, or 'Add Property' to create your first auction.")
+                           // .font(.subheadline)
+                          //  .foregroundColor(.secondary)
+                            //.multilineTextAlignment(.center)
+                          //  .padding(.horizontal, 40)
                         
                         Text("Debug: \(biddingService.auctionProperties.count) properties loaded")
                             .font(.caption)

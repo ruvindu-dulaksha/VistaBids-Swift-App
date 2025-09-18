@@ -370,10 +370,26 @@ struct PlaceBidView: View {
         guard isValidBid && isValidMaxAutoBid else { return }
         
         // Validate that we have a valid property ID
-        guard let propertyId = property.id, !propertyId.isEmpty else {
+        guard let propertyId = property.id?.trimmingCharacters(in: .whitespacesAndNewlines), !propertyId.isEmpty else {
             //print("PlaceBidView: Property ID is nil or empty - cannot place bid")
             alertTitle = "Bid Failed"
             alertMessage = "Property ID is missing. Please try again."
+            showingAlert = true
+            return
+        }
+        
+        // Validate auction status
+        guard property.status == .active else {
+            alertTitle = "Bid Failed"
+            alertMessage = "Auction is not currently active."
+            showingAlert = true
+            return
+        }
+        
+        // Validate auction timing
+        guard property.auctionEndTime > Date() else {
+            alertTitle = "Bid Failed"
+            alertMessage = "Auction has ended."
             showingAlert = true
             return
         }

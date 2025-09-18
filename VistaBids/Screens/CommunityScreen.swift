@@ -110,6 +110,8 @@ struct LanguageSelectorOriginal: View {
     
     private let languages = [
         ("en", "🇺🇸 EN"),
+        ("si", "🇱🇰 SI"),
+        ("ta", "🇱🇰 TA"),
         ("es", "🇪🇸 ES"),
         ("fr", "🇫🇷 FR"),
         ("de", "🇩🇪 DE"),
@@ -345,13 +347,6 @@ struct PostCardOriginal: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Debug info 
-            if post.originalLanguage != selectedLanguage {
-                Text("🔍 Debug: Post(\(post.originalLanguage)) vs Selected(\(selectedLanguage))")
-                    .font(.caption2)
-                    .foregroundColor(.orange)
-            }
-            
             // Header
             HStack {
                 AsyncImage(url: URL(string: post.authorAvatar ?? "")) { phase in
@@ -390,7 +385,7 @@ struct PostCardOriginal: View {
                 
                 Spacer()
                 
-                if post.originalLanguage != selectedLanguage {
+                if selectedLanguage != "en" {
                     Button(action: {
                         print("🔄 Translate button tapped - Post Language: \(post.originalLanguage), Selected: \(selectedLanguage)")
                         translatePost()
@@ -624,7 +619,6 @@ struct PostCardOriginal: View {
     }
     
     private func showCommentSheet(for postId: String) {
-        
         selectedPostId = postId
         
         // Ensure we're on the main thread when updating UI state
@@ -634,37 +628,51 @@ struct PostCardOriginal: View {
         }
     }
     
+    private func languageFromCode(_ code: String) -> String {
+        switch code {
+        case "en": return "en"
+        case "si": return "si"
+        case "ta": return "ta"
+        default: return "en"
+        }
+    }
+    
     private func translatePost() {
+        print("🔄 Starting translation for post: \(post.content.prefix(30))...")
+        print("🔄 Selected language: \(selectedLanguage)")
         isTranslating = true
         // Clear any previous errors
         communityService.error = nil
         
         Task {
             do {
-                let result = await communityService.translatePost(post, to: selectedLanguage)
+                let lang = languageFromCode(selectedLanguage)
+                print("🔄 Language code: \(lang)")
+                let result = await communityService.translatePost(post, to: lang)
                 
                 // Update UI on main thread
                 await MainActor.run {
                     translatedPost = result
+                    print("🔄 Translation result - isTranslated: \(result.isTranslated), content: \(result.translatedContent ?? "nil")")
                     
                     // Check if translation was successful
                     if let error = communityService.error {
                         print("⚠️ Translation error: \(error)")
                         // Reset to show original post on error
-                        translatedPost = post
+                        translatedPost = nil
                     } else if result.isTranslated == true {
-                        print(" Translation successful to \(selectedLanguage)")
-                        print(" Translated content: \(result.translatedContent ?? "None")")
+                        print("✅ Translation successful to \(selectedLanguage)")
+                        print("✅ Translated content: \(result.translatedContent ?? "None")")
                     } else {
-                        print("No translation needed - same language")
+                        print("ℹ️ No translation needed - same language")
                     }
                     
                     isTranslating = false
                 }
             } catch {
                 await MainActor.run {
-                    print("Translation failed: \(error.localizedDescription)")
-                    translatedPost = post // Show original on error
+                    print("❌ Translation failed: \(error.localizedDescription)")
+                    translatedPost = nil // Show original on error
                     isTranslating = false
                 }
             }
@@ -672,27 +680,34 @@ struct PostCardOriginal: View {
     }
     
     private func getDisplayContent() -> String {
-        // Debug logging
-        print("getDisplayContent() - translatedPost: \(translatedPost != nil)")
-        print("translatedPost?.isTranslated: \(translatedPost?.isTranslated ?? false)")
-        print(" translatedPost?.translatedContent: \(translatedPost?.translatedContent ?? "nil")")
-        print(" post.content: \(post.content)")
+        let content = post.content
+        let hasTranslation = translatedPost != nil
+        let isTranslated = translatedPost?.isTranslated ?? false
+        let translatedContent = translatedPost?.translatedContent ?? "nil"
+        
+        print("📄 getDisplayContent - Original: '\(content)'")
+        print("📄 getDisplayContent - Has translation: \(hasTranslation), Is translated: \(isTranslated)")
+        print("📄 getDisplayContent - Translated content: '\(translatedContent)'")
         
         // If we have a translated post and it has translated content, use it
         if let translated = translatedPost,
            translated.isTranslated == true,
            let translatedContent = translated.translatedContent,
            !translatedContent.isEmpty {
+            print("📄 getDisplayContent - Returning translated content: '\(translatedContent)'")
             return translatedContent
         }
         
         // Otherwise use original content
+        print("📄 getDisplayContent - Returning original content: '\(content)'")
         return post.content
     }
     
     private func languageDisplayName(_ code: String) -> String {
         let languageNames: [String: String] = [
             "en": "English",
+            "si": "Sinhala", 
+            "ta": "Tamil",
             "es": "Spanish", 
             "fr": "French",
             "de": "German",
