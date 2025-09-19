@@ -4,7 +4,7 @@
 
 <div align="center">A modern iOS auction application built with SwiftUI and Firebase, allowing users to participate in property auctions with real-time bidding, community features, and secure payment processing.
 
-  <img src="VistaBids/Assets.xcassets/AppIcon.appiconset/AppIcon.png" alt="VistaBids Logo" width="120" height="120">
+
 
   ## Features
 
@@ -18,7 +18,7 @@
 
   ![License](https://img.shields.io/badge/License-MIT-green.svg)- 💳 **Secure Payments**: Integrated payment processing
 
-</div>- 🔐 **Authentication**: Firebase Auth with Google Sign-In
+</div> - 🔐 Authentication: Firebase Auth with Google Sign-In
 
 - 📱 **Modern UI**: SwiftUI-based responsive design
 
@@ -36,7 +36,7 @@ VistaBids is a comprehensive real estate auction platform for iOS that enables u
 
 
 
-## ✨ Key Features## Tech Stack
+## ✨ Key Features ##Tech Stack
 
 
 
@@ -82,7 +82,7 @@ VistaBids is a comprehensive real estate auction platform for iOS that enables u
 
 cd VistaBids-Swift-App
 
-### 👤 User Experience```
+### 👤 User Experience
 
 - **Multi-language Support**: Comprehensive translation system
 
@@ -96,11 +96,11 @@ cd VistaBids-Swift-App
 
 3. Open the project in Xcode
 
-### 🗺️ Location & Maps```bash
+### 🗺️ Location & Maps
 
 - **Interactive Maps**: MapKit integration with property locationsopen VistaBids.xcodeproj
 
-- **Nearby Properties**: Location-based property discovery```
+- **Nearby Properties**: Location-based property discovery
 
 - **Geofencing**: Location-aware notifications and alerts
 
@@ -112,7 +112,7 @@ cd VistaBids-Swift-App
 
 
 
-### **Frontend**```
+### **Frontend**
 
 - **SwiftUI**: Modern declarative UI frameworkVistaBids/
 
@@ -130,7 +130,7 @@ cd VistaBids-Swift-App
 
 - **Firebase Firestore**: Real-time database└── Assets.xcassets/ # App icons and images
 
-- **Firebase Authentication**: User management```
+- **Firebase Authentication**: User management
 
 - **Firebase Storage**: File and media storage
 
@@ -164,13 +164,7 @@ cd VistaBids-Swift-App
 
 Ruvindu Dulaksha - [@ruvindu-dulaksha](https://github.com/ruvindu-dulaksha)
 
-## 📱 Screenshots
 
-Project Link: [https://github.com/ruvindu-dulaksha/VistaBids-Swift-App](https://github.com/ruvindu-dulaksha/VistaBids-Swift-App)
-
-| Property Listing | Bidding Screen | Payment Flow | User Profile |
-|:----------------:|:--------------:|:------------:|:------------:|
-| <img src="screenshots/property-list.png" width="200"> | <img src="screenshots/bidding.png" width="200"> | <img src="screenshots/payment.png" width="200"> | <img src="screenshots/profile.png" width="200"> |
 
 ## 🚀 Getting Started
 
@@ -216,7 +210,7 @@ Project Link: [https://github.com/ruvindu-dulaksha/VistaBids-Swift-App](https://
 FirebaseApp.configure()
 ```
 
-#### Stripe Configuration
+#### Stripe Configuration (optional)
 ```swift
 // Add your Stripe publishable key
 StripeAPI.defaultPublishableKey = "pk_test_your_key_here"
@@ -338,13 +332,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Contact Information
 - **Developer**: Ruvindu Dulaksha
-- **Email**: support@vistabids.com
+- **Email**: ruvindufdo@gmail.com
 - **GitHub**: [@ruvindu-dulaksha](https://github.com/ruvindu-dulaksha)
 
-### Documentation
-- **API Documentation**: [docs.vistabids.com](https://docs.vistabids.com)
-- **User Guide**: [help.vistabids.com](https://help.vistabids.com)
-- **Developer Portal**: [developers.vistabids.com](https://developers.vistabids.com)
+
 
 ## 🙏 Acknowledgments
 
