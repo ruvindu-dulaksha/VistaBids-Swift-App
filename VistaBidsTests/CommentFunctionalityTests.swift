@@ -24,7 +24,7 @@ final class CommentFunctionalityTests: XCTestCase {
         let initialComments = await communityService.getComments(for: postId)
         let initialCount = initialComments.count
         
-        // NOTE: This test requires Firebase authentication which may not be available in test environment
+        // This test requires Firebase authentication which may not be available in test environment
         // For now, we'll test the comment retrieval functionality with existing comments
         // In a real scenario, this would add a comment and verify it was added
         

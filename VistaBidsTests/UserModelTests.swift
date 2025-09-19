@@ -10,7 +10,7 @@ import Foundation
 import FirebaseAuth
 @testable import VistaBids
 
-// MARK: - Mock Firebase User Protocol
+// Mock Firebase User Protocol
 private protocol MockUserProtocol {
     var uid: String { get }
     var email: String? { get }
@@ -19,7 +19,7 @@ private protocol MockUserProtocol {
     var isEmailVerified: Bool { get }
 }
 
-// MARK: - Mock Firebase User Class
+//  Mock Firebase User Class
 private class MockFirebaseUser: MockUserProtocol {
     let uid: String
     let email: String?
@@ -36,7 +36,7 @@ private class MockFirebaseUser: MockUserProtocol {
     }
 }
 
-// MARK: - Test UserModel for Testing
+// Test UserModel for Testing
 private struct TestUserModel: Identifiable, Codable {
     let id: String
     let email: String
@@ -63,7 +63,7 @@ private struct TestUserModel: Identifiable, Codable {
 
 struct UserModelTests {
 
-    // MARK: - Test Cases
+    //   Test Cases
 
     @Test func testUserModelInitializationFromMockUser() {
         // Given

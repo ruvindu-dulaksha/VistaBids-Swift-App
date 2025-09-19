@@ -11,6 +11,7 @@ import FirebaseFirestore
 import GoogleSignIn
 import UserNotifications
 import Intents
+import AppIntents
 
 @main
 struct VistaBidsApp: App {
@@ -37,6 +38,11 @@ struct VistaBidsApp: App {
         if #available(iOS 13.0, *) {
             _ = SiriKitManager.shared
             print("SiriKit Manager initialized")
+        }
+        
+        // Configure App Intents for Siri integration
+        if #available(iOS 16.0, *) {
+            print("🎯 App Intents are automatically discoverable by the system")
         }
     }
     
